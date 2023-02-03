@@ -7,9 +7,16 @@
 
 #pragma once
 #include <stdint.h>
+#include "loramacstate.h"
 
 class LoRaWAN {
   public:
-  void sendMessage();
+    void initialize();
+    loraMacState getState() const;
+    bool joinNetwork();
+    void sendMessage();
+    
+
   private:
+    loraMacState theState{loraMacState::boot};
 };
