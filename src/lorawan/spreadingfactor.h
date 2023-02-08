@@ -9,12 +9,14 @@
 #include <stdint.h>
 
 enum class spreadingFactor : uint32_t {
-    SF7,
-    SF7,
-    SF9,
-    SF10,
-    SF11,
-    SF12
+    SF5 = 0x05,
+    SF6 = 0x06,
+    SF7 = 0x07,
+    SF8 = 0x08,
+    SF9 = 0x09,
+    SF10 = 0x0A,
+    SF11 = 0x0B,
+    SF12 = 0x0C
 };
 
 const char* toString(spreadingFactor aSpreadingFactor);
