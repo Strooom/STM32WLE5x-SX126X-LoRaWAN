@@ -8,13 +8,8 @@
 #pragma once
 #include <stdint.h>
 
-enum class sx126xRegister : uint32_t {
-    hoppingEnable = 0x0385,
-    packetLength = 0x386,
-    
-    overcurrentProtection = 0x08E7,
-    footCapacitorConfigA  = 0x0911,
-    footCapacitorConfigA  = 0x0912
-
+enum class sx126xPowerMode : uint32_t {
+    LDO = 0x00,
+	DCDC = 0x01
 };
 

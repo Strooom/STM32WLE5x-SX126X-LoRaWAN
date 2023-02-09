@@ -7,10 +7,148 @@
 
 #include "sx126x.h"
 
+bool sx126x::isStandby() {
+    theState = getStateFromHW();
+    return ((theState == sx126xState::standbyRc) || (theState == sx126xState::standbyXosc));
+}
 
-void sx126x::goSleep()
-{
-/* switch the antenna OFF by SW */
+void sx126x::executeCommand(const sx126xCommand opcode, const uint8_t* parameters, const uint8_t nmbrParameters) {
+    // send all bytes via SPI
+    // data received in SPI is stored in parameters[n] array
+}
+
+sx126xState sx126x::getStateFromHW() {
+    constexpr uint8_t nmbrExtraBytes{1};
+    uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];
+    executeCommand(sx126xCommand::getStatus, parametersIn, nmbrExtraBytes);
+
+    switch (SUBGRF_GetOperatingMode()) {
+        case MODE_TX:
+            return RF_TX_RUNNING;
+        case MODE_RX:
+            return RF_RX_RUNNING;
+        case MODE_CAD:
+            return RF_CAD;
+        default:
+            return RF_IDLE;
+    }
+
+    return theState;
+}
+
+sx126xError sx126x::getLastError() {
+    sx126xError result = lastError;
+    lastError          = sx126xError::none;
+    return result;
+}
+
+bool sx126x::isBusy() {
+    // PWR_SR2 register, bit 1
+}
+
+void sx126x::setRegulatorMode() {
+    // Check if in Standby Mode - you cannot change the regulator in other state
+    // Also check OverCurrentProtection - default at 60 mA
+    // EU 868 band also limits power to 16 dBm !! so maybe the DCDC is not needed in this case
+    // Datasheet pg 76 : default the LDO is selected. This works but is not the most power efficient solution -> using the DCDC can be postponed for a next phase where we optimize power
+}
+
+void sx126x::reset() {
+    // control the RESET line of the SX126X from the STM32WLE RCC registers
+    // SX126x datasheet recommends to keep RESET low for 100 uS
+    // After reset
+    // * SX126x performs a calibration
+    // * all context/config inside the SX126x is lost -> initialization is needed
+
+    CLEAR_BIT(RCC->CSR, RCC_CSR_RFRST);        // Drive RESET LOW
+                                               // wait 100uS
+    SET_BIT(RCC->CSR, RCC_CSR_RFRST);          // Drive RESET HIGH
+    READ_BIT(RCC->CSR, RCC_CSR_RFRSTF);        // Read RFRSTF flag and wait for SX126x to come out of reset
+    // TODO : wait for flag
+
+    // Also, after reset, the SX126x will be Busy for some time, so check this before doing anything
+}
+
+void sx126x::initialize() {
+    // 1. Clocks
+    // The SPI between STM32WLE and SX126x runs on the PCLK3 clock, divided by 2.
+    // The SX126x-SPI interface has a maximum of 16 MhZ
+    // As we are running the whole STM32WLE on 16 MHz (or lower), we can send the SYSCLK straight to the PCLK3 which means this SPI will run on 8 MHz
+
+    // MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, Source);        // enable clocks to SPI1
+    //      Source This parameter can be one of the following values:
+    //    *         @arg @ref LL_RCC_SYS_CLKSOURCE_MSI
+    //    *         @arg @ref LL_RCC_SYS_CLKSOURCE_HSI
+    //    *         @arg @ref LL_RCC_SYS_CLKSOURCE_HSE
+    //    *         @arg @ref LL_RCC_SYS_CLKSOURCE_PLL
+    // MODIFY_REG(RCC->CFGR, RCC_CFGR_HPRE, Prescaler);                      // set AHB prescaler
+    // MODIFY_REG(RCC->EXTCFGR, RCC_EXTCFGR_SHDHPRE, Prescaler >> 4);        // set AHB 3 prescaler
+    // MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE1, Prescaler);                     // set APB1 prescaler
+    // MODIFY_REG(RCC->CFGR, RCC_CFGR_PPRE2, Prescaler);                     // set APB2 prescaler
+
+    // MODIFY_REG(RCC->CFGR, RCC_CFGR_STOPWUCK, Clock);        // Set clock after WakeUp from Stop - TODO I think this needs to be a global thing for the STM32wle, not only for this SPI1
+
+    // configure SPI1
+
+    // set packet type
+    uint8_t data[1];
+    data[0] = 0x01;        // We only do LoRa
+    executeCommand(sx126xCommand::setPACKETTYPE, data, 1);
+
+    SUBGRF_SetPacketType(modulationParams->PacketType);
+
+    Radio_SMPS_Set(SMPS_DRIVE_SETTING_DEFAULT);
+    // uint8_t modReg;
+    //     modReg= SUBGRF_ReadRegister(SUBGHZ_SMPSC2R);
+    //     modReg&= (~SMPS_DRV_MASK);
+    //     SUBGRF_WriteRegister(SUBGHZ_SMPSC2R, modReg | level);
+
+    SUBGRF_WriteCommand(RADIO_SET_STANDBY, (uint8_t*)&standbyConfig, 1);
+    // if( standbyConfig == STDBY_RC )
+    // {
+    //     OperatingMode = MODE_STDBY_RC;
+    // }
+    // else
+    // {
+    //     OperatingMode = MODE_STDBY_XOSC;
+    // }
+    CalibrateImage ? ? if (freq > 900000000) {
+        calFreq[0] = 0xE1;
+        calFreq[1] = 0xE9;
+    }
+    else if (freq > 850000000) {
+        calFreq[0] = 0xD7;
+        calFreq[1] = 0xDB;
+    }
+    else if (freq > 770000000) {
+        calFreq[0] = 0xC1;
+        calFreq[1] = 0xC5;
+    }
+    else if (freq > 460000000) {
+        calFreq[0] = 0x75;
+        calFreq[1] = 0x81;
+    }
+    else if (freq > 425000000) {
+        calFreq[0] = 0x6B;
+        calFreq[1] = 0x6F;
+    }
+    SUBGRF_WriteCommand(RADIO_CALIBRATEIMAGE, calFreq, 2);
+}
+
+void sx126x::goSleep() {
+    sx126xState currentState = getStateFromHW();
+    if (currentState == sx126xState::standby) {
+        constexpr uint8_t nmbrExtraBytes{1};
+        uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];
+
+        executeCommand(sx126xCommand::setSleep, parametersIn, nmbrExtraBytes);
+    } else {
+        lastError = sx126xError::goSleepWhenNotInStandby;
+    }
+
+    // TODO : change the state
+
+    /* switch the antenna OFF by SW */
     // RBI_ConfigRFSwitch(RBI_SWITCH_OFF);
 
     // Radio_SMPS_Set(SMPS_DRIVE_SETTING_DEFAULT);
@@ -22,165 +160,94 @@ void sx126x::goSleep()
     // OperatingMode = MODE_SLEEP;
 }
 
+void sx126x::goStandby(sx126xStandbyMode theStandbyMode = sx126xStandbyMode::rc) {
+    // normally the SX126x goes to standby automatically after transmission / receive completed, or timed out
 
-
-
-void sx126x::goStandby()
-{
-// SUBGRF_WriteCommand( RADIO_SET_STANDBY, ( uint8_t* )&standbyConfig, 1 );
-//     if( standbyConfig == STDBY_RC )
-//     {
-//         OperatingMode = MODE_STDBY_RC;
-//     }
-//     else
-//     {
-//         OperatingMode = MODE_STDBY_XOSC;
-//     }	
+    constexpr uint8_t nmbrExtraBytes{1};
+    uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];
+    parametersIn[0] = static_cast<uint8_t>(theStandbyMode);
+    executeCommand(sx126xCommand::setStandby, parametersIn, nmbrExtraBytes);
 }
 
+void sx126x::setRfFrequency(uint32_t frequencyInHz) {
+    uint64_t tmpFrequencyRegisterValue = ((static_cast<uint64_t>(frequencyInHz) << 25) / static_cast<uint64_t>(crystalFrequency));        // 64 bit math needed to avoid overflow, result is only 32 bits wide
+    uint32_t frequencyRegisterValue    = (static_cast<uint32_t>(tmpFrequencyRegisterValue && 0x00000000FFFFFFFF));                        // take only lower 32-bits, upper bits should be zero
 
+    constexpr uint8_t nmbrExtraBytes{4};
+    uint8_t parametersIn[nmbrExtraBytes]{0}, dataOut[nmbrExtraBytes];
+    parametersIn[0] = static_cast<uint8_t>((frequencyRegisterValue >> 24) & 0xFF);        //
+    parametersIn[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16) & 0xFF);        //
+    parametersIn[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8) & 0xFF);         //
+    parametersIn[3] = static_cast<uint8_t>((frequencyRegisterValue)&0xFF);                //
 
-void sx126x::setRfFrequency( uint32_t frequency )
-{
-    // uint8_t buf[4];
-    // uint32_t chan = 0;
-
-    // if( ImageCalibrated == false )
-    // {
-    //     SUBGRF_CalibrateImage( frequency );
-    //     ImageCalibrated = true;
-    // }
-    // /* ST_WORKAROUND_BEGIN: Simplified frequency calculation */
-    // SX_FREQ_TO_CHANNEL(chan, frequency);   
-    // /* ST_WORKAROUND_END */
-    // buf[0] = ( uint8_t )( ( chan >> 24 ) & 0xFF );
-    // buf[1] = ( uint8_t )( ( chan >> 16 ) & 0xFF );
-    // buf[2] = ( uint8_t )( ( chan >> 8 ) & 0xFF );
-    // buf[3] = ( uint8_t )( chan & 0xFF );
-    // SUBGRF_WriteCommand( RADIO_SET_RFFREQUENCY, buf, 4 );
+    executeCommand(sx126xCommand::setRfFRequency, parametersIn, nmbrExtraBytes);
 }
 
+void setTxParameters(int8_t transmitPowerdBm) {        // caution - signed int8, negative dBm values are in two's complement
+    constexpr uint8_t nmbrExtraBytes{2};
+    uint8_t parametersIn[nmbrExtraBytes]{0}, dataOut[nmbrExtraBytes];
 
-
-void setTxParams( uint8_t paSelect, int8_t power, RadioRampTimes_t rampTime ) 
-{
-    uint8_t buf[2];
-
-    if( paSelect == RFO_LP )
-    {
-        if( power == 15 )
-        {
-            SUBGRF_SetPaConfig( 0x06, 0x00, 0x01, 0x01 );
-        }
-        else
-        {
-            SUBGRF_SetPaConfig( 0x04, 0x00, 0x01, 0x01 );
-        }
-        if( power >= 14 )
-        {
-            power = 14;
-        }
-        else if( power < -17 )
-        {
-            power = -17;
-        }
-        SUBGRF_WriteRegister( REG_OCP, 0x18 ); // current max is 80 mA for the whole device
+    if (transmitPowerdBm < 0) {
+        parametersIn[0] = 255 - static_cast<uint8_t>(-(transmitPowerdBm + 1));        // magic to turn negative signed value into a raw byte in two's complement
+    } else {
+        parametersIn[0] = static_cast<uint8_t>(transmitPowerdBm);        // if value is not negative, casting it is safe
     }
-    else // rfo_hp
-    {
-        // WORKAROUND - Better Resistance of the SX1262 Tx to Antenna Mismatch, see DS_SX1261-2_V1.2 datasheet chapter 15.2
-        // RegTxClampConfig = @address 0x08D8
-        SUBGRF_WriteRegister( REG_TX_CLAMP, SUBGRF_ReadRegister( REG_TX_CLAMP ) | ( 0x0F << 1 ) );
-        // WORKAROUND END
-
-        SUBGRF_SetPaConfig( 0x04, 0x07, 0x00, 0x01 );
-        if( power > 22 )
-        {
-            power = 22;
-        }
-        else if( power < -9 )
-        {
-            power = -9;
-        }
-        SUBGRF_WriteRegister( REG_OCP, 0x38 ); // current max 160mA for the whole device
-    }
-    buf[0] = power;
-    buf[1] = ( uint8_t )rampTime;
-    SUBGRF_WriteCommand( RADIO_SET_TXPARAMS, buf, 2 );
+    parametersIn[1] = 0x04;        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
+                                   // the remaining 4 bytes are empty 0x00 for LoRa
+    executeCommand(sx126xCommand::setTXPARAMS, parametersIn, nmbrExtraBytes);
 }
 
-
-void SUBGRF_SetModulationParams( ModulationParams_t *modulationParams )
-{
-    uint8_t n;
-    uint32_t tempVal = 0;
-    uint8_t buf[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-    // Check if required configuration corresponds to the stored packet type
-    // If not, silently update radio packet type
-    if( PacketType != modulationParams->PacketType )
-    {
-        SUBGRF_SetPacketType( modulationParams->PacketType );
-    }
-
-    switch( modulationParams->PacketType )
-    {
-    case PACKET_TYPE_GFSK:
-        n = 8;
-        tempVal = ( uint32_t )(( 32 * XTAL_FREQ ) / modulationParams->Params.Gfsk.BitRate );
-        buf[0] = ( tempVal >> 16 ) & 0xFF;
-        buf[1] = ( tempVal >> 8 ) & 0xFF;
-        buf[2] = tempVal & 0xFF;
-        buf[3] = modulationParams->Params.Gfsk.ModulationShaping;
-        buf[4] = modulationParams->Params.Gfsk.Bandwidth;
-        /* ST_WORKAROUND_BEGIN: Simplified frequency calculation */
-        SX_FREQ_TO_CHANNEL(tempVal, modulationParams->Params.Gfsk.Fdev);
-        /* ST_WORKAROUND_END */
-        buf[5] = ( tempVal >> 16 ) & 0xFF;
-        buf[6] = ( tempVal >> 8 ) & 0xFF;
-        buf[7] = ( tempVal& 0xFF );
-        SUBGRF_WriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
-        break;
-    case PACKET_TYPE_BPSK:
-        n = 4;
-        tempVal = ( uint32_t ) (( 32 * XTAL_FREQ) / modulationParams->Params.Bpsk.BitRate );
-        buf[0] = ( tempVal >> 16 ) & 0xFF;
-        buf[1] = ( tempVal >> 8 ) & 0xFF;
-        buf[2] = tempVal & 0xFF;
-        buf[3] = modulationParams->Params.Bpsk.ModulationShaping;
-        SUBGRF_WriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
-        break;
-    case PACKET_TYPE_LORA:
-        n = 4;
-        buf[0] = modulationParams->Params.LoRa.SpreadingFactor;
-        buf[1] = modulationParams->Params.LoRa.Bandwidth;
-        buf[2] = modulationParams->Params.LoRa.CodingRate;
-        buf[3] = modulationParams->Params.LoRa.LowDatarateOptimize;
-
-        SUBGRF_WriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
-
-        break;
-    case PACKET_TYPE_GMSK:
-        n = 5;
-        tempVal = ( uint32_t )(( 32 *XTAL_FREQ) / modulationParams->Params.Gfsk.BitRate );
-        buf[0] = ( tempVal >> 16 ) & 0xFF;
-        buf[1] = ( tempVal >> 8 ) & 0xFF;
-        buf[2] = tempVal & 0xFF;
-        buf[3] = modulationParams->Params.Gfsk.ModulationShaping;
-        buf[4] = modulationParams->Params.Gfsk.Bandwidth;
-        SUBGRF_WriteCommand( RADIO_SET_MODULATIONPARAMS, buf, n );
-        break;
-    default:
-    case PACKET_TYPE_NONE:
-      break;
-    }
+void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth, codingRate theCodingRate) {
+    constexpr uint8_t nmbrExtraBytes{8};
+    uint8_t parametersIn[nmbrExtraBytes]{0}, dataOut[nmbrExtraBytes];
+    parametersIn[0] = static_cast<uint8_t>(theSpreadingFactor);        //
+    parametersIn[1] = static_cast<uint8_t>(theBandwidth);              //
+    parametersIn[2] = static_cast<uint8_t>(theCodingRate);             //
+    parametersIn[3] = 0x01;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
+                                                                       // the remaining 4 bytes are empty 0x00 for LoRa
+    executeCommand(sx126xCommand::setPACKETPARAMS, parametersIn, nmbrExtraBytes);
 }
 
+void sx126x::setPacketParameters(uint8_t payloadLength) {
+    constexpr uint8_t nmbrExtraBytes{9};
+    uint8_t parametersIn[nmbrExtraBytes]{0}, dataOut[nmbrExtraBytes];
+    parametersIn[0] = 0x00;                 // MSB for PreambleLength
+    parametersIn[1] = 0x08;                 // LSB for PreambleLength LoRaWAN is fixed to 8 symbols
+    parametersIn[2] = 0x00;                 // Variable length packet (explicit header)
+    parametersIn[3] = payloadLength;        // Payload Length
+    parametersIn[4] = 0x01;                 // CRC On ??
+    parametersIn[5] = 0x00;                 // Standard IQ : for uplink. Downlink requires inverted IQ
+                                            // the remaining 3 bytes are empty 0x00 for LoRa
+    executeCommand(sx126xCommand::setPacketParameters, parametersIn, nmbrExtraBytes);
+}
 
+void sx126x::setPowerAmplifierConfig(uint8_t paDutyCycle, uint8_t hpMax, uint8_t deviceSel, uint8_t paLut) {
+    // Guessing from the STM32WLE datasheet, there is an SX1262 inside, ie. the high power version, with up to 22 dBm transmit power.
+    // However, in Europe, ETSI limits the power to 16 dBm anyway, so it seems like useing the extra power of the SX1262 vs the SX1261 is not allowed...
+
+    constexpr uint8_t nmbrExtraBytes{4};
+    uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];
+    parametersIn[0] = 0x06;        // paDutyCycle - +15 dBm
+    parametersIn[1] = 0x00;        // hpMax - no effect in case of SX1261 mode, only for SX1262
+    parametersIn[2] = 0x01;        // 0x01 = SX1261, 0x00 = SX1262 mode
+    parametersIn[3] = 0x01;        // reserved and always 0x01
+
+    executeCommand(sx126xCommand::setPowerAmplifierConfig, parametersIn, nmbrExtraBytes);
+}
+
+void sx126x::writeBuffer(uint8_t* data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
+    // Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
+    executeCommand(sx126xCommand::writeBuffer, parametersIn, nmbrExtraBytes);
+}
+
+uint32_t sx126x::readBuffer(uint8_t* data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
+    // Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
+    executeCommand(sx126xCommand::writeBuffer, parametersIn, nmbrExtraBytes);
+}
 
 // /* Includes ------------------------------------------------------------------*/
 // #include "radio_conf.h"
-// #include "radio_driver.h" 
+// #include "radio_driver.h"
 // #include "mw_log_conf.h"
 
 // /* External variables ---------------------------------------------------------*/
@@ -760,7 +827,7 @@ void SUBGRF_SetModulationParams( ModulationParams_t *modulationParams )
 //         ImageCalibrated = true;
 //     }
 //     /* ST_WORKAROUND_BEGIN: Simplified frequency calculation */
-//     SX_FREQ_TO_CHANNEL(chan, frequency);   
+//     SX_FREQ_TO_CHANNEL(chan, frequency);
 //     /* ST_WORKAROUND_END */
 //     buf[0] = ( uint8_t )( ( chan >> 24 ) & 0xFF );
 //     buf[1] = ( uint8_t )( ( chan >> 16 ) & 0xFF );
@@ -786,7 +853,7 @@ void SUBGRF_SetModulationParams( ModulationParams_t *modulationParams )
 //     return PacketType;
 // }
 
-// void SUBGRF_SetTxParams( uint8_t paSelect, int8_t power, RadioRampTimes_t rampTime ) 
+// void SUBGRF_SetTxParams( uint8_t paSelect, int8_t power, RadioRampTimes_t rampTime )
 // {
 //     uint8_t buf[2];
 
@@ -1177,7 +1244,7 @@ void SUBGRF_SetModulationParams( ModulationParams_t *modulationParams )
 //     RBI_ConfigRFSwitch(state);
 // }
 
-// uint8_t SUBGRF_SetRfTxPower( int8_t power ) 
+// uint8_t SUBGRF_SetRfTxPower( int8_t power )
 // {
 //     uint8_t paSelect= RFO_LP;
 
@@ -1221,7 +1288,7 @@ void SUBGRF_SetModulationParams( ModulationParams_t *modulationParams )
 //     return RF_WAKEUP_TIME;
 // }
 
-// /* HAL_SUBGHz Callbacks definitions */ 
+// /* HAL_SUBGHz Callbacks definitions */
 // void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz)
 // {
 //     RadioOnDioIrqCb( IRQ_TX_DONE );

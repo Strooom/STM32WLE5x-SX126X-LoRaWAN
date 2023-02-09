@@ -8,15 +8,15 @@
 #pragma once
 #include <stdint.h>
 
-enum class spreadingFactor : uint32_t {
-    SF5  = 0x05,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF6  = 0x06,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF7  = 0x07,
-    SF8  = 0x08,
-    SF9  = 0x09,
-    SF10 = 0x0A,
-    SF11 = 0x0B,
-    SF12 = 0x0C
+enum class sx126xState : uint32_t {
+    sleep,
+    calibration,
+    standbyRc,
+    standbyXosc,
+    frequencySynthesis,
+    transmit,
+    receive
+
 };
 
-const char* toString(spreadingFactor aSpreadingFactor);
+const char* toString(sx126xState aState);

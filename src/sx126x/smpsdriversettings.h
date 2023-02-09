@@ -8,15 +8,17 @@
 #pragma once
 #include <stdint.h>
 
-enum class spreadingFactor : uint32_t {
-    SF5  = 0x05,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF6  = 0x06,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF7  = 0x07,
-    SF8  = 0x08,
-    SF9  = 0x09,
-    SF10 = 0x0A,
-    SF11 = 0x0B,
-    SF12 = 0x0C
+enum class smpsDriveSetting : uint32_t {
+drive20 = 0x00,
+drive40 = 0x02,
+drive60 = 0x04,
+drive100 = 0x06
+
+// #define SMPS_DRV_20  ((uint8_t) ((0x0)<<1))
+// #define SMPS_DRV_40  ((uint8_t) ((0x1)<<1))
+// #define SMPS_DRV_60  ((uint8_t) ((0x2)<<1))
+// #define SMPS_DRV_100 ((uint8_t) ((0x3)<<1))
+// #define SMPS_DRV_MASK ((uint8_t) ((0x3)<<1))
+
 };
 
-const char* toString(spreadingFactor aSpreadingFactor);

@@ -8,15 +8,10 @@
 #pragma once
 #include <stdint.h>
 
-enum class spreadingFactor : uint32_t {
-    SF5  = 0x05,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF6  = 0x06,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
-    SF7  = 0x07,
-    SF8  = 0x08,
-    SF9  = 0x09,
-    SF10 = 0x0A,
-    SF11 = 0x0B,
-    SF12 = 0x0C
+enum class codingRate : uint32_t {
+    CR4_4 = 0x00,
+    CR4_5 = 0x01,
+    CR4_6 = 0x02,
+    CR4_7 = 0x03,
+    CR4_8 = 0x04,
 };
-
-const char* toString(spreadingFactor aSpreadingFactor);

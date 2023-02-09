@@ -8,14 +8,10 @@
 #pragma once
 #include <stdint.h>
 
-enum class sx126xState : uint32_t {
-    sleep,
-    calibration,
-    standby,
-    frequencySynthesis,
-    transmit,
-    receive
+enum class sx126xError : uint32_t {
+    none,
+    goSleepWhenNotInStandby,
 
 };
 
-const char* toString(sx126xState aState);
+const char* toString(sx126xError anError);

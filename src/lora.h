@@ -1,43 +1,21 @@
-#pragma once
+// #############################################################################
+// ### This file is part of the source code for the MuMo project             ###
+// ### https://github.com/Strooom/MuMo-v2-Node-SW                            ###
+// ### Author(s) : Pascal Roobrouck - @strooom                               ###
+// ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
+// #############################################################################
 
+#pragma once
 #include "stdint.h"
 
-class loRaBandwidth
+class loraPacket {
+  public:
+    float getTimeOnAir(); // calculates the timeOnAir for the current packet 
 
-{
-private:
-enum class bandwidth : uint32_t {
-loRaBandwidth500,
-loRaBandwidth500
-} theBandwidth;
-
-
-public:
-    loRaBandwidth
-    (/* args */);
-    ~loRaBandwidth
-    ();
-};
-
-loRaBandwidth
-::loRaBandwidth
-(/* args */)
-{
+  private:
+    preamble,
+        header,
+        headerCrc,
+        payload,
+        payloadCrc
 }
-
-loRaBandwidth
-::~loRaBandwidth
-()
-{
-}
-
-
-operationMode
-startup,
-sleep,
-standbyRc,
-standbyXOsc,
-frequencySynthesisMode,
-transmitMode,
-receiveMode
-
