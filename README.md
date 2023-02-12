@@ -1,30 +1,28 @@
 # Welcome to STM32WLE5-SX126X-LoRa
 
-This is a driver for the SX126X LoRa radio inside the STM32WLE5x.
+This is a driver for the **SX126X LoRa radio** inside the **STM32WLE5x**.
 
-I found the Semtech driver, as well as the ST-variant not really easy to use:
-* not optimal as this software tries to be generic, but as a result does not benefit from the HW resources of the MCU, such as CRC calculation, etc.
-* hard to read, as there are many preprocessor parts, making the code compile for different variants, eg single core, dual core..
-* contains more code than needed because it also supports Lora class B and C
+As part of the development for this Lora End-Node project (https://github.com/Strooom/MuMo-V2-Node-PCB (HW) https://github.com/Strooom/MuMo-v2-Node-SW (SW)) I was looking for a software library for the SX126x and LoRaWAN. Unfortunately, I could not find anything that met my needs.
+* Semtech's driver is not easy to reuse, mainly because it tries to implement all their radio chips, all LoraWAN versions and all 3 classes (A,B & C) in a single software repository.
+* Looking into the code, I found that ST had added several workarounds... Why are they needed ? How do they work ?
+* Inside the code I found numerous code smells, eg. negative values being assigned into unsigned int, etc..
+* Initially their code had FUOTA examples, but they were revoked, with the message that they didn't work..
+* In demo's from their code I saw people disable ADR, because it didn't work..
+* Everything is written in C io. C++
 
-A much simpler driver is possible when only Lora class A, on a single core STM32WLE.
+Investigating the existing code, I realised that writing my own driver would take a few months. But trying te reuse the existing code would take much more effort in the long term, en probably never reach the same quality.
 
-Finally the semtech code is C, whereas a basic C++ implementation is way more readible.
+# Requirements - Scope
 
+In order to limit the amount of work, and get something working soon, I decided to limit the scope and postpone some non-essential things for later:
+* only do LoRa - no (G)FSK, long packets, etc
+* only do LoRaWAN Class A
 
-This is currently a work-in-progress:
-* should have a working first release before 2023-03-31
+# Things for later
+* Class C when having external power
+* firmware Update Over The Air - FUOTA
 
-
-
-# Things this library does NOT do
-* (G)FSK modulation. This library only supports the LoRa modulation
-* initially I only support LoraWAN Class A, so no support for Class B and C - but the framework is ready for it, and it could be added later when needed
-* Implicit Header Mode - only Explicit Header Mode is supported
-* firmware Update Over The Air - FUOTA - Although I think this is a very powerfull feature, and mandatory to have when deploying a large number of nodes, I have the impression that it is not mature and not really working well. Demo applications from the suppliers were revoked because they were not working well. So I'll postpone FUOTA for a next version
-* As a result we do not really need multicast, clock-sync etc.
-* things I don't think this SW should do : 
- - measure battery level, measure other sensors (all this belongs in the application above), 
- - handle the non-volatile storage of data (this is needed in the application above anyway, so let them do this)
- - logging, tracing : you need this at application level anyway, don't do anything yourself in the LoraWAN layer
-* 
+# Application Functionality
+Some things are needed by the application anyway, so we don't need to repeat them in the SX126 / LoRaWAN driver:
+* handling of non-volatile storage
+* logging / tracing
