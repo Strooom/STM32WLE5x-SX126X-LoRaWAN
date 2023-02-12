@@ -19,11 +19,13 @@ In order to limit the amount of work, and get something working soon, I decided 
 * only do LoRaWAN Class A
 * only do LoRaWAN V1.0.4
 * only Activation By Personalization - ABP
+* only support region EU-868
 
 # Things for later
 * Over-The-Air Activation - OTAA
 * Class C when having external power
 * firmware Update Over The Air - FUOTA
+* other regions ??
 
 # Application Functionality
 Some things are needed by the application anyway, so we don't need to repeat them in the SX126 / LoRaWAN driver:
