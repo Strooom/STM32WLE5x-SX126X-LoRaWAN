@@ -17,8 +17,11 @@ Investigating the existing code, I realised that writing my own driver would tak
 In order to limit the amount of work, and get something working soon, I decided to limit the scope and postpone some non-essential things for later:
 * only do LoRa - no (G)FSK, long packets, etc
 * only do LoRaWAN Class A
+* only do LoRaWAN V1.0.4
+* only Activation By Personalization - ABP
 
 # Things for later
+* Over-The-Air Activation - OTAA
 * Class C when having external power
 * firmware Update Over The Air - FUOTA
 
