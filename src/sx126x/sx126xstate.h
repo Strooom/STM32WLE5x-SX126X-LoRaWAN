@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 enum class sx126xState : uint32_t {
+    boot,
     sleep,
     calibration,
     standbyRc,

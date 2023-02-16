@@ -7,21 +7,9 @@
 
 #pragma once
 #include <stdint.h>
-#include "region.h"
 
-enum class dataRate : uint32_t {
-    DR0,
-	DR1,
-	DR2,
-	DR3,
-	DR4,
-	DR5,
-	DR6,
-	DR7
+enum class packetType : uint8_t {
+    gfsk = 0x00,
+    lora = 0x01,
+    lrFhss = 0x03
 };
-
-const char* toString(dataRate aDataRate);
-
-uint32_t getMaximumPayloadLength(dataRate aDataRate);
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset);

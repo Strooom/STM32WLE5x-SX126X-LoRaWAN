@@ -21,7 +21,7 @@ enum class sx126xCommand : uint32_t {
     setCAD                   = 0xC5U,
     setTXCONTINUOUSWAVE      = 0xD1U,
     setTXCONTINUOUSPREAMBLE  = 0xD2U,
-    setREGULATORMODE         = 0x96U,
+    setRegulatorMode         = 0x96U,
     RADIO_CALIBRATE          = 0x89U,
     RADIO_CALIBRATEIMAGE     = 0x98U,
     setPowerAmplifierConfig  = 0x95U,
@@ -45,11 +45,11 @@ enum class sx126xCommand : uint32_t {
     // Commands Controlling the RF and Packets Settings - SX1261/2 Datasheet Rev 2.1 - Table 11-4
 
     setRfFRequency       = 0x86,
-    setPACKETTYPE        = 0x8AU,
+    setPacketType        = 0x8AU,
     getPACKETTYPE        = 0x11U,
     setTXPARAMS          = 0x8EU,
     setMODULATIONPARAMS  = 0x8BU,
-    setPacketParameters      = 0x8C,
+    setPacketParameters  = 0x8C,
     setCADPARAMS         = 0x88U,
     setBUFFERBASEADDRESS = 0x8FU,
     setLORASYMBTIMEOUT   = 0xA0U,

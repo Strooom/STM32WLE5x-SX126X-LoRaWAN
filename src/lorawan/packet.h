@@ -37,11 +37,3 @@ class frameCount {};
 
 class frameOptions {};
 
-enum class frameType : uint8_t {
-    joinRequest             = 0x00,
-    joinAccept              = 0x01,
-    unconfirmedDataUplink   = 0x02,
-    unconfirmedDataDownlink = 0x03,
-    confirmedDataUplink     = 0x04,
-    confirmedDataDownlink   = 0x05
-};
