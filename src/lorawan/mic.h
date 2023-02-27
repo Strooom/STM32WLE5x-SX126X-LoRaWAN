@@ -7,21 +7,11 @@
 
 #pragma once
 #include <stdint.h>
-#include "region.h"
 
-enum class dataRate : uint32_t {
-    DR0 = 0,
-    DR1 = 1,
-    DR2 = 2,
-    DR3 = 3,
-    DR4 = 4,
-    DR5 = 5,
-    DR6 = 6,
-    DR7 = 7
+class messageIntegrityCode {
+  public:
+    uint32_t calculate(const uint8_t* buffer, uint32_t length, const uint8_t* key) const;        // calculates the MIC over the buffer, using the key
+    bool validate(const uint8_t* buffer, uint32_t length, const uint8_t* key) const;             // validates the MIC over the buffer, using the key
+    static constexpr uint32_t length{4};                                                         // [bytes]
+  private:
 };
-
-const char* toString(dataRate aDataRate);
-
-uint32_t getMaximumPayloadLength(dataRate aDataRate);
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset);

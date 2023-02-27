@@ -8,6 +8,8 @@
 #pragma once
 #include <stdint.h>
 
+// It looks like in EU868, the bandwidth is fixed to 125kHz so we don't need this
+
 enum class bandwidth : uint32_t {
     b7dot81kHz,
     b10dot42kHz,
@@ -23,15 +25,3 @@ enum class bandwidth : uint32_t {
 
 const char* toString(bandwidth aBandwidth);
 
-
-
-//   LORA_BW_500                             = 6,
-//     LORA_BW_250                             = 5,
-//     LORA_BW_125                             = 4,
-//     LORA_BW_062                             = 3,
-//     LORA_BW_041                             = 10,
-//     LORA_BW_031                             = 2,
-//     LORA_BW_020                             = 9,
-//     LORA_BW_015                             = 1,
-//     LORA_BW_010                             = 8,
-//     LORA_BW_007                             = 0,

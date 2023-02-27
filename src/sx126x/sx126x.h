@@ -8,51 +8,51 @@
 // Notes :
 // This driver intends to drive the SX126X chip from Semtech, embedded in the STM32WLE from ST
 // As the (current) scope for my application is only LoRa in the EU868 region, all functions outside this scope are not implemented (FSK, long packets, etc..)
-// As the SX126X is embedded inside the STM32WEL, some of the IOs are 'connected' to registers in the STM32WLE
+// As the SX126X is embedded inside the STM32WLE5, some of the IOs are 'connected' to registers in the STM32WLE
 // * RESET
 // * BUSY
 // * interrupt lines..
 
 #pragma once
 #include <stdint.h>
-#include "stm32wle_peripheral.h"
+
+#include "../general/stm32wle5.h"        // this defines all register addresses of the STM32WLE5
 #include "sx126xregisters.h"
 #include "sx126xstate.h"
 #include "sx126xerrors.h"
 #include "sx126xcommands.h"
 #include "sx126xstandbymodes.h"
 #include "sx126packettypes.h"
+#include "sx126xramptime.h"
 
-#include "../lorawan/bandwidth.h"
-#include "../lorawan/spreadingfactor.h"
-#include "../lorawan/codingrate.h"
+#include "../lora/bandwidth.h"
+#include "../lora/codingrate.h"
+#include "../lora/spreadingfactor.h"
+#include "../lora/crctype.h"
+#include "../lora/headertype.h"
+#include "../lora/lowdatarateoptimize.h"
+#include "../lora/invertiq.h"
 
-#define RCC_CSR (*(volatile uint32_t *)0x5800 0094)         // RCC control/status register - datasheet RM0461 page 288
-#define RFRST 0x01 << 15;                                   // RF reset bit in RCC_CSR
-#define RCC_CFGR (*(volatile uint32_t *)0x5800 0008)        // RCC clock configuration register - datasheet RM0461 page 254
 
-#define SX126X_SPI_CR1 (*(volatile uint32_t *)0x5801 0000)        // SPI control register 1 - datasheet RM0461 page 1197
-#define SX126X_SPI_CR2 (*(volatile uint32_t *)0x5801 0004)        // SPI control register 2 - datasheet RM0461 page 1199
-#define SX126X_SPI_SR (*(volatile uint32_t *)0x5801 0008)         // SPI status register - datasheet RM0461 page 1201
-#define SX126X_SPI_DR (*(volatile uint32_t *)0x5801 000C)         // SPI data register - datasheet RM0461 page 1203
-
-#define PWR_SR2 (*(volatile uint32_t *)0x5801 000C)        // Power status register 2 - datasheet RM0461 page 219
-#define RFBUSYS 0x01 << 1;                                 // Radio busy signal status
-
-class sx126x : stm32wlePeripheral {
+class sx126x {
   public:
-    void reset();
+    void reset(bool waitForNoBusy = false);        // reset the SX126 from its HW reset pin
     void initialize();
+    void prepareForSleep();
+    void goSleep();
+    void goStandby(sx126xStandbyMode aStandbyMode);
+    bool isStandby();
+
 
     bool detectChannelActivity();
-    void prepareForSleep();
     void restoreAfterSleep();
     bool isInitialized();
 
-    void setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth, codingRate theCodingRate);
-    void setPacketParameters(uint8_t payloadLength);
+    void setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth, codingRate theCodingRate, lowDataRateOptimize theLowDataRateOptimize);
     void setRfFrequency(uint32_t frequency);
-    void setTxParameters(int8_t transmitPowerdBm);
+    void setPacketType(packetType thePacketType);
+    void setPacketParameters(uint16_t preambleLength, headerType theHeaderType, uint8_t payloadLength, CRCType theCRCType, InvertIQ theInvertIQ);
+    void setTxParameters(int8_t transmitPowerdBm, rampTime theRampTime);
 
     // void setTxParameters(uint8_t paSelect, int8_t power, RadioRampTimes_t rampTime);
 
@@ -61,9 +61,6 @@ class sx126x : stm32wlePeripheral {
     sx126xState getState() const;
     // uint32_t getTimeOnAir(RadioModems_t modem, uint32_t bandwidth, uint32_t datarate, uint8_t coderate, uint16_t preambleLen, bool fixLen, uint8_t payloadLen, bool crcOn);
 
-    void goSleep();
-    void goStandby(sx126xStandbyMode aStandbyMode);
-    bool isStandby();
 
     void writeRegister(sx126xRegister theRegister, uint32_t newValue);
     uint32_t readRegister(sx126xRegister theRegister);
@@ -83,9 +80,8 @@ class sx126x : stm32wlePeripheral {
     sx126xError getLastError();        // reads and clears the last error that occured
 
   private:
-    void setPacketType(packetType thePacketType);
 
-    void executeCommand(sx126xCommand opcode, uint8_t *parametersIn, uint8_t *dataOut, uint8_t nmbrExtraBytes, bool waitOnBusy = false);
+    void executeCommand(sx126xCommand opcode, uint8_t *parametersIn, uint8_t arametersInLength, uint8_t *dataOut, uint8_t dataOutLength, bool waitOnBusy = false);
 
     sx126xError lastError{sx126xError::none};        // remembers the last error that occured
     sx126xState theState{sx126xState::boot};
@@ -99,22 +95,3 @@ class sx126x : stm32wlePeripheral {
     uint8_t readSPI();
 };
 
-// void SUBGRF_SetPayload(uint8_t *payload, uint8_t size) {
-//     SUBGRF_WriteBuffer(0x00, payload, size);
-// }
-
-// void SUBGRF_SetTx(uint32_t timeout) {
-//     uint8_t buf[3];
-
-//     OperatingMode = MODE_TX;
-
-//     buf[0] = (uint8_t)((timeout >> 16) & 0xFF);
-//     buf[1] = (uint8_t)((timeout >> 8) & 0xFF);
-//     buf[2] = (uint8_t)(timeout & 0xFF);
-//     SUBGRF_WriteCommand(RADIO_SET_TX, buf, 3);
-// }
-
-// void SUBGRF_SendPayload(uint8_t *payload, uint8_t size, uint32_t timeout) {
-//     SUBGRF_SetPayload(payload, size);
-//     SUBGRF_SetTx(timeout);
-// }

@@ -7,21 +7,11 @@
 
 #pragma once
 #include <stdint.h>
-#include "region.h"
 
-enum class dataRate : uint32_t {
-    DR0 = 0,
-    DR1 = 1,
-    DR2 = 2,
-    DR3 = 3,
-    DR4 = 4,
-    DR5 = 5,
-    DR6 = 6,
-    DR7 = 7
+class macPayload {
+  public:
+    uint32_t maximumLength{0};        // this is region and data-rate dependent - see regional parameters
+  private:
 };
 
-const char* toString(dataRate aDataRate);
 
-uint32_t getMaximumPayloadLength(dataRate aDataRate);
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset);

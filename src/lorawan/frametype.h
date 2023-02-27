@@ -6,20 +6,17 @@
 // #############################################################################
 
 #pragma once
-
 #include <stdint.h>
 
-#define peripheralBaseAddress	0x4000000
-
-class stm32wlePeripheral {
-public:
-	virtual void initialize() = 0;
-	virtual void prepareForSleep() = 0;
-	virtual void restoreAfterSleep() = 0;
-	bool isInitialized();
-
-private:
-	bool initialized{false};
+enum class frameType : uint8_t {
+    joinRequest         = 0b000,
+    joinAccept          = 0b001,
+    unconfirmedDataUp   = 0b010,
+    unconfirmedDataDown = 0b011,
+    confirmedDataUp     = 0b100,
+    confirmedDataDown   = 0b101,
+    rejoinRequest       = 0b110,
+    proprietary         = 0b111
 };
 
-
+const char* toString(frameType aFrameType);

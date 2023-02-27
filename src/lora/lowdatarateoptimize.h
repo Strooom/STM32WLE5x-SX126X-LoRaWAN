@@ -7,21 +7,10 @@
 
 #pragma once
 #include <stdint.h>
-#include "region.h"
 
-enum class dataRate : uint32_t {
-    DR0 = 0,
-    DR1 = 1,
-    DR2 = 2,
-    DR3 = 3,
-    DR4 = 4,
-    DR5 = 5,
-    DR6 = 6,
-    DR7 = 7
+enum class lowDataRateOptimize : uint8_t {
+    off = 0x00,
+    on = 0x01
 };
 
-const char* toString(dataRate aDataRate);
-
-uint32_t getMaximumPayloadLength(dataRate aDataRate);
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset);
+const char* toString(lowDataRateOptimize theLowDataRateOptimize);

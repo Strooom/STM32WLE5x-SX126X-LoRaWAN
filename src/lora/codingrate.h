@@ -8,9 +8,12 @@
 #pragma once
 #include <stdint.h>
 
-enum class loraMacState : uint32_t {
-    boot
+// TODO : check coding values with LoRaWAN spec
 
+enum class codingRate : uint32_t {
+    cr4_4 = 0x00,
+    cr4_5 = 0x01,
+    cr4_6 = 0x02,
+    cr4_7 = 0x03,
+    cr4_8 = 0x04,
 };
-
-const char* toString(loraMacState aState);

@@ -8,11 +8,17 @@
 #pragma once
 #include <stdint.h>
 #include "datarate.h"
+#include "bandwidth.h"
+#include "spreadingfactor.h"
 
-class AdaptiveDataRate {
+class adaptiveDataRate {
   public:
     void setDataRate(dataRate newDataRate);
+    void increaseDataRate();
     void decreaseDataRate();
+    bandwidth getBandwidth() const;
+    spreadingFactor getSpreadingFactor() const;
+
     static constexpr uint32_t unAcknowledgedUplinksLimit{64}; // after this amount of uplink messages, we set a flag to request an acknoledge
     static constexpr uint32_t unAcknowledgedUplinksDelay{32}; // after this amount of uplink messages with request for acknowledge flag set, and no acknowledge received, we decrease the data rate.
 

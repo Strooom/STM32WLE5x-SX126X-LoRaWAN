@@ -9,7 +9,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class loraCommand : uint32_t {
+enum class macCommand : uint32_t {
     linkCheck                      = 0x02,
     linkAdaptiveDataRate           = 0x03,
     endDeviceTransmitDutyCycle     = 0x04,
@@ -21,10 +21,5 @@ enum class loraCommand : uint32_t {
     deviceTime                     = 0x0D
 };
 
-enum class direction : uint32_t {
-    uplink,
-    downlink
-};
 
-const char* toString(loraCommand aCommand);
-const char* toString(direction aDirection);
+const char* toString(macCommand aCommand);

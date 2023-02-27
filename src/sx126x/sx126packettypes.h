@@ -10,6 +10,6 @@
 
 enum class packetType : uint8_t {
     gfsk = 0x00,
-    lora = 0x01,
+    LoRa = 0x01,
     lrFhss = 0x03
 };

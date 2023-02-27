@@ -6,16 +6,16 @@
 // #############################################################################
 
 #pragma once
-#include "stdint.h"
+#include <stdint.h>
 
-class loraPacket {
+class deviceAddress {
   public:
-    float getTimeOnAir(); // calculates the timeOnAir for the current packet 
-
+    deviceAddress(uint32_t theDeviceAddress);
+    uint32_t asUint32() const;                         // return the deviceAddress as a uint32_t
+    void fromUint32(uint32_t theDeviceAddress);        // decode the deviceAddress from a uint32_t
+    static constexpr uint32_t length{4};               // [bytes]
   private:
-    preamble,
-        header,
-        headerCrc,
-        payload,
-        payloadCrc
-}
+    uint32_t theDeviceAddress;
+};
+
+// Note : eventually we are going to read this from the UID64 of the STM32WLE5JC

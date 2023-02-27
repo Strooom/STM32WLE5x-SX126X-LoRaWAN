@@ -7,6 +7,27 @@
 
 #include "sx126x.h"
 
+peripheralRegister SPI_SX126X_CR1(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x00));
+peripheralRegister SPI_SX126X_CR2(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x04));
+peripheralRegister SPI_SX126X_SR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x08));
+peripheralRegister SPI_SX126X_DR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x0C));
+peripheralRegister SPI_SX126X_CRCPR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x10));
+peripheralRegister SPI_SX126X_RXCRCR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x14));
+peripheralRegister SPI_SX126X_CTXCRCR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x18));
+
+extern peripheralRegister RCC_APB3ENR;
+extern peripheralRegister RCC_CSR;
+extern peripheralRegister PWR_SR2;
+
+// Notes on the SX126x to STM32WLE interface
+// The SX126x RESET is connected to RCC_CSR:15 (RFRST) for driving it, and RCC_CSR:14 (RFRSTF) for reading it
+// The SX126x BUSY is connected to PWR_SR2:1 (RFBUSY)
+// The SX126x SPI NSS 
+// * the functionality is enabled by PWR_CR1:3 (SUBGHZSPINSSSEL)
+// * the NSS is driven by PWR_SUBGHZSPICR:14 (NSS)
+
+
+
 void sx126x::setPacketType(packetType thePacketType) {
     constexpr uint8_t nmbrExtraBytes{1};                                                        //
     uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];                              //
@@ -80,22 +101,19 @@ void sx126x::setRegulatorMode() {
     executeCommand(sx126xCommand::setRegulatorMode, parametersIn, nmbrExtraBytes);        //
 }
 
-void sx126x::reset() {
-    // control the RESET line of the SX126X from the STM32WLE RCC registers
-    // SX126x datasheet recommends to keep RESET low for 100 uS
-    // After reset
-    // * SX126x performs a calibration
-    // * all context/config inside the SX126x is lost -> initialization is needed
+void sx126x::reset(bool waitForNoBusy = false) {
+    constexpr uint32_t RFRST{15};
+    constexpr uint32_t RFRSTF{14};
+    constexpr uint32_t RFBUSYS{1};
 
-    RCC_CSR
+    RCC_CSR.setBit(RFRSTF);          // activate reset
+                                     // How long should we wait ? 1 ms
+    RCC_CSR.clearBit(RFRSTF);        // deactivate reset line
 
-    CLEAR_BIT(RCC->CSR, RCC_CSR_RFRST);        // Drive RESET LOW
-                                               // wait 100uS
-    SET_BIT(RCC->CSR, RCC_CSR_RFRST);          // Drive RESET HIGH
-    READ_BIT(RCC->CSR, RCC_CSR_RFRSTF);        // Read RFRSTF flag and wait for SX126x to come out of reset
-    // TODO : wait for flag
-
-    // Also, after reset, the SX126x will be Busy for some time, so check this before doing anything
+    if (waitForNoBusy) {        //      optionally, wait until the SX126x is no longer busy
+        while (PWR_SR2.readBit(RFBUSYS)) {
+        }
+    }
 }
 
 void sx126x::initialize() {
@@ -103,13 +121,10 @@ void sx126x::initialize() {
     // The SPI between STM32WLE and SX126x runs on the PCLK3 clock, divided by 2.
     // The SX126x-SPI interface has a maximum of 16 MhZ
     // As we are running the whole STM32WLE on 16 MHz (or lower), we can send the SYSCLK straight to the PCLK3 which means this SPI will run on 8 MHz
-    // MODIFY_REG(RCC->CFGR, RCC_CFGR_SW, Source);        // enable clocks to SPI1
+    RCC_APB3ENR.setBit(0);
+    // Wait a few clocks before accessing the peripheral
 
     // 2. Configure SPI1
-
-    /* Disable SUBGHZSPI Peripheral */
-    CLEAR_BIT(SUBGHZSPI->CR1, SPI_CR1_SPE);
-
     /*----------------------- SPI CR1 Configuration ----------------------------*
      *             SPI Mode: Master                                             *
      *   Communication Mode: 2 lines (Full-Duplex)                              *
@@ -120,19 +135,21 @@ void sx126x::initialize() {
      *            First bit: MSB                                                *
      *      CRC calculation: Disable                                            *
      *--------------------------------------------------------------------------*/
-    WRITE_REG(SUBGHZSPI->CR1, (SPI_CR1_MSTR | SPI_CR1_SSI | BaudratePrescaler | SPI_CR1_SSM));
-
-    /*----------------------- SPI CR2 Configuration ----------------------------*
+    constexpr uint32_t MSTR{2};
+    SPI_SX126X_CR1.setBit(MSTR); // All other bits are 0 and this is what we need
+        /*----------------------- SPI CR2 Configuration ----------------------------*
      *            Data Size: 8bits                                              *
      *              TI Mode: Disable                                            *
      *            NSS Pulse: Disable                                            *
      *    Rx FIFO Threshold: 8bits                                              *
      *--------------------------------------------------------------------------*/
-    WRITE_REG(SUBGHZSPI->CR2, (SPI_CR2_FRXTH | SPI_CR2_DS_0 | SPI_CR2_DS_1 | SPI_CR2_DS_2));
-
-    /* Enable SUBGHZSPI Peripheral */
-    SET_BIT(SUBGHZSPI->CR1, SPI_CR1_SPE);
-
+    constexpr uint32_t FRXTH{12};
+    SPI_SX126X_CR2.setBit(FRXTH);
+    // SPI_SX126X_CR2.writeBits(0xF << 8, 0x7 << 8); // 8 bits data size is already the default
+    
+    constexpr uint32_t SPE{6};
+    SPI_SX126X_CR1.setBit(SPE);         /* Enable SUBGHZSPI Peripheral */
+        
     // 3. Configure the SX126x
     setRegulatorMode();
     setPowerAmplifierConfig(uint8_t paDutyCycle, uint8_t hpMax, uint8_t deviceSel, uint8_t paLut);
