@@ -67,3 +67,8 @@ firmware.elf
 # ### VSCodeCounter         ###
 # #############################
 .VSCodeCounter/*
+
+# #############################
+# ### FreeFileSync          ###
+# #############################
+src/sync.ffs_db
