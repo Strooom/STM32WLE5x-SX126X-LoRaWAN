@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include "bytebuffer.h"
 #include "frameport.h"
-#include "macstate.h"
+#include "radiostate.h"
 #include "deviceaddress.h"
 #include "loramessage.h"
 #include "../general/aeskey.h"

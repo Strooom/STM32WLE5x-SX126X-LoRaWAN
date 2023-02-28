@@ -16,6 +16,7 @@ void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFram
         encryptApplicationPayload();
         uplinkMessage.constructUplinkMessage(tmpFrameHeader, theFramePort, applicationPayloadToSend, key1);
         uplinkMessage.transmit();
+        // TODO : update the LoRaWAN state and store it in Non-Volatile Storage
     } else {
         // TODO : log error : trying to send too much data
     }

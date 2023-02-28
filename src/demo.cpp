@@ -3,13 +3,16 @@
 #include "timer.h"        // dummy timer class, FTTB
 #include "lorawan.h"
 #include "bytebuffer.h"
-
+#include "general/nvs.h"
 
 timer txTimer;
+nonVolatileStorage nvs;
 byteBuffer myData;
 LoRaWAN loraNetwork;
 
 int main() {
+    uint32_t devAdrrBlockIndex = nvs.addBlock(4);
+
     myData.set("Hello World", 11);
 
     while (true) {
@@ -23,20 +26,6 @@ int main() {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // class loRaWanNetwork {
 //   public:
