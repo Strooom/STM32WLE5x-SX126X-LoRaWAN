@@ -22,11 +22,9 @@ extern peripheralRegister PWR_SR2;
 // Notes on the SX126x to STM32WLE interface
 // The SX126x RESET is connected to RCC_CSR:15 (RFRST) for driving it, and RCC_CSR:14 (RFRSTF) for reading it
 // The SX126x BUSY is connected to PWR_SR2:1 (RFBUSY)
-// The SX126x SPI NSS 
+// The SX126x SPI NSS
 // * the functionality is enabled by PWR_CR1:3 (SUBGHZSPINSSSEL)
 // * the NSS is driven by PWR_SUBGHZSPICR:14 (NSS)
-
-
 
 void sx126x::setPacketType(packetType thePacketType) {
     constexpr uint8_t nmbrExtraBytes{1};                                                        //
@@ -136,8 +134,8 @@ void sx126x::initialize() {
      *      CRC calculation: Disable                                            *
      *--------------------------------------------------------------------------*/
     constexpr uint32_t MSTR{2};
-    SPI_SX126X_CR1.setBit(MSTR); // All other bits are 0 and this is what we need
-        /*----------------------- SPI CR2 Configuration ----------------------------*
+    SPI_SX126X_CR1.setBit(MSTR);        // All other bits are 0 and this is what we need
+    /*----------------------- SPI CR2 Configuration ----------------------------*
      *            Data Size: 8bits                                              *
      *              TI Mode: Disable                                            *
      *            NSS Pulse: Disable                                            *
@@ -146,10 +144,10 @@ void sx126x::initialize() {
     constexpr uint32_t FRXTH{12};
     SPI_SX126X_CR2.setBit(FRXTH);
     // SPI_SX126X_CR2.writeBits(0xF << 8, 0x7 << 8); // 8 bits data size is already the default
-    
+
     constexpr uint32_t SPE{6};
-    SPI_SX126X_CR1.setBit(SPE);         /* Enable SUBGHZSPI Peripheral */
-        
+    SPI_SX126X_CR1.setBit(SPE); /* Enable SUBGHZSPI Peripheral */
+
     // 3. Configure the SX126x
     setRegulatorMode();
     setPowerAmplifierConfig(uint8_t paDutyCycle, uint8_t hpMax, uint8_t deviceSel, uint8_t paLut);
@@ -230,7 +228,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     executeCommand(sx126xCommand::setRfFRequency, parametersIn, dataOut, nmbrExtraBytes);
 }
 
-void sx126x::setTxParameters(int8_t transmitPowerdBm) {        // caution - signed int8, negative dBm values are in two's complement
+void sx126x::setTxParameters(int8_t transmitPowerdBm, rampTime theRamptime) {        // caution - signed int8, negative dBm values are in two's complement
     constexpr uint8_t nmbrExtraBytes{2};
     uint8_t parametersIn[nmbrExtraBytes]{0}, dataOut[nmbrExtraBytes];
 
@@ -239,8 +237,8 @@ void sx126x::setTxParameters(int8_t transmitPowerdBm) {        // caution - sign
     } else {
         parametersIn[0] = static_cast<uint8_t>(transmitPowerdBm);        // if value is not negative, casting it is safe
     }
-    parametersIn[1] = 0x04;        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
-                                   // the remaining 4 bytes are empty 0x00 for LoRa
+    parametersIn[1] = theRamptime;        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
+                                          // the remaining 4 bytes are empty 0x00 for LoRa
     executeCommand(sx126xCommand::setTXPARAMS, parametersIn, dataOut, nmbrExtraBytes);
 }
 

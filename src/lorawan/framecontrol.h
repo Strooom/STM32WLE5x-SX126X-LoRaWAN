@@ -11,7 +11,8 @@
 
 class frameControl {
   public:
-    frameControl(linkDirection theLinkDirection);
+    frameControl();        // default constructor
+    frameControl(linkDirection theLinkDirection); // slighly smart constructor, creates one based on the link direction
     void set(bool ADR, bool ADRACKReq, bool ACK, bool ClassB, uint8_t FOptsLen);
     uint8_t asByte() const;                     // return the frameControl as a byte
     void fromByte(uint8_t theByte);             // decode the frameControl from a byte

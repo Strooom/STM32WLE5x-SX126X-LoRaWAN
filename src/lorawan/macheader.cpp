@@ -10,6 +10,10 @@
 
 macHeader::macHeader(frameType theFrameType) : theFrameType{theFrameType} {};
 
+void macHeader::set(frameType newFrameType) {
+    theFrameType = newFrameType;
+}
+
 uint8_t macHeader::asByte() const {
     return static_cast<uint8_t>(theFrameType) << 5;
 }

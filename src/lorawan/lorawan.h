@@ -7,23 +7,38 @@
 
 #pragma once
 #include <stdint.h>
+#include "bytebuffer.h"
+#include "frameport.h"
 #include "macstate.h"
+#include "deviceaddress.h"
+#include "loramessage.h"
+#include "../general/aeskey.h"
+#include "dutycycle.h"
 
 class LoRaWAN {
   public:
     void initialize();
-    macState getState() const;
-    // bool joinNetwork(); // TODO : using ABP for the time being to keep things simple for now
-    bool isReadyToTRansmit();
-    void sendMessage(const uint8_t* payload);
-    
+    radioState getState() const;
+
+    bool isReadyToTransmit() const;
+    uint32_t getMaxApplicationPayloadLength() const;
+    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
+    //    void sendUplinkConfirmed(byteBuffer& applicationPayloadToSend);
+    void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
+
+    void runMAC();        // taking care of all the MAC layer logic
+
+    void encryptApplicationPayload();
 
     // TODO : we need a reference to NVS so we can store keys etc in EEPROM
 
   private:
-    macState theState{macState::idle};
-    static constexpr uint32_t rxBufferLength{256};
-    static constexpr uint32_t txBufferLength{256};
-    uint8_t rxBuffer[rxBufferLength]{};
-    uint8_t txBuffer[txBufferLength]{};
+    deviceAddress thisDeviceAddress{0U};
+    aesKey key1;
+    uint32_t uplinkFrameCount{0};
+    uint32_t downlinkFrameCount{0};
+    radioState theState{radioState::idle};
+    loraMessage uplinkMessage;
+    loraMessage downlinkMessage;
+    dutyCycle theDutyCycle;
 };

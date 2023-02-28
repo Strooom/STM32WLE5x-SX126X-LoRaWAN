@@ -7,11 +7,13 @@
 
 #pragma once
 #include <stdint.h>
+#include "../general/aeskey.h"
+
 
 class messageIntegrityCode {
   public:
-    uint32_t calculate(const uint8_t* buffer, uint32_t length, const uint8_t* key) const;        // calculates the MIC over the buffer, using the key
-    bool validate(const uint8_t* buffer, uint32_t length, const uint8_t* key) const;             // validates the MIC over the buffer, using the key
+    uint32_t calculate(aesKey aKey);        // calculates the MIC over the buffer, using the key
+    bool validate(const uint8_t* buffer, uint32_t length, aesKey aKey) ;             // validates the MIC over the buffer, using the key
     static constexpr uint32_t length{4};                                                         // [bytes]
   private:
 };

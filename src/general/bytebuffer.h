@@ -8,4 +8,17 @@
 #pragma once
 #include <stdint.h>
 
-typedef uint8_t framePort;
+// In LoRaWAN data is usually binary io null terminated strings, so I use this class to easily pass data around between application, Lorawan and the LoRa modem
+
+class byteBuffer {
+  public:
+    void set(const uint8_t* newData, uint32_t newDataLength);
+
+    static constexpr uint32_t maxLength{256};
+    uint8_t buffer[maxLength]{};
+    uint32_t length{0};
+
+    void dump();        // dump the contents to the logging output for testing purposes
+
+  private:
+};

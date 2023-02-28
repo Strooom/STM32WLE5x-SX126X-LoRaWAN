@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class macState : uint32_t {
+enum class radioState : uint32_t {
     idle,                      // waiting for the application to start a transmission / SX126x is powered-down
     waitForTxReady,            // configured the radio for transmit, waiting until it is powered-up and ready to transmit
     waitForTxComplete,         // transmitting, waiting for the radio to finish transmitting
@@ -18,4 +18,4 @@ enum class macState : uint32_t {
     waitForRx2Timeout,         // listening / Rx : either we receive a msg or we timeout
 };
 
-const char* toString(macState aState);
+const char* toString(radioState aState);

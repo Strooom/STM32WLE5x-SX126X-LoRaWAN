@@ -8,4 +8,9 @@
 #pragma once
 #include <stdint.h>
 
-typedef uint8_t framePort;
+
+class aesKey{
+    public:
+    private:
+        uint8_t key[16]; // 128 bits = 16 bytes
+};

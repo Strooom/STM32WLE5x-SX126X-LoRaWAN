@@ -7,11 +7,18 @@
 
 #pragma once
 #include <stdint.h>
+#include "../general/bytebuffer.h"
+#include "frameheader.h"
+#include "frameport.h"
 
 class macPayload {
   public:
-    uint32_t maximumLength{0};        // this is region and data-rate dependent - see regional parameters
+    void set(frameHeader theFrameHeader, framePort theFramePort, byteBuffer applicationPayload);
+    uint8_t *get();
+    uint32_t getLength();
+
   private:
+    frameHeader FHDR;
+    framePort FPort;
+    byteBuffer FRMPayload;
 };
-
-

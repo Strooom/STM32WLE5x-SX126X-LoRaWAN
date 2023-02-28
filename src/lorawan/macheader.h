@@ -7,10 +7,12 @@
 
 #pragma once
 #include <stdint.h>
+#include "frametype.h"
 
 class macHeader {
   public:
     macHeader(frameType theFrameType);          // construct a macHeader with the given frameType
+    void set(frameType theFrameType);                // set the macHeader with the given frameType
     uint8_t asByte() const;                     // return the macHeader as a byte
     static constexpr uint32_t length{1};        // [bytes]
   private:
