@@ -12,7 +12,7 @@ uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {
 void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFramePort) {
     if (applicationPayloadToSend.length <= getMaxApplicationPayloadLength()) {
         frameControl uplinkFrameControl(linkDirection::uplink);
-        frameHeader tmpFrameHeader(thisDeviceAddress, uplinkFrameControl, uplinkFrameCount);
+        frameHeader tmpFrameHeader(devAddr, uplinkFrameControl, uplinkFrameCount);
         encryptApplicationPayload();
         uplinkMessage.constructUplinkMessage(tmpFrameHeader, theFramePort, applicationPayloadToSend, key1);
         uplinkMessage.transmit();

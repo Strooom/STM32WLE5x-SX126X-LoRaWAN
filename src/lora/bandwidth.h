@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 // It looks like in EU868, the bandwidth is fixed to 125kHz so we don't need this
+// still, it doesn't harm to keep it, maybe later we extend data rates and/or regions
 
 enum class bandwidth : uint32_t {
     b7dot81kHz,

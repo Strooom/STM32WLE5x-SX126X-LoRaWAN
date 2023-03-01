@@ -6,7 +6,15 @@
 
 #include "nvs.h"
 
-bool isReady() {
+void nonVolatileStorage::initialize() {
+    addBlock(4);
+    addBlock(16);
+    addBlock(16);
+    addBlock(4);
+    addBlock(4);
+}
+
+bool nonVolatileStorage::isReady() {
     return (HAL_OK == HAL_I2C_IsDeviceReady(I2C_HandleTypeDef * hi2c, uint16_t DevAddress, uint32_t Trials, uint32_t Timeout));
 }
 
@@ -25,7 +33,7 @@ uint8_t nonVolatileStorage::read8(uint32_t blockIndex) {
 uint16_t nonVolatileStorage::read16(uint32_t blockIndex) {}
 uint32_t nonVolatileStorage::read32(uint32_t blockIndex) {}
 uint64_t nonVolatileStorage::read64(uint32_t blockIndex) {}
-aesKey nonVolatileStorage::readAesKey(uint32_t blockIndex) {}
+void nonVolatileStorage::readAesKey(uint32_t blockIndex, aesKey &theAesKey) {}
 
 void nonVolatileStorage::write(uint32_t blockIndex, uint8_t sourceData) {
     if (isValidBlockIndex(blockIndex)) {

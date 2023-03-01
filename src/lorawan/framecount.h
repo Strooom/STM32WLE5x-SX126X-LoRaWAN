@@ -16,4 +16,5 @@ class frameCount {
     static constexpr uint32_t length{4};               // [bytes]
   private:
     uint32_t theFrameCount;
+    const uint32_t nvsBlockIndex;
 };

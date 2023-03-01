@@ -10,7 +10,7 @@
 
 enum class crcType : uint8_t {
     off = 0x00,
-    on = 0x0
+    on = 0x01
 };
 
 const char* toString(crcType theCrcType);

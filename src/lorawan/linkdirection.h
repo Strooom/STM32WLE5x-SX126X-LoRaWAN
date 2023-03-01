@@ -9,8 +9,8 @@
 #include <stdint.h>
 
 enum class linkDirection : uint8_t {
-    uplink,
-    downlink
+    uplink = 0x00,
+    downlink = 0x01
 };
 
 

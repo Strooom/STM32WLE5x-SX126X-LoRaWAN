@@ -5,9 +5,14 @@
 #include "bytebuffer.h"
 #include "general/nvs.h"
 
-timer txTimer;
 nonVolatileStorage nvs;
-byteBuffer myData;
+
+timer txTimer;            // dummy to make the intellisense happy
+byteBuffer myData;        // demo data to send
+
+// allocating the necessary blocks in the NVS - NOTE : do not change the order of these blocks if you want future firmware to find this data in the correct location. Only add new blocks to the end of the list. Blocks no longer needed can be ignored by doing (void) nvs.AddBlock(x);
+
+
 LoRaWAN loraNetwork;
 
 int main() {

@@ -7,6 +7,7 @@
 
 #pragma once
 #include <stdint.h>
+#include "../general/nvs.h"
 
 class deviceAddress {
   public:
@@ -16,6 +17,7 @@ class deviceAddress {
     static constexpr uint32_t length{4};               // [bytes]
   private:
     uint32_t theDeviceAddress;
+    const uint32_t nvsBlockIndex;
 };
 
 // Note : eventually we are going to read this from the UID64 of the STM32WLE5JC

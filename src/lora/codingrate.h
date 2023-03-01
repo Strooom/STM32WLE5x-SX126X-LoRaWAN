@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 
-// TODO : check coding values with LoRaWAN spec
+// It seems LoRaWAN fixes the coding rate to 4/5 (for the payload) and 4/8 (for the header), so we don't really need all the others
 
 enum class codingRate : uint32_t {
     cr4_4 = 0x00,

@@ -33,10 +33,10 @@ class LoRaWAN {
     // TODO : we need a reference to NVS so we can store keys etc in EEPROM
 
   private:
-    deviceAddress thisDeviceAddress{0U};
+    deviceAddress devAddr;
     aesKey key1;
-    uint32_t uplinkFrameCount{0};
-    uint32_t downlinkFrameCount{0};
+    frameCount uplinkFrameCount;
+    frameCount downlinkFrameCount;
     radioState theState{radioState::idle};
     loraMessage uplinkMessage;
     loraMessage downlinkMessage;
