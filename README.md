@@ -20,6 +20,7 @@ In order to limit the amount of work, and get something working soon, I decided 
 * only do LoRaWAN V1.0.4
 * only Activation By Personalization - ABP : DevEUI is taken from the UID64 inside the STM32WLE. DeviceAddress (DevAddr) AppSKey and NwkSKey are generated on TTN 'register end device' console and then programmed via the Node's CLI into the device.
 * only support region EU-868
+* LoRa sync word is fixed to 0x34 and preamble length is fixed to 8 symbols
 * Support only the minimum set of DR0 - DR5, as a consequence, the bandwidth is always 125 kHz
 * in the uplink, we don't combine MAC messages with application payload.
     - MAC messages are sent in the payload on framePort 0

@@ -6,19 +6,33 @@
 
 #pragma once
 #include <stdint.h>
+#include "bandwidth.h"
 
-class loRaChannel{
-    public:
-        loRaChannel();
-        void set(uint32_t frequency, uint8_t dataRate, uint8_t maxEIRP, bool enabled);
-        uint32_t getFrequency() const;
-        uint8_t getDataRate() const;
-        uint8_t getMaxEIRP() const;
-        bool isEnabled() const;
-        static constexpr uint32_t length{7};        // [bytes]
-    private:
-        uint32_t frequency{0};          // [Hz]
-        uint8_t dataRate{0};            // [0..15]
-        uint8_t maxEIRP{0};             // [dBm]
-        bool enabled{false};            // [true/false]
+class loRaChannel {
+  public:
+    loRaChannel(uint32_t frequency, bool enabled);
+
+  private:
+    uint32_t frequency{0};                             // [Hz]
+    bandwidth theBandwidth{bandwidth::b125kHz};        // [Hz]
+    bool enabled{false};                               // [true/false]
+    friend class loRaChannels;
+};
+
+class loRaChannels {
+  public:
+    void initialize();
+    void add(loRaChannel newChannel);
+    void remove(loRaChannel toBeRemovedChannel);
+    void remove(uint32_t channelIndex);
+    void enable(loRaChannel toBeRemovedChannel);
+    void enable(uint32_t channelIndex);
+    void disable(loRaChannel toBeRemovedChannel);
+    void disable(uint32_t channelIndex);
+    loRaChannel getNext();        // randomly select the next to be used channel from the list of active channels
+    static constexpr uint32_t maxNmbrChannels{16};
+    uint32_t nmbrAvailableChannels{0};
+
+  private:
+    loRaChannel theChannels[maxNmbrChannels];
 };

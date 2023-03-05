@@ -1,33 +1,26 @@
 #include "datarate.h"
 
-uint32_t getMaximumPayloadLength(dataRate aDataRate) {
-    switch (aDataRate) {
-        case dataRate::DR0:
-            return 51;
-        case dataRate::DR1:
-            return 51;
-        case dataRate::DR2:
-            return 51;
-        case dataRate::DR3:
-            return 123;
-        case dataRate::DR4:
-            return 230;
-        case dataRate::DR5:
-            return 230;
-        case dataRate::DR6:
-            return 230;
-        case dataRate::DR7:
-            return 230;
-        default:
-            return 0;
+void dataRates::initialize() {
+    add(spreadingFactor::SF12, bandwidth::b125kHz, 51);
+    add(spreadingFactor::SF11, bandwidth::b125kHz, 51);
+    add(spreadingFactor::SF10, bandwidth::b125kHz, 51);
+    add(spreadingFactor::SF9, bandwidth::b125kHz, 123);
+    add(spreadingFactor::SF8, bandwidth::b125kHz, 230);
+    add(spreadingFactor::SF7, bandwidth::b125kHz, 230);
+}
+
+uint32_t dataRates::getMaximumPayloadLength(uint32_t dataRateIndex) {
+    if (dataRateIndex < nmbrUsedDataRates) {
+        return theDataRates[dataRateIndex].maximumPayloadLength;
+
+    } else {
+        return 0;
     }
 }
 
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset) {
-    // uint8_t downlinkDataRate = static_cast<uint8_t>(uplinkDataRate) + Rx1DataRateOffset;
-    // if (downlinkDataRate > 7) {
-    //     downlinkDataRate = 7;
-    // }
-    return static_cast<dataRate>(downlinkDataRate);
+uint32_t getDownlinkDataRateIndex(uint32_t uplinkDataRateIndex, uint8_t Rx1DataRateOffset) {
+    if (uplinkDataRateIndex > Rx1DataRateOffset) {
+        return uplinkDataRateIndex - Rx1DataRateOffset;
+    }
+    return 0;
 }
