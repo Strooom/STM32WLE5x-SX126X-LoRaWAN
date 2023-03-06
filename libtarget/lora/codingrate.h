@@ -8,20 +8,12 @@
 #pragma once
 #include <stdint.h>
 
-// It looks like in EU868, the bandwidth is fixed to 125kHz so we don't need this
+// It seems LoRaWAN fixes the coding rate to 4/5 (for the payload) and 4/8 (for the header), so we don't really need all the others
 
-enum class bandwidth : uint32_t {
-    b7dot81kHz,
-    b10dot42kHz,
-    b157dot63kHz,
-    b20dot83kHz,
-    b31dot25kHz,
-    b41dot67kHz,
-    b62dot5kHz,
-    b125kHz,
-    b250kHz,
-    b500kHz
+enum class codingRate : uint32_t {
+    cr4_4 = 0x00,
+    cr4_5 = 0x01,
+    cr4_6 = 0x02,
+    cr4_7 = 0x03,
+    cr4_8 = 0x04,
 };
-
-const char* toString(bandwidth aBandwidth);
-

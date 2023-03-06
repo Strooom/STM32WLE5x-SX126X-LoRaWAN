@@ -34,22 +34,26 @@ class nvsMap {
     uint32_t nextStartAddress{0};
 
     // Required Persistent Values for ABP Devcies In the event of a reset or loss of power, the following values must be persisted so that an ABP end device can return to the network connection session where it left off before the loss of power:
-    // DevEUI
-    // DevAddr
-    // SessionKeys
-    // Frame Counters (both uplink and downlink)
+
+    // DevEUI : this we can get from the device UID64 - hardcoded in ROM
+    // DevAddr [4 bytes], genereated by the network server / TTN
+    // SessionKeys : NwkSKey and AppSKey : both keys are 128 bits = 16 bytes
+    // Frame Counters (both uplink and downlink)  : both are 32 bit counters
+
     // Channel List (frequencies and enabled channels)
     // Data rate
-    // TXPower
-    // NbTrans
-    // MaxDutyCycle
-    // RX2Frequency
-    // RX1DROffset
-    // RX2DataRate
-    // RXTimingDelay
-    // MaxEIRP
-    // DownlinkDwellTime
-    // UplinkDwellTime
+    // TXPower : FTTB we just transmit at 14 dBm / 25 mW
+    // NbTrans : TODO
+    // MaxDutyCycle : ideally we should store this in NVS, so after a reset we can continue where we left off, but as resets are quite rare, I postpone this for now
+
+    // RX2Frequency : for TTN this is currently fixed at 869.525 MHz, so we can hardcode it..
+    // RX1DROffset :
+    // RX2DataRate : fixed at SF9 for TTN
+    // RXTimingDelay : 1 second up to 15 seconds - I think it can only be changed with OTAA Join, which we don't do FTTB
+
+    // MaxEIRP ?? What is the difference with TxPower ?
+    // DownlinkDwellTime / not for EU region
+    // UplinkDwellTime / not for EU region
 
     // Note for OTAA there is some delta
     // not stored : DevAddr & Session Keys
@@ -61,13 +65,14 @@ class nvsMap {
 
 class nonVolatileStorage {
   public:
+    void initialize();
     bool isReady();
 
     uint8_t read8(uint32_t blockIndex);
     uint16_t read16(uint32_t blockIndex);
     uint32_t read32(uint32_t blockIndex);
     uint64_t read64(uint32_t blockIndex);
-    aesKey readAesKey(uint32_t blockIndex);
+    void readAesKey(uint32_t blockIndex, aesKey &theAesKey);
 
     void write(uint32_t blockIndex, uint8_t sourceData);
     void write(uint32_t blockIndex, uint16_t sourceData);
@@ -75,9 +80,15 @@ class nonVolatileStorage {
     void write(uint32_t blockIndex, uint64_t sourceData);
     void write(uint32_t blockIndex, aesKey sourceData);
 
-    uint32_t addBlock(uint32_t length);        // adds a block to the nvsMap, returns the blockIndex
+    uint32_t addBlock(uint32_t length);        // adds a block with size [length] bytes to the nvsMap, returns the blockIndex
     uint32_t getNumberOfBlocksUsed() const;
     uint32_t getNumberOfBytesUsed() const;
+
+    const uint32_t deviceAddressBlockIndex{addBlock(4)};
+    const uint32_t networkSessionKeyBlockIndex{addBlock(16)};
+    const uint32_t applicationSessionKeyBlockIndex{addBlock(16)};
+    const uint32_t uplinkFrameCounterBlockIndex{addBlock(4)};
+    const uint32_t downlinkFrameCounterBlockIndex{addBlock(4)};
 
   private:
     nvsMap theNvsMap;

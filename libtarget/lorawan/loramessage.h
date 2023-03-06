@@ -22,7 +22,7 @@
 class loraMessage {        // aka PHYPayload
   public:
     void constructUplinkMessage(frameHeader aFrameHeader, framePort aFramePort, byteBuffer& applicationPayload, aesKey aKey);        //
-    bool transmit();                                                                           // send the Msg to the SX126x radio
+    bool transmit();                                                                                                                 // send the Msg to the SX126x radio
 
     bool receive();                                                        // load message received by the SX126x radio
     void processDownlinkMessage(byteBuffer& theApplicationPayload);        //

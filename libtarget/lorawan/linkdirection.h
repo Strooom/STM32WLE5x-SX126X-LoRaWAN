@@ -8,9 +8,10 @@
 #pragma once
 #include <stdint.h>
 
-
-class aesKey{
-    public:
-    private:
-        uint8_t key[16]; // 128 bits = 16 bytes
+enum class linkDirection : uint8_t {
+    uplink = 0x00,
+    downlink = 0x01
 };
+
+
+const char* toString(linkDirection theDirection);

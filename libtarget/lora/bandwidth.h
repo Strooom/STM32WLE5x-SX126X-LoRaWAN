@@ -8,14 +8,21 @@
 #pragma once
 #include <stdint.h>
 
-class deviceAddress {
-  public:
-    deviceAddress(uint32_t theDeviceAddress);
-    uint32_t asUint32() const;                         // return the deviceAddress as a uint32_t
-    void fromUint32(uint32_t theDeviceAddress);        // decode the deviceAddress from a uint32_t
-    static constexpr uint32_t length{4};               // [bytes]
-  private:
-    uint32_t theDeviceAddress;
+// It looks like in EU868, the bandwidth is fixed to 125kHz so we don't need this
+// still, it doesn't harm to keep it, maybe later we extend data rates and/or regions
+
+enum class bandwidth : uint32_t {
+    b7dot81kHz,
+    b10dot42kHz,
+    b157dot63kHz,
+    b20dot83kHz,
+    b31dot25kHz,
+    b41dot67kHz,
+    b62dot5kHz,
+    b125kHz,
+    b250kHz,
+    b500kHz
 };
 
-// Note : eventually we are going to read this from the UID64 of the STM32WLE5JC
+const char* toString(bandwidth aBandwidth);
+

@@ -8,12 +8,13 @@
 #pragma once
 #include <stdint.h>
 
-// TODO : check coding values with LoRaWAN spec
-
-enum class codingRate : uint32_t {
-    cr4_4 = 0x00,
-    cr4_5 = 0x01,
-    cr4_6 = 0x02,
-    cr4_7 = 0x03,
-    cr4_8 = 0x04,
+class frameCount {
+  public:
+    frameCount(uint32_t theFrameCount);
+    uint16_t asUint32() const;                         // return the frameCount as a uint16_t
+    void fromUint32(uint16_t theFrameCount);           // decode the frameCount from a uint16_t
+    static constexpr uint32_t length{4};               // [bytes]
+  private:
+    uint32_t theFrameCount;
+    const uint32_t nvsBlockIndex;
 };
