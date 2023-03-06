@@ -1,21 +1,33 @@
 
 #include "aeskey.h"
 
+aesKey::aesKey() {
+    for (uint32_t index = 0; index < binaryKeyLength; index++) {
+        key[index] = 0;
+    }
+    for (uint32_t index = 0; index < asciiKeyLength; index++) {
+        keyAsASCII[index] = 0;
+    }
+}
+
 bool aesKey::fromASCII(const char* asciiKey) {
     // TODO : iterate over the string, take two characters at a time, convert to a byte, store in the key
-    uint8_t leftCharacter;
-    uint8_t rightCharacter;
+    uint8_t leftCharacter{0};
+    uint8_t rightCharacter{0};
     leftCharacter  = toUpperCase(leftCharacter);
     rightCharacter = toUpperCase(rightCharacter);
     if ((isHexCharacter(leftCharacter)) && (isHexCharacter(rightCharacter))) {
         uint8_t hexValue = (valueFromHexCharacter(leftCharacter) << 4) + valueFromHexCharacter(rightCharacter);
     }
+    return false;
 }
+
 const uint8_t* aesKey::toASCII() {
+    uint8_t leftCharacter{0};
+    uint8_t rightCharacter{0};
+    uint8_t aValue{0};
+
     // TODO : iterate over the key, convert each byte to two characters, store in the string
-    uint8_t leftCharacter;
-    uint8_t rightCharacter;
-    uint8_t aValue;
     leftCharacter  = hexCharacterFromValue((aValue >> 4) & 0x0F);
     rightCharacter = hexCharacterFromValue(aValue & 0x0F);
 }
