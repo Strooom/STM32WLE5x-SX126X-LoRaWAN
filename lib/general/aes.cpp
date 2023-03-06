@@ -1,5 +1,58 @@
 #include "aes.h"
 
+void aes::encryptPayload() {}
+void aes::generateMIC() {}
+bool aes::validateMIC() { return false; }
+
+void aes::encryptBlock() {
+    uint8_t rowIndex, columnIndex, round = 0;
+
+    //  Copy input to state arry
+    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
+        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
+            state[rowIndex][columnIndex] = Data[rowIndex + (columnIndex << 2)];
+        }
+    }
+
+    //  Copy key to round key
+    memcpy(&roundKey[0], &Key[0], 16);
+
+    addRoundKey();
+
+    //  Perform 9 full rounds with mixed columns
+    for (round = 1; round < 10; round++) {
+        //  Perform Byte substitution with S table
+        for (columnIndex = 0; columnIndex < 4; columnIndex++) {
+            for (rowIndex = 0; rowIndex < 4; rowIndex++) {
+                state[rowIndex][columnIndex] = subByte(state[rowIndex][columnIndex]);
+            }
+        }
+
+        shiftRows();
+        mixColumns();
+        calculateRoundKey(round);
+        addRoundKey();
+    }
+
+    //  Perform Byte substitution with S table whitout mix collums
+    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
+        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
+            state[rowIndex][columnIndex] = subByte(state[rowIndex][columnIndex]);
+        }
+    }
+
+    shiftRows();
+    calculateRoundKey(round);
+    addRoundKey();
+
+    //  Copy the state into the data array
+    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
+        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
+            Data[rowIndex + (columnIndex << 2)] = state[rowIndex][columnIndex];
+        }
+    }
+}
+
 void aes::addRoundKey() {
     uint8_t rowIndex, columnIndex;
 
@@ -90,57 +143,6 @@ void aes::calculateRoundKey(uint8_t Round) {
         for (j = 0; j < 4; j++) {
             roundKey[j + (i << 2)] ^= Temp[j];
             Temp[j] = roundKey[j + (i << 2)];
-        }
-    }
-}
-
-void aes::encrypt(uint8_t *Data, uint8_t *Key) {
-    uint8_t rowIndex, columnIndex, round = 0;
-
-    //  Copy input to state arry
-    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
-        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
-            state[rowIndex][columnIndex] = Data[rowIndex + (columnIndex << 2)];
-        }
-    }
-
-    //  Copy key to round key
-    memcpy(&roundKey[0], &Key[0], 16);
-
-    
-    addRoundKey();
-
-    //  Perform 9 full rounds with mixed columns
-    for (round = 1; round < 10; round++) {
-        //  Perform Byte substitution with S table
-        for (columnIndex = 0; columnIndex < 4; columnIndex++) {
-            for (rowIndex = 0; rowIndex < 4; rowIndex++) {
-                state[rowIndex][columnIndex] = subByte(state[rowIndex][columnIndex]);
-            }
-        }
-
-        shiftRows();
-        mixColumns();
-        calculateRoundKey(round);
-        addRoundKey();
-    }
-
-    //  Perform Byte substitution with S table whitout mix collums
-    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
-        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
-            state[rowIndex][columnIndex] = subByte(state[rowIndex][columnIndex]);
-        }
-    }
-
-    
-    shiftRows();
-    calculateRoundKey(round);
-    addRoundKey();
-
-    //  Copy the state into the data array
-    for (columnIndex = 0; columnIndex < 4; columnIndex++) {
-        for (rowIndex = 0; rowIndex < 4; rowIndex++) {
-            Data[rowIndex + (columnIndex << 2)] = state[rowIndex][columnIndex];
         }
     }
 }

@@ -23,7 +23,7 @@ class LoRaWAN {
     bool isReadyToTransmit() const;
     uint32_t getMaxApplicationPayloadLength() const;
     void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
-    //    void sendUplinkConfirmed(byteBuffer& applicationPayloadToSend);
+    //    void sendUplinkConfirmed(byteBuffer& applicationPayloadToSend); // waitm for succes or fail from LoRA LAYER
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
     void runMAC();        // taking care of all the MAC layer logic
