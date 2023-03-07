@@ -1,0 +1,63 @@
+// #############################################################################
+// ### This file is part of the source code for the MuMo project             ###
+// ### https://github.com/Strooom/MuMo-v2-Node-SW                            ###
+// ### Author(s) : Pascal Roobrouck - @strooom                               ###
+// ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
+// #############################################################################
+
+#include <stdint.h>
+#include "logging.h"                 // definition of the logging class
+#include "power.h"                   //
+#include "eventbuffer.h"             // application uses 3 eventbuffers, and the eventbuffer class is defined here
+#include "applicationevent.h"        // definition of all events that can happen in the application
+#include "maincontroller.h"          // definition of the class that handles the top-level control of the application - a finite state machine
+#include "lorawanevent.h"            // definition of all events that can happen in the LoRaWAN protocol
+#include "lorawan.h"                 // definition of the class that implements the lorawan protocol layer
+#include "radioevent.h"              // definition of all events that can happen in the radio layer / SC126x
+#include "nvs.h"                     // definition of the class that implements the non-volatile storage
+#include "sx126x.h"                  // definition of the class that implements the radio / sx126x driver
+
+power thePower;
+
+eventBuffer<radioEvent, static_cast<size_t>(16)> sx126xEventBuffer;
+eventBuffer<loRaWanEvent, static_cast<size_t>(16)> loraWanEventBuffer;
+eventBuffer<applicationEvent, static_cast<size_t>(16)> applicationEventBuffer;
+
+nonVolatileStorage nvs;        // instance of the non-volatile storage class
+mainController mainCtrl;
+LoRaWAN loraNetwork;        // object abstraction of the LoRaWAN protocol & network connection
+sx126x theRadio;            // instance of the radio / sx126x driver
+
+int main() {
+    loraNetwork.initialize();
+    theRadio.initialize();
+    // a lot more initialization code is needed here
+
+    while (true) {
+        thePower.detectUsbConnectOrRemove();
+
+        if (sx126xEventBuffer.isEmpty()) {
+            theRadio.handleEvents();
+        }
+
+        if (loraWanEventBuffer.isEmpty()) {
+            loraNetwork.handleEvents();
+        }
+        if (!applicationEventBuffer.isEmpty()) {
+            mainCtrl.handleEvents();
+        }
+
+        // if (txTimer.expired()) {
+        //     if (loraNetwork.isReadyToTransmit()) {
+        //         loraNetwork.sendUplink(myData, 20U);
+        //     }
+        // }
+        // if (event == event::downlinkReceived) {
+        //     loraNetwork.getDownlinkMessage(myData);
+        // }
+
+        if (!thePower.isUsbConnected()) {
+            // goSleep()
+        }
+    }
+}
