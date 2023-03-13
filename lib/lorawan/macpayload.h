@@ -15,7 +15,7 @@ class macPayload {
   public:
     void set(frameHeader theFrameHeader, framePort theFramePort, byteBuffer applicationPayload);
     uint8_t *get();
-    uint32_t getLength();
+    uint32_t length();
 
   private:
     frameHeader FHDR;

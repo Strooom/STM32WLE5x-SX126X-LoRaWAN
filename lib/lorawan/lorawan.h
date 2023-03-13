@@ -20,6 +20,8 @@ class LoRaWAN {
     void initialize();
     radioState getState() const;
 
+    void handleEvents();
+
     bool isReadyToTransmit() const;
     uint32_t getMaxApplicationPayloadLength() const;
     void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
@@ -28,13 +30,14 @@ class LoRaWAN {
 
     void runMAC();        // taking care of all the MAC layer logic
 
-    void encryptApplicationPayload();
+    void encryptPayload(byteBuffer& applicationPayloadToEncrypt, aesKey& theEncryptionKey);
 
     // TODO : we need a reference to NVS so we can store keys etc in EEPROM
 
   private:
     deviceAddress devAddr;
-    aesKey key1;
+    aesKey applicationKey;
+    aesKey networkKey;
     frameCount uplinkFrameCount;
     frameCount downlinkFrameCount;
     radioState theState{radioState::idle};

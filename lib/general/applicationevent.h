@@ -9,6 +9,10 @@
 #include <stdint.h>
 
 enum class applicationEvent : uint8_t {
+    usbConnected,
+    usbRemoved,
+
+    downlinkMessageReceived,
 };
 
 const char* toString(applicationEvent anEvent);

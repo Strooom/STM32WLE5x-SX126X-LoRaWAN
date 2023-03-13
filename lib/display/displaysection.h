@@ -7,15 +7,28 @@
 
 #pragma once
 #include <stdint.h>
-#include "aeskey.h"
 
-class messageIntegrityCode {
-  public:
-    uint32_t calculate(aesKey aKey);                                           // calculates the MIC over the buffer, using the key
-    bool validate(const uint8_t* buffer, uint32_t length, aesKey aKey);        // validates the MIC over the buffer, using the key
-    static constexpr uint32_t length{4};                                       // [bytes]
-    uint8_t& operator[](uint32_t);
+enum class displaySection : uint32_t {
+    s1Rx1C,
 
-  private:
-    uint32_t mic{0};
+    s1Rx2Cl_left,
+    s1Rx2C_right,
+    s2Rx1C_top,
+    s2Rx1C_bottom,
+
+    s4Rx1C_top,
+    s4Rx1C_row1,
+    s4Rx1C_row2,
+    s4Rx1C_bottom,
+
+    s4Rx2C_topLeft,
+    s4Rx2C_row1Left,
+    s4Rx2C_row2Left,
+    s4Rx2C_bottomLeft,
+    s4Rx2C_topRight,
+    s4Rx2C_row1Right,
+    s4Rx2C_row2Right,
+    s4Rx2C_bottomRight,
 };
+
+const char* toString(displaySection aSection);

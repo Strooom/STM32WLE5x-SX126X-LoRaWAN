@@ -16,7 +16,7 @@
 #pragma once
 #include <stdint.h>
 
-//#include "../general/stm32wle5.h"        // this defines all register addresses of the STM32WLE5
+// #include "../general/stm32wle5.h"        // this defines all register addresses of the STM32WLE5
 #include "sx126xregisters.h"
 #include "sx126xstate.h"
 #include "sx126xerrors.h"
@@ -33,6 +33,7 @@
 #include "lowdatarateoptimize.h"
 #include "invertiq.h"
 
+#include "bytebuffer.h"
 
 class sx126x {
   public:
@@ -43,6 +44,7 @@ class sx126x {
     void goStandby(sx126xStandbyMode aStandbyMode);
     bool isStandby();
 
+    void handleEvents();
 
     bool detectChannelActivity();
     void restoreAfterSleep();
@@ -61,12 +63,14 @@ class sx126x {
     sx126xState getState() const;
     // uint32_t getTimeOnAir(RadioModems_t modem, uint32_t bandwidth, uint32_t datarate, uint8_t coderate, uint16_t preambleLen, bool fixLen, uint8_t payloadLen, bool crcOn);
 
-
     void writeRegister(sx126xRegister theRegister, uint32_t newValue);
     uint32_t readRegister(sx126xRegister theRegister);
 
-    void writeBuffer(sx126xRegister theRegister, uint32_t newValue);        // accesses the payload data buffer
-    uint32_t readBuffer(sx126xRegister theRegister);                        // accesses the payload data buffer
+    //void writeBuffer(sx126xRegister theRegister, uint32_t newValue);        // accesses the payload data buffer
+    void writeBuffer(byteBuffer rawMessage);
+
+    //uint32_t readBuffer(sx126xRegister theRegister);        // accesses the payload data buffer
+    void readBuffer(byteBuffer rawMessage);
 
     //    void writeMultipleRegisters(sx126xRegister theRegister, uint32_t newValue); // Dont know if they will be useful, looks like we barely need to write registers, and probably never a RANGE of adjacent registers
     //    uint32_t readMultipleRegisters(sx126xRegister theRegister);
@@ -80,7 +84,6 @@ class sx126x {
     sx126xError getLastError();        // reads and clears the last error that occured
 
   private:
-
     void executeCommand(sx126xCommand opcode, uint8_t *parametersIn, uint8_t arametersInLength, uint8_t *dataOut, uint8_t dataOutLength, bool waitOnBusy = false);
 
     sx126xError lastError{sx126xError::none};        // remembers the last error that occured
@@ -94,4 +97,3 @@ class sx126x {
     void writeSPI();
     uint8_t readSPI();
 };
-

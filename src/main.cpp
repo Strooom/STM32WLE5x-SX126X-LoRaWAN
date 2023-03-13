@@ -16,8 +16,11 @@
 #include "radioevent.h"              // definition of all events that can happen in the radio layer / SC126x
 #include "nvs.h"                     // definition of the class that implements the non-volatile storage
 #include "sx126x.h"                  // definition of the class that implements the radio / sx126x driver
+#include "cli.h"                     // definition of the class that implements the command line interface
 
 power thePower;
+
+cli theCli;
 
 eventBuffer<radioEvent, static_cast<size_t>(16)> sx126xEventBuffer;
 eventBuffer<loRaWanEvent, static_cast<size_t>(16)> loraWanEventBuffer;
@@ -31,33 +34,27 @@ sx126x theRadio;            // instance of the radio / sx126x driver
 int main() {
     loraNetwork.initialize();
     theRadio.initialize();
-    // a lot more initialization code is needed here
+    // TODO : a lot more initialization code is needed here
 
     while (true) {
         thePower.detectUsbConnectOrRemove();
 
-        if (sx126xEventBuffer.isEmpty()) {
+        while (sx126xEventBuffer.isEmpty()) {
             theRadio.handleEvents();
         }
 
-        if (loraWanEventBuffer.isEmpty()) {
+        while (loraWanEventBuffer.isEmpty()) {
             loraNetwork.handleEvents();
         }
-        if (!applicationEventBuffer.isEmpty()) {
+
+        while (!applicationEventBuffer.isEmpty()) {
             mainCtrl.handleEvents();
         }
 
-        // if (txTimer.expired()) {
-        //     if (loraNetwork.isReadyToTransmit()) {
-        //         loraNetwork.sendUplink(myData, 20U);
-        //     }
-        // }
-        // if (event == event::downlinkReceived) {
-        //     loraNetwork.getDownlinkMessage(myData);
-        // }
-
-        if (!thePower.isUsbConnected()) {
-            // goSleep()
+        if (thePower.isUsbConnected()) {
+            theCli.handleEvents();
+        } else {
+            // theMcu.goSleep(), go sleep, real-time clock will wake us up
         }
     }
 }

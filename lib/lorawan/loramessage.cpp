@@ -7,6 +7,12 @@ void loraMessage::constructUplinkMessage(frameHeader theFrameHeader, framePort t
     theMacHeader.set(frameType::unconfirmedDataUp);       
     theMacPayload.set(theFrameHeader, theFramePort, theApplicationPayload);
     theMIC.calculate(theKey);
+    // Now copy all bytes to the byteBuffer
+    rawMessage.clear();
+    rawMessage.append(theMacHeader);
+    rawMessage.append(theMacPayload);
+    rawMessage.append(theMIC);
+    
 }
 
 bool loraMessage::transmit() {

@@ -26,6 +26,9 @@ extern peripheralRegister PWR_SR2;
 // * the functionality is enabled by PWR_CR1:3 (SUBGHZSPINSSSEL)
 // * the NSS is driven by PWR_SUBGHZSPICR:14 (NSS)
 
+void sx126x::handleEvents() {
+}
+
 void sx126x::setPacketType(packetType thePacketType) {
     constexpr uint8_t nmbrExtraBytes{1};                                                        //
     uint8_t parametersIn[nmbrExtraBytes], dataOut[nmbrExtraBytes];                              //
@@ -280,12 +283,20 @@ void sx126x::setPowerAmplifierConfig(uint8_t paDutyCycle, uint8_t hpMax, uint8_t
     executeCommand(sx126xCommand::setPowerAmplifierConfig, parametersIn, dataOut, nmbrExtraBytes);
 }
 
-void sx126x::writeBuffer(uint8_t *data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
-    // Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
-    // executeCommand(sx126xCommand::writeBuffer, parametersIn, dataOut, nmbrExtraBytes);
+// void sx126x::writeBuffer(uint8_t *data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
+//  Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
+//  executeCommand(sx126xCommand::writeBuffer, parametersIn, dataOut, nmbrExtraBytes);
+//}
+
+void sx126x::writeBuffer(byteBuffer rawMessage) {
+    // copy the raw LoRa message into the transmitBuffer
 }
 
-uint32_t sx126x::readBuffer(uint8_t *data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
-    // Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
-    // executeCommand(sx126xCommand::writeBuffer, parametersIn, dataOut, nmbrExtraBytes);
+// uint32_t sx126x::readBuffer(uint8_t *data, uint8_t dataLength, uint8_t startAddressOffset = 0) {
+//  Problem : we need to insert the offset byte into the stream of data... maybe we need to make a local copy, but this buffer can be 256 bytes long..
+//  executeCommand(sx126xCommand::writeBuffer, parametersIn, dataOut, nmbrExtraBytes);
+//}
+
+void sx126x::readBuffer(byteBuffer rawMessage) {
+    // read the raw LoRa message which has been received
 }
