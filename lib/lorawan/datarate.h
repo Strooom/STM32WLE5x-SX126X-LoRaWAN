@@ -8,8 +8,8 @@
 #pragma once
 #include <stdint.h>
 #include "region.h"
-#include "../lora/spreadingfactor.h"
-#include "../lora/bandwidth.h"
+#include "spreadingfactor.h"
+#include "bandwidth.h"
 
 class data_rate {
   public:

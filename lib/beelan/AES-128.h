@@ -15,38 +15,27 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************************/
 /****************************************************************************************
-* File:     Encrypt.h
+* File:     AES-128.h
 * Author:   Gerben den Hartog
 * Compagny: Ideetron B.V.
 * Website:  http://www.ideetron.nl/LoRa
 * E-mail:   info@ideetron.nl
 ****************************************************************************************/
 /****************************************************************************************
-* Created on:         09-02-2017
+* Created on:         13-01-2017
 * Supported Hardware: ID150119-02 Nexus board with RFM95
 ****************************************************************************************/
 
-#ifndef ENCRYPT_H
-#define ENCRYPT_H
+#ifndef AES128_H
+#define AES128_H
 
 /*
 ********************************************************************************************
-* INCLUDES
+* FUNCTION
 ********************************************************************************************
 */
 
-#include "Struct.h"
-
-/*
-*****************************************************************************************
-* FUNCTION PROTOTYPES
-*****************************************************************************************
-*/
-
-void Construct_Data_MIC(sBuffer *Buffer, sLoRa_Session *Session_Data, sLoRa_Message *Message);
-void Calculate_MIC(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message);
-void Encrypt_Payload(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message);
-void Generate_Keys(unsigned char *Key, unsigned char *K1, unsigned char *K2);
+void AES_Encrypt(unsigned char *Data, unsigned char *Key);
 
 #endif
 

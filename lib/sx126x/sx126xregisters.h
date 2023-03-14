@@ -17,7 +17,7 @@ enum class sx126xRegister : uint32_t {
 
     overcurrentProtection = 0x08E7,
     footCapacitorConfigA  = 0x0911,
-    footCapacitorConfigA  = 0x0912,
+    footCapacitorConfigB  = 0x0912,
 
     REG_LR_CRCSEEDBASEADDR          = 0x06BC,
     REG_LR_CRCPOLYBASEADDR          = 0x06BE,

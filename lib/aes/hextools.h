@@ -7,17 +7,11 @@
 
 #pragma once
 #include <stdint.h>
-#include "nvs.h"
 
-class deviceAddress {
-  public:
-    deviceAddress(uint32_t theDeviceAddress);
-    uint32_t asUint32() const;                         // return the deviceAddress as a uint32_t
-    void fromUint32(uint32_t theDeviceAddress);        // decode the deviceAddress from a uint32_t
-    static constexpr uint32_t length{4};               // [bytes]
-  private:
-    uint32_t theDeviceAddress;
-    const uint32_t nvsBlockIndex;
-};
+uint8_t toUpperCase(uint8_t aCharacter);
+bool isHexCharacter(uint8_t aCharacter);
+uint8_t valueFromHexCharacter(uint8_t aCharacter);
+uint8_t hexCharacterFromValue(uint8_t aValue);
 
-// Note : eventually we are going to read this from the UID64 of the STM32WLE5JC
+void hexStringToBinaryArray(const char* aHexString, uint8_t* aBinaryArray);        // convert HEX-ASCII string to binary array
+void binaryArrayToHexString(const uint8_t* aBinaryArray, uint32_t aBinaryArrayLength, char* aHexString);        // convert binary array to HEX-ASCII string
