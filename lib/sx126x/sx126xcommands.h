@@ -8,64 +8,58 @@
 #pragma once
 #include <stdint.h>
 
-enum class sx126xCommand : uint32_t {
+enum class sx126xCommand : uint8_t {
+    // Commands accessing the radio registers and FIFO - SX1261/2 Datasheet Rev 2.1 - Table 11-2
+    writeRegister        = 0x0D,
+    readRegister         = 0x1D,
+    setBufferBaseAddress = 0x8F,
+    writeBuffer          = 0x0E,
+    readBuffer           = 0x1E,
+
     // Commands selecting the operating mode of the radio - SX1261/2 Datasheet Rev 2.1 - Table 11-1
     setSleep              = 0x84,
     setStandby            = 0x80,
-    setFrequencySynthesis = 0xC1,
+    setFs                 = 0xC1,
     setTx                 = 0x83,
     setRx                 = 0x82,
-
-    setSTOPRXTIMERONPREAMBLE = 0x9FU,
-    setRXDUTYCYCLE           = 0x94U,
-    setCAD                   = 0xC5U,
-    setTXCONTINUOUSWAVE      = 0xD1U,
-    setTXCONTINUOUSPREAMBLE  = 0xD2U,
-    setRegulatorMode         = 0x96U,
-    RADIO_CALIBRATE          = 0x89U,
-    RADIO_CALIBRATEIMAGE     = 0x98U,
-    setPowerAmplifierConfig  = 0x95U,
-    setRxTXFALLBACKMODE      = 0x93U,
-
-    // Commands accessing the radio registers and FIFO - SX1261/2 Datasheet Rev 2.1 - Table 11-2
-
-    writeRegister = 0x0D,
-    readRegister  = 0x1D,
-    writeBuffer   = 0x0E,
-    readBuffer    = 0x1E,
-
-    // Commands controlling the radio IRQ and Digital IO (DIO) - SX1261/2 Datasheet Rev 2.1 - Table 11-3
-
-    RADIO_CFG_DIOIRQ      = 0x08U,
-    getIRQSTATUS          = 0x12U,
-    RADIO_CLR_IRQSTATUS   = 0x02U,
-    SetDIO2AsRfSwitchCtrl = 0x9D,
-    SetDIO3AsTcxoCtrl     = 0x97,
+    stopTimerOnPreamble   = 0x9F,
+    setRxdutycycle        = 0x94,
+    setCad                = 0xC5,
+    setTxContinuousWave   = 0xD1,
+    setTxInfinitePreamble = 0xD2,
+    setRegulatorMode      = 0x96,
+    calibrate             = 0x89,
+    calibrateImage        = 0x98,
+    setPaConfig           = 0x95,
+    setRxTxFallbackMode   = 0x93,
 
     // Commands Controlling the RF and Packets Settings - SX1261/2 Datasheet Rev 2.1 - Table 11-4
+    setRfFRequency        = 0x86,
+    setPacketType         = 0x8A,
+    getPacketType         = 0x11,
+    setTxParams           = 0x8E,
+    setModulationParams   = 0x8B,
+    setPacketParameters   = 0x8C,
+    setCadParams          = 0x88,
+    setLoRaSymbNumTimeout = 0xA0,
 
-    setRfFRequency       = 0x86,
-    setPacketType        = 0x8AU,
-    getPACKETTYPE        = 0x11U,
-    setTXPARAMS          = 0x8EU,
-    setMODULATIONPARAMS  = 0x8BU,
-    setPacketParameters  = 0x8C,
-    setCADPARAMS         = 0x88U,
-    setBUFFERBASEADDRESS = 0x8FU,
-    setLORASYMBTIMEOUT   = 0xA0U,
+    // Commands controlling the radio IRQ and Digital IO (DIO) - SX1261/2 Datasheet Rev 2.1 - Table 11-3
+    setDioIrqParams       = 0x08,
+    getIrqStatus          = 0x12,
+    clearIrqStatus        = 0x02,
+    setDIO2AsRfSwitchCtrl = 0x9D,
+    setDIO3AsTcxoCtrl     = 0x97,
 
-    // Commands Returning the Radio Status -  - SX1261/2 Datasheet Rev 2.1 - Table 11-5
-
+    // Commands Returning the Radio Status - Errors - Statistics SX1261/2 Datasheet Rev 2.1 - Table 11-5
     getStatus         = 0x0C,
-    getRSSIINST       = 0x15U,
-    getRXBUFFERSTATUS = 0x13U,
-    getPACKETSTATUS   = 0x14U,
-    getERROR          = 0x17U,
-    RADIO_CLR_ERROR   = 0x07U,
-    getSTATS          = 0x10U,
-    RADIO_RESET_STATS = 0x00U
-
-    // setTCXOMODE          = 0x97U,
-    // setRFSWITCHMODE      = 0x9DU,
+    getRssiInst       = 0x15,
+    getRxBufferStatus = 0x13,
+    getPacketStatus   = 0x14,
+    getDeviceErrors   = 0x17,
+    clearDeviceErrors = 0x07,
+    getStats          = 0x10,
+    resetStats        = 0x00,
 
 };
+
+const char* toString(sx126xCommand command);

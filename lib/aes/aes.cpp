@@ -67,7 +67,7 @@ void aes::encryptBlock() {
 }
 
 void aes::addRoundKey() {
-    uint8_t rowIndex, columnIndex;
+    uint32_t rowIndex, columnIndex;
 
     for (columnIndex = 0; columnIndex < 4; columnIndex++) {
         for (rowIndex = 0; rowIndex < 4; rowIndex++) {
@@ -77,7 +77,7 @@ void aes::addRoundKey() {
 }
 
 uint8_t aes::substituteByte(uint8_t aByte) {
-    return sTable[((aByte >> 4) & 0x0F)][((aByte >> 0) & 0x0F)];
+    return sBox[((aByte >> 4) & 0x0F)][((aByte >> 0) & 0x0F)];
 }
 
 void aes::shiftRows() {

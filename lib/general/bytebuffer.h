@@ -7,30 +7,24 @@
 
 #pragma once
 #include <stdint.h>
-//#include "macheader.h"
-//#include "macpayload.h"
-//#include "mic.h"
 
 // In LoRaWAN data is usually binary io null terminated strings, so I use this class to easily pass data around between application, Lorawan and the LoRa modem
 
 class byteBuffer {
   public:
     void clear();
-    //void append(macHeader& aMacHeader);
-    //void append(macPayload& aPayload);
-    //void append(messageIntegrityCode& aMic);
-
     void set(const uint8_t* newData, uint32_t newDataLength);
     void set(const char* newData);
-    void setFromASCII(const char* asciiKey);        // initialize the key from an ASCII string, returns true if successful
+    void setFromHexAscii(const char* asciiKey);
 
+    void dump();        // dump the contents to the logging output for testing purposes
+
+#ifndef unitTesting
+//  private:
+#endif
     static constexpr uint32_t maxLength{256};
     uint8_t buffer[maxLength]{};
     uint32_t length{0};
 
-    void dump();        // dump the contents to the logging output for testing purposes
-
-
-
-  private:
+    friend class LoRaWAN;
 };

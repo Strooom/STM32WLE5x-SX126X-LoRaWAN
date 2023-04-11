@@ -6,6 +6,7 @@
 
 #pragma once
 #include <stdint.h>
+
 #include "bandwidth.h"
 
 class loRaChannel {
@@ -36,3 +37,5 @@ class loRaChannels {
   private:
     loRaChannel theChannels[maxNmbrChannels];
 };
+
+// TODO : For all channels, I can precalculate the frequency register value and store it in the channel object.

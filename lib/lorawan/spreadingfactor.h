@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class spreadingFactor : uint32_t {
+enum class spreadingFactor : uint8_t {
     SF5  = 0x05,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
     SF6  = 0x06,        // Note : supported by the SX126x but not sure if it's supported by LoRaWAN standards
     SF7  = 0x07,

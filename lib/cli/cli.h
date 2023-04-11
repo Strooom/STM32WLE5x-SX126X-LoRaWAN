@@ -9,9 +9,11 @@
 #include <stdint.h>
 
 class cli {
-    public:
-        void handleEvents();
+  public:
+    void handleRxEvent();
+    void handleEvents();
 
-    private:
-
+  private:
+    static constexpr uint32_t commandBufferLength{65};
+    uint8_t commandBuffer[commandBufferLength]{0};
 };

@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 enum class radioEvent : uint8_t {
+    none = 0x00,
     transmitComplete,
     transmitTimeout,
     receiveComplete,

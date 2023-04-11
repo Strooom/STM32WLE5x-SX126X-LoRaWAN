@@ -9,28 +9,44 @@
 #include <stdint.h>
 
 // template class for event buffers. Each layer needs it's own buffer, and the events are different types
-// instantiate as
-//      eventBuffer<sx126xEvent, static_cast<size_t>(16)> radioBuffer;
+// This is a circular buffer, so it works FIFO
+// push() on an already full buffer, overwrites the oldes event.
+// pop() on an empty buffer, returns 0x00
+// TODO : this needs to be made thread safe with critical sections. Ideally in this class, but if not possible, then in code that calls it
 
-template <typename eventType, size_t bufferLength>
+template <typename eventType, uint32_t bufferLength>
 class eventBuffer {
   public:
-    static constexpr size_t length = bufferLength;
+    static constexpr uint32_t length = bufferLength;
 
     eventBuffer() {
         initialize();
     };
 
     void initialize() {
-        head     = 0;
-        level    = 0;
-        levelMax = 0;
+        head  = 0;
+        level = 0;
+        // levelMax = 0;
     };
 
-    void push(eventType event){};
+    void push(eventType event) {
+        theBuffer[(head + level) % bufferLength] = event;
+        if (level < bufferLength) {
+            level++;
+        } else {
+            head = (head + 1) % bufferLength;
+        }
+    };
 
     eventType pop() {
-        return eventType{};
+        if (level > 0) {
+            eventType result = theBuffer[head];
+            head             = (head + 1) % bufferLength;
+            level--;
+            return result;
+        } else {
+            return static_cast<eventType>(0x00);
+        }
     };
 
     bool isEmpty() const {
@@ -41,15 +57,19 @@ class eventBuffer {
         return level > 0;
     };
 
-    size_t getLevel() const {
+    uint32_t getLevel() const {
         return level;
     };
 
-    size_t getLevelMax() { return levelMax; };        // TODO, this should reset the levelMax after reading it
+        // uint32_t getLevelMax() {
+        //     return levelMax;
+        // };        // TODO, this should reset the levelMax after reading it
 
-  private:
-    size_t head{0};
-    size_t level{0};
-    size_t levelMax{0};
+#ifndef unitTesting
+//  private:
+#endif
+    uint32_t head{0};
+    uint32_t level{0};
     eventType theBuffer[bufferLength];
+    // uint32_t levelMax{0};
 };

@@ -26,8 +26,8 @@
 * Supported Hardware: ID150119-02 Nexus board with RFM95
 ****************************************************************************************/
 
-#include <string.h>
 #include "AES-128.h"
+#include <string.h>
 
 
 static const unsigned char S_Table[16][16] = {

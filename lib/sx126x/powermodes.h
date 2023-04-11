@@ -8,7 +8,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class sx126xPowerMode : uint32_t {
+enum class sx126xPowerMode : uint8_t {
     LDO = 0x00,
 	DCDC = 0x01
 };

@@ -7,9 +7,10 @@
 
 #pragma once
 #include <stdint.h>
+
+#include "bandwidth.h"
 #include "region.h"
 #include "spreadingfactor.h"
-#include "bandwidth.h"
 
 class data_rate {
   public:

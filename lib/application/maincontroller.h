@@ -12,13 +12,13 @@
 
 class mainController {
   public:
-    mainController();           // constructor
-    void handleEvents();        // handles the events such as switch close/open and end-of-motion
-    uint32_t getRootSamplingPeriod();
+    void initialize();
+    void handleEvents();
 
   private:
     // ### Properties ###
-    // StateMachines
+    // ### StateMachines ###
     mainState theMainState = mainState::boot;
-    uint32_t rootSamplingPeriod{1};        // value between 1 and 32, controlling the basic rate at which the application wakes up, and takes samples from the sensors.
+
+    // uint32_t rootSamplingPeriod{1};        // value between 1 and 32, controlling the basic rate at which the application wakes up, and takes samples from the sensors.
 };

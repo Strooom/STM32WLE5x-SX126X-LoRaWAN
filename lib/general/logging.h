@@ -6,12 +6,15 @@
 
 #pragma once
 #include <stdint.h>
+#include <stdarg.h> // required so we can define functions with variable number of arguments
 
 class logging {
   public:
+    void detectDebugProbe();                              // check if a debug probe is connected by reading the DBGMCU_CR register
     static constexpr uint32_t bufferLength = 1024;        //
-	void snprintf(const char *format, ...);
+    void snprintf(const char *format, ...);
 
   private:
-    char buffer[bufferLength]{};        // Transmit buffer
+    char buffer[bufferLength]{};          // Transmit buffer
+    bool debugProbePresent{true};        // only send SWO trace if a debug probe is connected
 };

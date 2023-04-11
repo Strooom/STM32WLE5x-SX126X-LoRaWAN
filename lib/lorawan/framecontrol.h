@@ -7,6 +7,7 @@
 
 #pragma once
 #include <stdint.h>
+
 #include "linkdirection.h"
 
 class frameControl {

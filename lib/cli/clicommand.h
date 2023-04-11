@@ -9,13 +9,21 @@
 #include <stdint.h>
 
 enum class cliCommand : uint32_t {
-    HLP = (0x48 << 16) + (0x4C << 8) + 0x50,        // show Help
-    VER = (0x56 << 16) + (0x45 << 8) + 0x52,        // show Version
-    HID = (0x48 << 16) + (0x49 << 8) + 0x44,        // show Hardeware IDs
-    LAC = (0x4C << 16) + (0x41 << 8) + 0x43,        // List Available Channels
-    BAT = (0x42 << 16) + (0x41 << 8) + 0x54,        // show Battery Status
-    NET = (0x4E << 16) + (0x45 << 8) + 0x54,        // show Network Status
-    MEM = (0x4D << 16) + (0x45 << 8) + 0x4D,        // show Memory Status
-    RES = (0x52 << 16) + (0x45 << 8) + 0x53,        // restart software
-    STP = (0x53 << 16) + (0x54 << 8) + 0x50,        // stop LoRa to prepare for firmware update
+    help = (0x68 << 24) + (0x65 << 16) + (0x6C << 8) + 0x70,        // show Help
+    stop = (0x73 << 24) + (0x74 << 16) + (0x6F << 8) + 0x70,        // stop LoRa to prepare for firmware update
+
+    ver = (0x76 << 24) + (0x65 << 16) + (0x72 << 8) + 0x73,        // show Version
+    hid = (0x68 << 24) + (0x69 << 16) + (0x64 << 8) + 0x73,        // show Hardeware IDs
+    lac = (0x6C << 24) + (0x61 << 16) + (0x63 << 8) + 0x73,        // List Available Channels
+    bat = (0x62 << 24) + (0x61 << 16) + (0x74 << 8) + 0x73,        // show Battery Status
+    net = (0x6E << 24) + (0x65 << 16) + (0x74 << 8) + 0x73,        // show Network Status
+    mem = (0x6D << 24) + (0x65 << 16) + (0x6D << 8) + 0x73,        // show Memory Status
+    res = (0x72 << 24) + (0x65 << 16) + (0x73 << 8) + 0x73,        // restart software
+
+    snk = (0x73 << 24) + (0x6E << 16) + (0x6B << 8) + 0x73,        // set Network Key
+    sak = (0x73 << 24) + (0x61 << 16) + (0x6B << 8) + 0x73,        // set Application Key
+    sda = (0x73 << 24) + (0x64 << 16) + (0x61 << 8) + 0x73,        // set Device Address
+    sam = (0x73 << 24) + (0x61 << 16) + (0x6D << 8) + 0x73,        // set Administator Mode
+    cam = (0x63 << 24) + (0x61 << 16) + (0x6D << 8) + 0x73,        // clear Administator Mode
+
 };

@@ -6,6 +6,7 @@
 
 #pragma once
 #include <stdint.h>
+
 #include "sample.h"
 // This implements a large circular buffer to store samples.
 // Samples are always written to EEPROM, but the head and level are kept in RAM, after reset, we can recover the head and level from scanning the EEPROM

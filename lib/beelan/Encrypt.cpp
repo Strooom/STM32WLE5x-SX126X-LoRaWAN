@@ -33,9 +33,11 @@
 */
 
 #include "Encrypt.h"
+
+#include <iostream>
+#include "hextools.h"
 #include "AES-128.h"
 #include "Struct.h"
-#include "hextools.h"
 
 /*
 *****************************************************************************************
@@ -165,10 +167,10 @@ void Construct_Data_MIC(sBuffer *Buffer, sLoRa_Session *Session_Data, sLoRa_Mess
 
     Block_B[5] = Message->Direction;
 
-    Block_B[6] = Message->DevAddr[3];
+    Block_B[6] = Message->DevAddr[3];        // LSByte
     Block_B[7] = Message->DevAddr[2];
     Block_B[8] = Message->DevAddr[1];
-    Block_B[9] = Message->DevAddr[0];
+    Block_B[9] = Message->DevAddr[0];        // MSByte
 
     Block_B[10] = (Message->Frame_Counter & 0x00FF);
     Block_B[11] = ((Message->Frame_Counter >> 8) & 0x00FF);
@@ -294,6 +296,12 @@ void Calculate_MIC(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message) 
         AES_Encrypt(New_Data, Key);
     }
 
+    std::cout << "Resulting MIC16 : ";
+    for (uint32_t index = 0; index < 16; index++) {
+        std::cout << std::hex << (int)New_Data[index] << " ";
+    }
+    std::cout << std::endl;
+
     Message->MIC[0] = New_Data[0];
     Message->MIC[1] = New_Data[1];
     Message->MIC[2] = New_Data[2];
@@ -353,7 +361,6 @@ void Generate_Keys(unsigned char *Key, unsigned char *K1, unsigned char *K2) {
     }
 }
 
-
 void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data) {
     unsigned char i, j;
     unsigned char Key_K1[16] = {
@@ -366,7 +373,7 @@ void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data
     unsigned char Old_Data[16] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    
+
     unsigned char Number_of_Blocks      = 0x00;
     unsigned char Incomplete_Block_Size = 0x00;
 
@@ -380,6 +387,24 @@ void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data
     }
 
     Generate_Keys(Key, Key_K1, Key_K2);
+
+std::cout << "MIC-Key : ";
+    for (uint32_t index = 0; index < 16; index++) {
+        std::cout << std::hex << (int)Key[index] << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "MIC-Key_K1 : ";
+    for (uint32_t index = 0; index < 16; index++) {
+        std::cout << std::hex << (int)Key_K1[index] << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "MIC-Key_K2 : ";
+    for (uint32_t index = 0; index < 16; index++) {
+        std::cout << std::hex << (int)Key_K2[index] << " ";
+    }
+    std::cout << std::endl;
 
     // Perform full calculating until n-1 message blocks
     for (j = 0x0; j < (Number_of_Blocks - 1); j++) {
@@ -439,4 +464,10 @@ void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data
         // Perform last AES routine
         AES_Encrypt(New_Data, Key);
     }
+
+    std::cout << "Resulting MIC16 : ";
+    for (uint32_t index = 0; index < 16; index++) {
+        std::cout << std::hex << (int)New_Data[index] << " ";
+    }
+    std::cout << std::endl;
 }

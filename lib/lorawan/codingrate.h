@@ -10,7 +10,7 @@
 
 // It seems LoRaWAN fixes the coding rate to 4/5 (for the payload) and 4/8 (for the header), so we don't really need all the others
 
-enum class codingRate : uint32_t {
+enum class codingRate : uint8_t {
     cr4_4 = 0x00,
     cr4_5 = 0x01,
     cr4_6 = 0x02,

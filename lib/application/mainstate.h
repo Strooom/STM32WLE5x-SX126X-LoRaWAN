@@ -9,8 +9,6 @@
 
 enum class mainState : uint32_t {
     boot = 0x00,
-    runOnBattery,
-    runOnExternalPower
 };
 
 const char* toString(const mainState aState);

@@ -45,7 +45,7 @@ void byteBuffer::set(const char* newDataAsString) {
     }
 }
 
-void byteBuffer::setFromASCII(const char* asciiKey) {
+void byteBuffer::setFromHexAscii(const char* asciiKey) {
     uint32_t asciiKeyLength = strnlen(asciiKey, 2 * maxLength);
 
     for (uint32_t index = 0; index < (asciiKeyLength / 2); index++) {

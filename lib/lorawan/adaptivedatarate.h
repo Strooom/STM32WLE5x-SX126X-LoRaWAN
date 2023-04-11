@@ -7,8 +7,9 @@
 
 #pragma once
 #include <stdint.h>
-#include "datarate.h"
+
 #include "bandwidth.h"
+#include "datarate.h"
 #include "spreadingfactor.h"
 
 class adaptiveDataRate {

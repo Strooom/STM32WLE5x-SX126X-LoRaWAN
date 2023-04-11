@@ -11,6 +11,7 @@ const char *toString(mainState aState) {
         case mainState::boot:
             return "boot";
             break;
+            
         default:
             return "unknown";
             break;

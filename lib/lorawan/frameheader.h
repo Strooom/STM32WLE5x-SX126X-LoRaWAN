@@ -7,6 +7,7 @@
 
 #pragma once
 #include <stdint.h>
+
 #include "deviceaddress.h"
 #include "framecontrol.h"
 #include "framecount.h"
