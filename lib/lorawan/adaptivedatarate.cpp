@@ -26,6 +26,7 @@ bandwidth adaptiveDataRate::getBandwidth() const {
 
 spreadingFactor adaptiveDataRate::getSpreadingFactor() const {
     switch (currentDataRate) {
+        default:
         case dataRate::DR0:
             return spreadingFactor::SF12;
             break;
@@ -43,9 +44,6 @@ spreadingFactor adaptiveDataRate::getSpreadingFactor() const {
             break;
         case dataRate::DR5:
             return spreadingFactor::SF7;
-            break;
-
-        default:
             break;
     }
 }

@@ -18,8 +18,8 @@ const char* toString(applicationEvent anEvent) {
             return "lowPowerTimerExpired";
             break;
 
-        case applicationEvent::downlinkMessageReceived:
-            return "downlinkMessageReceived";
+        case applicationEvent::downlinkApplicationPayloadReceived:
+            return "downlinkApplicationPayloadReceived";
             break;
 
         default:

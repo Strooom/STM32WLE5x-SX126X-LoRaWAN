@@ -1,11 +1,33 @@
+/* USER CODE BEGIN Header */
+/**
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "app_subghz_phy.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include <stdio.h>        // for snprintf()...
 #include "logging.h"
 #include "eventbuffer.h"
 #include "applicationevent.h"
-#include "lorawanevent.h"
-#include "radioevent.h"
+#include "txrxcycle.h"
 #include "lorawan.h"
 #include "string.h"
 #include "sx126x.h"
@@ -14,19 +36,48 @@
 #include "cli.h"
 #include "sensorcollection.h"
 #include "nvs.h"
+#include "measurementcollection.h"
 
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
+
+CRYP_HandleTypeDef hcryp;
+__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
+
 I2C_HandleTypeDef hi2c2;
+
 LPTIM_HandleTypeDef hlptim1;
+
+RNG_HandleTypeDef hrng;
+
 RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi2;
+
 SUBGHZ_HandleTypeDef hsubghz;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
+/* USER CODE BEGIN PV */
 nonVolatileStorage nvs;
 logging theLog;
-eventBuffer<radioEvent, 16U> sx126xEventBuffer;
 eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
@@ -35,27 +86,83 @@ mainController theMainController;
 power thePowerControl;
 cli theCli;
 sensorCollection theSensors;
+measurementCollection theMeasurements;
 
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ADC_Init(void);
+static void MX_AES_Init(void);
 static void MX_I2C2_Init(void);
+static void MX_LPTIM1_Init(void);
+static void MX_RNG_Init(void);
 static void MX_RTC_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_LPTIM1_Init(void);
-void initializePeripherals(void);
+/* USER CODE BEGIN PFP */
 
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void) {
+    /* USER CODE BEGIN 1 */
+
+    /* USER CODE END 1 */
+
+    /* MCU Configuration--------------------------------------------------------*/
+
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
     HAL_Init();
-    initializePeripherals();
+
+    /* USER CODE BEGIN Init */
+
+    /* USER CODE END Init */
+
+    /* Configure the system clock */
+    SystemClock_Config();
+
+    /* USER CODE BEGIN SysInit */
+
+    /* USER CODE END SysInit */
+
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_ADC_Init();
+    MX_AES_Init();
+    MX_I2C2_Init();
+    MX_LPTIM1_Init();
+    MX_RNG_Init();
+    MX_RTC_Init();
+    MX_SPI2_Init();
+    MX_USART1_UART_Init();
+    // MX_USART2_UART_Init(); // only initialized when USB power is connected
+    MX_SubGHz_Phy_Init();
+    /* USER CODE BEGIN 2 */
     theLog.snprintf("MuMo v2\n");
+    /* USER CODE END 2 */
+
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
     theSensors.discover();
     loraNetwork.initialize();              // LoRaWAN layer + the LoRa radio
     theMainController.initialize();        // application
 
     while (1) {
+        /* USER CODE END WHILE */
+        // MX_SubGHz_Phy_Process();
+
+        /* USER CODE BEGIN 3 */
         thePowerControl.detectUsbConnectOrRemove();
         loraNetwork.handleEvents();
         theMainController.handleEvents();
@@ -67,9 +174,13 @@ int main(void) {
             // It's not so much a problem that there would be an interrupt pending and the MCU refuses to go into sleep..
             // The problem would be that there are messages waiting in the eventBuffers which would only be served after waking up..
         }
+        /* USER CODE END 3 */
     }
 }
-
+/**
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -121,43 +232,35 @@ static void MX_ADC_Init(void) {
 
     /* USER CODE END ADC_Init 0 */
 
-    ADC_ChannelConfTypeDef sConfig = {0};
-
     /* USER CODE BEGIN ADC_Init 1 */
 
     /* USER CODE END ADC_Init 1 */
 
     /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
      */
-    hadc.Instance                   = ADC;
-    hadc.Init.ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;
-    hadc.Init.Resolution            = ADC_RESOLUTION_12B;
-    hadc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
-    hadc.Init.ScanConvMode          = ADC_SCAN_DISABLE;
-    hadc.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
-    hadc.Init.LowPowerAutoWait      = DISABLE;
-    hadc.Init.LowPowerAutoPowerOff  = DISABLE;
-    hadc.Init.ContinuousConvMode    = DISABLE;
-    hadc.Init.NbrOfConversion       = 1;
-    hadc.Init.DiscontinuousConvMode = DISABLE;
-    hadc.Init.ExternalTrigConv      = ADC_SOFTWARE_START;
-    hadc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    hadc.Init.DMAContinuousRequests = DISABLE;
-    hadc.Init.Overrun               = ADC_OVR_DATA_PRESERVED;
-    hadc.Init.SamplingTimeCommon1   = ADC_SAMPLETIME_160CYCLES_5;
-    hadc.Init.SamplingTimeCommon2   = ADC_SAMPLETIME_160CYCLES_5;
-    hadc.Init.OversamplingMode      = DISABLE;
-    hadc.Init.TriggerFrequencyMode  = ADC_TRIGGER_FREQ_HIGH;
+    hadc.Instance                        = ADC;
+    hadc.Init.ClockPrescaler             = ADC_CLOCK_SYNC_PCLK_DIV1;
+    hadc.Init.Resolution                 = ADC_RESOLUTION_12B;
+    hadc.Init.DataAlign                  = ADC_DATAALIGN_RIGHT;
+    hadc.Init.ScanConvMode               = ADC_SCAN_DISABLE;
+    hadc.Init.EOCSelection               = ADC_EOC_SINGLE_CONV;
+    hadc.Init.LowPowerAutoWait           = DISABLE;
+    hadc.Init.LowPowerAutoPowerOff       = DISABLE;
+    hadc.Init.ContinuousConvMode         = DISABLE;
+    hadc.Init.NbrOfConversion            = 1;
+    hadc.Init.DiscontinuousConvMode      = DISABLE;
+    hadc.Init.ExternalTrigConv           = ADC_SOFTWARE_START;
+    hadc.Init.ExternalTrigConvEdge       = ADC_EXTERNALTRIGCONVEDGE_NONE;
+    hadc.Init.DMAContinuousRequests      = DISABLE;
+    hadc.Init.Overrun                    = ADC_OVR_DATA_PRESERVED;
+    hadc.Init.SamplingTimeCommon1        = ADC_SAMPLETIME_79CYCLES_5;
+    hadc.Init.SamplingTimeCommon2        = ADC_SAMPLETIME_79CYCLES_5;
+    hadc.Init.OversamplingMode           = ENABLE;
+    hadc.Init.Oversampling.Ratio         = ADC_OVERSAMPLING_RATIO_8;
+    hadc.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_NONE;
+    hadc.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+    hadc.Init.TriggerFrequencyMode       = ADC_TRIGGER_FREQ_HIGH;
     if (HAL_ADC_Init(&hadc) != HAL_OK) {
-        Error_Handler();
-    }
-
-    /** Configure Regular Channel
-     */
-    sConfig.Channel      = ADC_CHANNEL_TEMPSENSOR;
-    sConfig.Rank         = ADC_REGULAR_RANK_1;
-    sConfig.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
-    if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN ADC_Init 2 */
@@ -166,13 +269,49 @@ static void MX_ADC_Init(void) {
 }
 
 /**
+ * @brief AES Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_AES_Init(void) {
+    /* USER CODE BEGIN AES_Init 0 */
+
+    /* USER CODE END AES_Init 0 */
+
+    /* USER CODE BEGIN AES_Init 1 */
+
+    /* USER CODE END AES_Init 1 */
+    hcryp.Instance             = AES;
+    hcryp.Init.DataType        = CRYP_DATATYPE_32B;
+    hcryp.Init.KeySize         = CRYP_KEYSIZE_128B;
+    hcryp.Init.pKey            = (uint32_t *)pKeyAES;
+    hcryp.Init.Algorithm       = CRYP_AES_ECB;
+    hcryp.Init.DataWidthUnit   = CRYP_DATAWIDTHUNIT_WORD;
+    hcryp.Init.HeaderWidthUnit = CRYP_HEADERWIDTHUNIT_WORD;
+    hcryp.Init.KeyIVConfigSkip = CRYP_KEYIVCONFIG_ALWAYS;
+    if (HAL_CRYP_Init(&hcryp) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN AES_Init 2 */
+
+    /* USER CODE END AES_Init 2 */
+}
+
+/**
  * @brief I2C2 Initialization Function
  * @param None
  * @retval None
  */
 static void MX_I2C2_Init(void) {
+    /* USER CODE BEGIN I2C2_Init 0 */
+
+    /* USER CODE END I2C2_Init 0 */
+
+    /* USER CODE BEGIN I2C2_Init 1 */
+
+    /* USER CODE END I2C2_Init 1 */
     hi2c2.Instance              = I2C2;
-    hi2c2.Init.Timing           = 0x00303D5B;
+    hi2c2.Init.Timing           = 0x0010061A;
     hi2c2.Init.OwnAddress1      = 0;
     hi2c2.Init.AddressingMode   = I2C_ADDRESSINGMODE_7BIT;
     hi2c2.Init.DualAddressMode  = I2C_DUALADDRESS_DISABLE;
@@ -195,6 +334,9 @@ static void MX_I2C2_Init(void) {
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK) {
         Error_Handler();
     }
+    /* USER CODE BEGIN I2C2_Init 2 */
+
+    /* USER CODE END I2C2_Init 2 */
 }
 
 /**
@@ -212,7 +354,7 @@ static void MX_LPTIM1_Init(void) {
     /* USER CODE END LPTIM1_Init 1 */
     hlptim1.Instance             = LPTIM1;
     hlptim1.Init.Clock.Source    = LPTIM_CLOCKSOURCE_APBCLOCK_LPOSC;
-    hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV1;
+    hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV16;
     hlptim1.Init.Trigger.Source  = LPTIM_TRIGSOURCE_SOFTWARE;
     hlptim1.Init.OutputPolarity  = LPTIM_OUTPUTPOLARITY_HIGH;
     hlptim1.Init.UpdateMode      = LPTIM_UPDATE_IMMEDIATE;
@@ -228,11 +370,47 @@ static void MX_LPTIM1_Init(void) {
 }
 
 /**
+ * @brief RNG Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_RNG_Init(void) {
+    /* USER CODE BEGIN RNG_Init 0 */
+
+    /* USER CODE END RNG_Init 0 */
+
+    /* USER CODE BEGIN RNG_Init 1 */
+
+    /* USER CODE END RNG_Init 1 */
+    hrng.Instance                 = RNG;
+    hrng.Init.ClockErrorDetection = RNG_CED_ENABLE;
+    if (HAL_RNG_Init(&hrng) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN RNG_Init 2 */
+
+    /* USER CODE END RNG_Init 2 */
+}
+
+/**
  * @brief RTC Initialization Function
  * @param None
  * @retval None
  */
 static void MX_RTC_Init(void) {
+    /* USER CODE BEGIN RTC_Init 0 */
+
+    /* USER CODE END RTC_Init 0 */
+
+    RTC_TimeTypeDef sTime = {0};
+    RTC_DateTypeDef sDate = {0};
+
+    /* USER CODE BEGIN RTC_Init 1 */
+
+    /* USER CODE END RTC_Init 1 */
+
+    /** Initialize RTC Only
+     */
     hrtc.Instance            = RTC;
     hrtc.Init.HourFormat     = RTC_HOURFORMAT_24;
     hrtc.Init.AsynchPrediv   = 127;
@@ -247,13 +425,37 @@ static void MX_RTC_Init(void) {
         Error_Handler();
     }
 
-    /** Enable the WakeUp
+    /* USER CODE BEGIN Check_RTC_BKUP */
+
+    /* USER CODE END Check_RTC_BKUP */
+
+    /** Initialize RTC and set the Time and Date
      */
-    //	if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61440, RTC_WAKEUPCLOCK_RTCCLK_DIV16,
-    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 4096, RTC_WAKEUPCLOCK_RTCCLK_DIV16,
-                                    0) != HAL_OK) {
+    sTime.Hours          = 0x0;
+    sTime.Minutes        = 0x0;
+    sTime.Seconds        = 0x0;
+    sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
         Error_Handler();
     }
+    sDate.WeekDay = RTC_WEEKDAY_MONDAY;
+    sDate.Month   = RTC_MONTH_JANUARY;
+    sDate.Date    = 0x1;
+    sDate.Year    = 0x0;
+
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
+        Error_Handler();
+    }
+
+    /** Enable the WakeUp
+     */
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61440, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN RTC_Init 2 */
+
+    /* USER CODE END RTC_Init 2 */
 }
 
 /**
@@ -273,7 +475,7 @@ static void MX_SPI2_Init(void) {
     hspi2.Instance               = SPI2;
     hspi2.Init.Mode              = SPI_MODE_MASTER;
     hspi2.Init.Direction         = SPI_DIRECTION_2LINES;
-    hspi2.Init.DataSize          = SPI_DATASIZE_4BIT;
+    hspi2.Init.DataSize          = SPI_DATASIZE_8BIT;
     hspi2.Init.CLKPolarity       = SPI_POLARITY_LOW;
     hspi2.Init.CLKPhase          = SPI_PHASE_1EDGE;
     hspi2.Init.NSS               = SPI_NSS_SOFT;
@@ -402,104 +604,48 @@ static void MX_USART2_UART_Init(void) {
  * @retval None
  */
 static void MX_GPIO_Init(void) {
-    LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
-    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
-    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
+    /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    LL_GPIO_ResetOutputPin(GPIOB, writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin);
-    LL_GPIO_ResetOutputPin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin);
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin, GPIO_PIN_RESET);
 
+    /*Configure GPIO pin Output Level */
+    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin, GPIO_PIN_RESET);
+
+    /*Configure GPIO pins : usbPowerPresent_Pin displayBusy_Pin */
     GPIO_InitStruct.Pin  = usbPowerPresent_Pin | displayBusy_Pin;
-    GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin        = writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin;
-    GPIO_InitStruct.Mode       = LL_GPIO_MODE_OUTPUT;
-    GPIO_InitStruct.Speed      = LL_GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    GPIO_InitStruct.Pull       = LL_GPIO_PULL_NO;
-    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    /*Configure GPIO pins : writeProtect_Pin displayDataCommand_Pin displayChipSelect_Pin */
+    GPIO_InitStruct.Pin   = writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin        = displayReset_Pin | rfControl1_Pin | rfControl2_Pin;
-    GPIO_InitStruct.Mode       = LL_GPIO_MODE_OUTPUT;
-    GPIO_InitStruct.Speed      = LL_GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    GPIO_InitStruct.Pull       = LL_GPIO_PULL_NO;
-    LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    //	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-    //
-    //	/* GPIO Ports Clock Enable */
-    //	__HAL_RCC_GPIOA_CLK_ENABLE();
-    //	__HAL_RCC_GPIOB_CLK_ENABLE();
-    //	__HAL_RCC_GPIOC_CLK_ENABLE();
-    //
-    //	/*Configure GPIO pin Output Level */
-    //	HAL_GPIO_WritePin(writeProtect_GPIO_Port, writeProtect_Pin, GPIO_PIN_SET); // High = writes protected, Low = writes enabled
-    //
-    //	/*Configure GPIO pin : vBus_Pin */
-    //	GPIO_InitStruct.Pin = vBus_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	HAL_GPIO_Init(vBus_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	/*Configure GPIO pin : writeProtect_Pin */
-    //	GPIO_InitStruct.Pin = writeProtect_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    //	HAL_GPIO_Init(writeProtect_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	HAL_GPIO_WritePin(RF_SW_CTRL1_GPIO_Port, RF_SW_CTRL1_Pin, GPIO_PIN_RESET);
-    //	HAL_GPIO_WritePin(RF_SW_CTRL2_GPIO_Port, RF_SW_CTRL2_Pin, GPIO_PIN_RESET);
-    //
-    //	/* Configure the Radio Switch pin PA4 */
-    //	GPIO_InitStruct.Pin = RF_SW_CTRL1_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    //
-    //	HAL_GPIO_Init(RF_SW_CTRL1_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	/* Configure the Radio Switch pin PA5 */
-    //	GPIO_InitStruct.Pin = RF_SW_CTRL2_Pin;
-    //	HAL_GPIO_Init(RF_SW_CTRL2_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	/*Configure GPIO pin Output Level */
-    //	HAL_GPIO_WritePin(displayDataCommand_GPIO_Port, displayDataCommand_Pin,
-    //			GPIO_PIN_RESET);
-    //
-    //	/*Configure GPIO pins : displayReset_Pin displayChipSelect_Pin TP3_Pin */
-    //	GPIO_InitStruct.Pin = displayReset_Pin | displayChipSelect_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    //	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    //
-    //	/*Configure GPIO pin : usbPower_Pin */
-    //	GPIO_InitStruct.Pin = usbPower_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	HAL_GPIO_Init(usbPower_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	/*Configure GPIO pin : displayDataCommand_Pin */
-    //	GPIO_InitStruct.Pin = displayDataCommand_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    //	HAL_GPIO_Init(displayDataCommand_GPIO_Port, &GPIO_InitStruct);
-    //
-    //	/*Configure GPIO pin : displayBusy_Pin */
-    //	GPIO_InitStruct.Pin = displayBusy_Pin;
-    //	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    //	GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //	HAL_GPIO_Init(displayBusy_GPIO_Port, &GPIO_InitStruct);
-    //
+    /*Configure GPIO pins : displayReset_Pin rfControl1_Pin rfControl2_Pin */
+    GPIO_InitStruct.Pin   = displayReset_Pin | rfControl1_Pin | rfControl2_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void) {
     /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state */
@@ -509,25 +655,18 @@ void Error_Handler(void) {
     /* USER CODE END Error_Handler_Debug */
 }
 
-void initializePeripherals(void) {
-    SystemClock_Config();
-    HAL_Delay(1U);
-    MX_GPIO_Init();
-    HAL_Delay(1U);
-    MX_ADC_Init();
-    HAL_Delay(1U);
-    MX_I2C2_Init();
-    HAL_Delay(1U);
-    MX_RTC_Init();
-    HAL_Delay(1U);
-    MX_SPI2_Init();
-    HAL_Delay(1U);
-    MX_USART1_UART_Init();
-    HAL_Delay(1U);
-    MX_USART2_UART_Init();
-    HAL_Delay(1U);
-    MX_LPTIM1_Init();
-    HAL_Delay(1U);
-    MX_SUBGHZ_Init();
-    HAL_Delay(1U);
+void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim) {
+    loraWanEventBuffer.push(loRaWanEvent::timeOut);
+}
+
+void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    loraWanEventBuffer.push(loRaWanEvent::sx126xTxComplete);
+}
+
+void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    loraWanEventBuffer.push(loRaWanEvent::sx126xRxComplete);
+}
+
+void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    loraWanEventBuffer.push(loRaWanEvent::sx126xTimeout);
 }

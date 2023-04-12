@@ -19,8 +19,7 @@ class eventBuffer {
   public:
     static constexpr uint32_t length = bufferLength;
 
-    eventBuffer() {
-        initialize();
+    eventBuffer(){
     };
 
     void initialize() {
@@ -70,6 +69,6 @@ class eventBuffer {
 #endif
     uint32_t head{0};
     uint32_t level{0};
-    eventType theBuffer[bufferLength];
+    eventType theBuffer[bufferLength]{};
     // uint32_t levelMax{0};
 };

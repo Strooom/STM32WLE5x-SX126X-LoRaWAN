@@ -8,12 +8,12 @@
 #include "logging.h"
 #include "eventbuffer.h"
 #include "txrxcycle.h"
+#include "nvs.h"
 
 extern sx126x theRadio;
 extern logging theLog;
 extern eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
-
-// extern nonVolatileStorage nvs;
+extern nonVolatileStorage nvs;
 
 LoRaWAN::LoRaWAN() {
 }
@@ -23,6 +23,7 @@ void LoRaWAN::handleEvents() {
         return;
     }
     loRaWanEvent theEvent = loraWanEventBuffer.pop();
+    theLog.snprintf("LoRaWAN event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
 
     switch (theTxRxCycleState) {
         case txRxCycleState::idle:
@@ -112,7 +113,7 @@ void LoRaWAN::handleEvents() {
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    theLog.snprintf("LoRaWAN stateChange from %s[%d] to %s[%d]", toString(theTxRxCycleState), theTxRxCycleState, toString(newState), newState);
+    theLog.snprintf("LoRaWAN stateChange from [%d] %s to [%d] %s", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
     exitState(theTxRxCycleState);
     theTxRxCycleState = newState;
     enterState(newState);
@@ -182,8 +183,7 @@ void LoRaWAN::enterState(txRxCycleState newState) {
 }
 
 bool LoRaWAN::isReadyToTransmit() const {
-    return true;        // TODO : add real implementation, taking into account the duty-cycle, being joined, etc
-    // For the time being, we keep it simple and just return true
+    return (theTxRxCycleState == txRxCycleState::idle);
 }
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {
@@ -339,50 +339,15 @@ void LoRaWAN::calculateAndAppendMic() {
 }
 
 void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFramePort) {
-    if (applicationPayloadToSend.length > getMaxApplicationPayloadLength()) {
-        return;        // TODO : log error : trying to send too much data
-    }
-
     copyPayload(applicationPayloadToSend);
-
-    // std::cout << "payload before encryption : ";
-    // for (uint32_t index = 0; index < payloadLength; index++) {
-    //     std::cout << std::hex << (int)rawMessage[payloadOffset + index] << " ";
-    // }
-    // std::cout << std::endl;
-
     encryptPayload(applicationKey);
-
-    // std::cout << "payload after encryption : ";
-    // for (uint32_t index = 0; index < payloadLength; index++) {
-    //     std::cout << std::hex << (int)rawMessage[payloadOffset + index] << " ";
-    // }
-    // std::cout << std::endl;
-
     prependHeader(theFramePort);
-
-    // std::cout << "header prepended : ";
-    // for (uint32_t index = 0; index < (payloadLength); index++) {
-    //     std::cout << std::hex << (int)rawMessage[headerOffset + index] << " ";
-    // }
-    // std::cout << std::endl;
-
     prepareBlockB0(applicationPayloadToSend.length, linkDirection::uplink);
     calculateAndAppendMic();
-
-    // std::cout << "phy payload : ";
-    // for (uint32_t index = 0; index < (payloadLength); index++) {
-    //     std::cout << std::hex << (int)rawMessage[headerOffset + index] << " ";
-    // }
-    // std::cout << std::endl;
-    // uplinkMessage.transmit();
 }
 
 void LoRaWAN::getDownlinkMessage(byteBuffer& applicationPayloadReceived) {
     // downlinkMessage.processDownlinkMessage(applicationPayloadReceived);
-}
-
-void LoRaWAN::runMAC() {
 }
 
 void LoRaWAN::initialize() {

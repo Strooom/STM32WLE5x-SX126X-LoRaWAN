@@ -30,7 +30,7 @@ void bme680::calculateBarometricPressure() {
 void bme680::calculateRelativeHumidity() {
 }
 
-bool bme680::goSleep() {
+void bme680::goSleep() {
     // nothing to do as the bme680 goes into sleep automatically after a conversion
 }
 

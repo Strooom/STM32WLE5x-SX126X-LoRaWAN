@@ -11,7 +11,7 @@
 class sensorCollection {
   public:
     void discover();        // this will scan all hardware ports (I2C, UART, ...) for known sensors, and if found add them to the collection
-    void measure();         // this will check all sensors in the collection if they need to be sampled, and will sample them if needed. Sample is stored in sample collection
+    void measure();         // this will check all sensors in the collection if they need to be sampled, and will measurement them if needed. Sample is stored in measurement collection
 
   private:
     static constexpr uint32_t maxNumberOfSensors{8};

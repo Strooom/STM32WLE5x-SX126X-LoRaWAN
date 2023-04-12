@@ -19,7 +19,7 @@ class bme680 {
     static float readTemperature();               //
     static float readHumidity();                  //
     static float readBarometricPressure();        //
-    static bool goSleep();                        //
+    static void goSleep();                        //
 
     static constexpr uint8_t i2cAddress{0x76};        // default I2C address for this sensor, DSO tied to GND on our hardware
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters

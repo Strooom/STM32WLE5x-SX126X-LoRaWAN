@@ -19,7 +19,7 @@ class deviceAddress {
     void fromUint32(uint32_t theDeviceAddress);        // decode the deviceAddress from a uint32_t
     static constexpr uint32_t length{4};               // [bytes]
   private:
-    uint32_t theDeviceAddress;
+    uint32_t theDeviceAddress{0};
     //const uint32_t nvsBlockIndex;
 };
 

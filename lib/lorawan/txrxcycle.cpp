@@ -3,6 +3,7 @@
 const char* toString(txRxCycleState theState) {
     switch (theState) {
         case txRxCycleState::idle:
+            return "idle";
             break;
         case txRxCycleState::waitForCadEnd:
             return "waitForCadEnd";
@@ -24,6 +25,9 @@ const char* toString(txRxCycleState theState) {
             break;
         case txRxCycleState::waitForRx2CompleteOrTimeout:
             return "waitForRx2CompleteOrTimeout";
+            break;
+        case txRxCycleState::waitForRxMessageReadout:
+            return "waitForRxMessageReadout";
             break;
         default:
             return "unknown state";

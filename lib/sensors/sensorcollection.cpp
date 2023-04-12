@@ -15,12 +15,12 @@ void sensorCollection::measure() {
 }
 
 void sensorCollection::discover() {
-    addSensor(infoChannelType::batteryLevel, 7, 359, 7, 14);        // one sample per day on battery, one per hour on USB power
+    addSensor(infoChannelType::batteryLevel, 7, 359, 7, 14);        // one measurement per day on battery, one per hour on USB power
 
     if (bme680::isPresent()) {
-        addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one sample per 20 minutes
-        //addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one sample per 20 minutes
-        //addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one sample per 20 minutes
+        addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
+        //addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
+        //addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
     }
 
     if (tsl2591::isPresent()) {

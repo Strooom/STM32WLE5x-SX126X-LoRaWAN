@@ -87,6 +87,7 @@ void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t *data, uint8_t d
 
 bool sx126x::isBusy() {
     // PWR_SR2 register, bit 1
+    return false; // TODO
 }
 
 void sx126x::setRegulatorMode() {

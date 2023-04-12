@@ -8,12 +8,8 @@
 #pragma once
 #include <stdint.h>
 
-enum class radioEvent : uint8_t {
-    none = 0x00,
-    transmitComplete,
-    transmitTimeout,
-    receiveComplete,
-    receiveTimeout,
+enum class collisionAvoidanceStrategy : uint8_t {
+    none,
+    cad,
+    aloha
 };
-
-const char* toString(radioEvent anEvent);

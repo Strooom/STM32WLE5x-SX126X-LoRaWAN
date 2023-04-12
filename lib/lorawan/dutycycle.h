@@ -14,8 +14,8 @@
 // clearly the TTN requirement is more stringent than the ETSI requirement, so FTTB we only check this one.
 
 struct transmitRecord {
-    uint32_t timestamp;        // from RTC
-    uint32_t duration;         // [ms]
+    uint32_t timestamp{0};        // from RTC
+    uint32_t duration{0};         // [ms]
 };
 
 class dutyCycle {

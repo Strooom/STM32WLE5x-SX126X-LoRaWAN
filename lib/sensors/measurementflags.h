@@ -7,7 +7,7 @@
 #pragma once
 #include <stdint.h>
 
-class sampleFlags {
+class measurementFlags {
   public:
     static constexpr uint8_t transmittedToCloud{0x01};
     static constexpr uint8_t acknowledgedByCloud{0x02};

@@ -7,18 +7,18 @@
 #pragma once
 #include <stdint.h>
 
-#include "sample.h"
+#include "measurement.h"
 // This implements a large circular buffer to store samples.
 // Samples are always written to EEPROM, but the head and level are kept in RAM, after reset, we can recover the head and level from scanning the EEPROM
 
 
-
-class sampleCollection {
+class measurementCollection {
   public:
-    void addSample(sample newSample);
-    void transmitSamples();
+    void add(measurement newSample);
+    void get();
+
+    uint32_t getNmbrToBeTransmitted(); // how many measurements are still to be transmitted
   private:
-    static constexpr uint32_t maxNumberOfSamples{8};
-    uint32_t actualNumberOfSamples{0};
-    sample allSamples[maxNumberOfSamples];
+    uint32_t head{0};
+    uint32_t level{0};
 };
