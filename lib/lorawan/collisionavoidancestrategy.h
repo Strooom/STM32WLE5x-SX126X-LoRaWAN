@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 enum class collisionAvoidanceStrategy : uint8_t {
-    none,
-    cad,
-    aloha
-};
+    none,        // when we want to transmit, we just do it immediately
+    cad,         // when we want to transmit, we first do a channel activity detection, and if no activity, we transmit. If activity, we wait a random time and do channel activity detection again, until we can transmit.
+    aloha        // when we want to transmit, we first wait a random time, and then transmit.
+    };

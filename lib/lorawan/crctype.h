@@ -13,4 +13,3 @@ enum class crcType : uint8_t {
     on = 0x01
 };
 
-const char* toString(crcType theCrcType);

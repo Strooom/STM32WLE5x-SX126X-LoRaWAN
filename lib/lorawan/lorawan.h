@@ -19,16 +19,22 @@
 #include "mic.h"
 #include "txrxcycle.h"
 #include "collisionavoidancestrategy.h"
+#include "spreadingfactor.h"
+#include "channel.h"
+#include "messagetype.h"
+#include "datarate.h"
+#include "transmitpower.h"
 
 class LoRaWAN {
   public:
-    LoRaWAN();
     void initialize();                                      // initialize the LoRaWAN layer
     void handleEvents();                                    // handle timeouts and tx/rxComplete
     bool isReadyToTransmit() const;                         // is the LoRaWAN layer in a state, ready to transmit a message?
     uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
 
     void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
+
+    messageType decodeMessage();        // is it for the application, for the MAC layer, or invalid msg
 
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
@@ -49,6 +55,12 @@ class LoRaWAN {
 
     dutyCycle theDutyCycle;
     messageIntegrityCode mic;
+
+    dataRates theDataRates;
+    uint32_t currentDataRateIndex{0};
+    loRaChannels theChannels;
+    uint32_t currentChannelIndex{0};
+    transmitPower theTransmitPower{transmitPower::max};
 
     uint8_t rawMessage[272]{};        // 256 bytes as this is the maximum we can send to the S126x radio. 16 extra bytes in front, needed to calculate the MIC (they are not part of the message sent to the radio)
     uint32_t payloadLength{0};        // length of the application payload
@@ -74,4 +86,6 @@ class LoRaWAN {
     static uint32_t getRandomNumber();
     static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
     static void stopTimer();
+
+    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 };

@@ -13,6 +13,7 @@
 
 class measurement {
   public:
+  static constexpr uint32_t length{10}; // total length of a measurement in bytes - NOTE : in RAM the compiler aligns things, so it occupies 16 bytes... 
   private:
     infoChannelType type;          // defines what data the measurement contains, eg temperature, humidity, pressure, etc
     uint32_t timestamp;            // TODO : define what standard we use here.. Unix time? GPS time?

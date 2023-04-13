@@ -19,6 +19,4 @@ class mainController {
     // ### Properties ###
     // ### StateMachines ###
     mainState theMainState = mainState::boot;
-
-    // uint32_t rootSamplingPeriod{1};        // value between 1 and 32, controlling the basic rate at which the application wakes up, and takes samples from the sensors.
 };

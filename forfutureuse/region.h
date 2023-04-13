@@ -5,18 +5,13 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#include "linkdirection.h"
+#pragma once
+#include <stdint.h>
 
-const char* toString(linkDirection theDirection) {
-    switch (theDirection) {
-        case linkDirection::uplink:
-            return "uplink";
-            break;
-        case linkDirection::downlink:
-            return "downlink";
-            break;
-        default:
-            return "unknown";
-            break;
-    }
-}
+class region {
+    public:
+        uint8_t loRaSyncword; // EU868 = 0x34
+        uint8_t preambleLength; // EU868 = 8 symbols
+        channels ch; // object holding the avaialble / active channels in this region
+
+};

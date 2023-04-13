@@ -1,6 +1,9 @@
 # TODO's LoRaWAN
-* get LowPower Timer working for timing the TxRx1Rx2Cycle
-* finalize TxRex stateMachine
+
+* set up an array of channels
+* randomize over channels
+
+
 
 
 

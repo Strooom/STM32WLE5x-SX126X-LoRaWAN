@@ -8,10 +8,8 @@
 #pragma once
 #include <stdint.h>
 
-enum class collisionPreventionMode : uint32_t {
-    none,
-    randomTxTime,
-    useCAD,
+enum class messageType : uint32_t {
+    invalid,
+    application,
+    lorawanMac,
 };
-
-const char* toString(collisionPreventionMode aMode);

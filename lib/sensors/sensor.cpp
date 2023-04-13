@@ -9,7 +9,7 @@ extern power thePowerControl;
 #include "tsl2591.h"
 
 void sensor::run() {
-    theLog.snprintf("run sensor [%d] %s\n", static_cast<uint8_t>(type), toString(type));
+    theLog.snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
 
     uint32_t oversampling;
     uint32_t prescaler;
@@ -31,12 +31,15 @@ void sensor::run() {
     }
 
     if (prescaleCounter == 0) {
+        theLog.snprintf("skipped\n");
     } else {
         sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
         if (oversamplingCounter == 0) {
+            theLog.snprintf("measurement\n");
             // average all samples & ouput this measurement to NVS
             oversamplingCounter = oversampling;
         } else {
+            theLog.snprintf("sampled\n");
             oversamplingCounter--;
             prescaleCounter = prescaler;
         }
@@ -49,13 +52,13 @@ float sensor::read() {
             break;
 
         case infoChannelType::BME680SensorTemperature:
-            //bme680::initialize();
-            //bme680::readTemperature();
-            //bme680::goSleep();
+            // bme680::initialize();
+            // bme680::readTemperature();
+            // bme680::goSleep();
             break;
 
         default:
             break;
     }
-    return 0.123F; // TODO : remove, test only
+    return 0.123F;        // TODO : remove, test only
 }

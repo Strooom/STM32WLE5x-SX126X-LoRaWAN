@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 enum class applicationEvent : uint8_t {
-        none = 0x00,             // when an eventBuffer underflows, it pops this dummy event
+    none = 0x00,        // when an eventBuffer underflows, it pops this dummy event
 
     usbConnected,
     usbRemoved,

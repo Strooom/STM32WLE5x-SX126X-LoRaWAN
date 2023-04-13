@@ -13,4 +13,3 @@ enum class invertIq : uint8_t {
     inverted = 0x01
 };
 
-const char* toString(invertIq theInvertIq);

@@ -12,4 +12,3 @@ enum class headerType : uint8_t {
     explicitHeader = 0x00,
     implicitHeader = 0x01
 };
-const char* toString(headerType theHeaderType);

@@ -56,22 +56,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
-
 CRYP_HandleTypeDef hcryp;
 __ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
-
 I2C_HandleTypeDef hi2c2;
-
 LPTIM_HandleTypeDef hlptim1;
-
 RNG_HandleTypeDef hrng;
-
 RTC_HandleTypeDef hrtc;
-
 SPI_HandleTypeDef hspi2;
-
 SUBGHZ_HandleTypeDef hsubghz;
-
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -149,13 +141,10 @@ int main(void) {
     // MX_USART2_UART_Init(); // only initialized when USB power is connected
     MX_SubGHz_Phy_Init();
     /* USER CODE BEGIN 2 */
-    theLog.snprintf("MuMo v2\n");
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    theSensors.discover();
-    loraNetwork.initialize();              // LoRaWAN layer + the LoRa radio
     theMainController.initialize();        // application
 
     while (1) {
@@ -450,7 +439,7 @@ static void MX_RTC_Init(void) {
 
     /** Enable the WakeUp
      */
-    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61440, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
+    if (HAL_RTCEx_SetWakeUpTimer_IT(&hrtc, 61439, RTC_WAKEUPCLOCK_RTCCLK_DIV16, 0) != HAL_OK) {
         Error_Handler();
     }
     /* USER CODE BEGIN RTC_Init 2 */
