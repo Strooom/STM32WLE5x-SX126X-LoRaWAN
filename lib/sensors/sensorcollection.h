@@ -18,6 +18,6 @@ class sensorCollection {
     uint32_t actualNumberOfSensors{0};
     sensor theSensorCollection[maxNumberOfSensors];
 
-    void addSensor(infoChannelType aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
+    void addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
     ;
 };

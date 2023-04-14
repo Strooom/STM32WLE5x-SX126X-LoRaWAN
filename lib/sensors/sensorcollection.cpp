@@ -18,23 +18,35 @@ void sensorCollection::measure() {
 }
 
 void sensorCollection::discover() {
-    addSensor(infoChannelType::batteryLevel, 7, 359, 7, 14);        // one measurement per day on battery, one per hour on USB power
+    addSensor(measurementChannel::batteryLevel, 8, 360, 8, 15);        // one measurement per day on battery, one per hour on USB power
 
     if (bme680::isPresent()) {
-        addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
-        // addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
-        // addSensor(infoChannelType::BME680SensorTemperature, 3, 9, 3, 9);        // one measurement per 20 minutes
+        addSensor(measurementChannel::BME680SensorTemperature, 4, 10, 4, 10);               // one measurement per 20 minutes
+        addSensor(measurementChannel::BME680SensorRelativeHumidity, 4, 30, 4, 30);          // one measurement per 60 minutes
+        addSensor(measurementChannel::BME680SensorBarometricPressure, 4, 30, 4, 30);        // one measurement per 60 minutes
     }
 
     if (tsl2591::isPresent()) {
-        addSensor(infoChannelType::TSL25911VisibleLight, 3, 9, 3, 9);        //
-        // addSensor(infoChannelType::TSL25911Infrared, 3, 9, 3, 9);        //
+        addSensor(measurementChannel::TSL25911VisibleLight, 4, 10, 4, 10);        //
+        addSensor(measurementChannel::TSL25911Infrared, 0, 0, 4, 10);             //
     }
 }
 
-void sensorCollection::addSensor(infoChannelType aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) {
+void sensorCollection::addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) {
     if (actualNumberOfSensors < maxNumberOfSensors) {
         theLog.snprintf("%u : Added Sensor [%s]\n", (actualNumberOfSensors + 1), toString(aType));
+        if (oversamplingLowPower > sensor::maxOversampling) {
+            oversamplingLowPower = sensor::maxOversampling;
+        }
+        if (oversamplingHighPower > sensor::maxOversampling) {
+            oversamplingHighPower = sensor::maxOversampling;
+        }
+        if (prescalerLowPower > sensor::maxPrescaler) {
+            prescalerLowPower = sensor::maxPrescaler;
+        }
+        if (prescalerHighPower > sensor::maxPrescaler) {
+            prescalerHighPower = sensor::maxPrescaler;
+        }
         theSensorCollection[actualNumberOfSensors].type                  = aType;
         theSensorCollection[actualNumberOfSensors].oversamplingLowPower  = oversamplingLowPower;
         theSensorCollection[actualNumberOfSensors].prescalerLowPower     = prescalerLowPower;

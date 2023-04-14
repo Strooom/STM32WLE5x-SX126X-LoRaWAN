@@ -8,22 +8,22 @@
 #pragma once
 #include <stdint.h>
 
-#include "aeskey.h"
 #include "bytebuffer.h"
-#include "deviceaddress.h"
-#include "dutycycle.h"
-#include "framecount.h"
 #include "frameport.h"
-#include "linkdirection.h"
-#include "macheader.h"
-#include "mic.h"
+#include "messagetype.h"
 #include "txrxcycle.h"
 #include "collisionavoidancestrategy.h"
-#include "spreadingfactor.h"
-#include "channel.h"
-#include "messagetype.h"
+#include "macheader.h"
+#include "deviceaddress.h"
+#include "aeskey.h"
+#include "framecount.h"
+#include "dutycycle.h"
+#include "mic.h"
 #include "datarate.h"
+#include "channel.h"
 #include "transmitpower.h"
+#include "linkdirection.h"
+#include "spreadingfactor.h"
 
 class LoRaWAN {
   public:

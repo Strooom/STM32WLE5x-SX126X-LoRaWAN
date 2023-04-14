@@ -18,9 +18,6 @@ extern eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void LoRaWAN::initialize() {
-    theChannels.initialize();
-    currentChannelIndex = 0;
-    theDataRates.initialize();
     currentDataRateIndex = 3;
     theRadio.initialize();
     DevAddr.fromUint32(0x260B3B92);
@@ -79,9 +76,9 @@ void LoRaWAN::handleEvents() {
             switch (theEvent) {
                 case loRaWanEvent::timeOut: {
                     // Start Timer for Rx2Start
-                    uint32_t rxFrequency = theChannels.get(currentChannelIndex).frequency;
-                    uint32_t rxTimeout   = getReceiveTimeout(theDataRates.get(currentDataRateIndex).theSpreadingFactor);
-                    theRadio.configForReceive(theDataRates.get(currentDataRateIndex).theSpreadingFactor, rxFrequency);
+                    uint32_t rxFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
+                    uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
+                    theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                     theRadio.startReceive(rxTimeout);
                 } break;
                 default:
@@ -120,7 +117,7 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForRx2Start:
             switch (theEvent) {
                 case loRaWanEvent::timeOut: {
-                    uint32_t rxFrequency = theChannels.getRx2channel().frequency;
+                    uint32_t rxFrequency = theChannels.rx2ChannelFrequency;
                     uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF12);
                     theRadio.configForReceive(spreadingFactor::SF12, rxFrequency);
                     theRadio.startReceive(rxTimeout);
@@ -380,8 +377,8 @@ void LoRaWAN::calculateAndAppendMic() {
     }
     std::cout << std::endl;
 
-    sLoRa_Message* Message;
-    // Calculate_MIC(&sourceData, networkKey.asUnsignedChar(), Message);
+    // sLoRa_Message* Message;
+    //  Calculate_MIC(&sourceData, networkKey.asUnsignedChar(), Message);
 
     Calculate_MIC2(&sourceData, networkKey.asUnsignedChar(), result);
     rawMessage[headerOffset + payloadLength]     = result[0];        // LSByte
@@ -392,7 +389,7 @@ void LoRaWAN::calculateAndAppendMic() {
 }
 
 void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFramePort) {
-    // 1. Convert the appliction payload, to a LoRa(WAN) payload
+    // 1. Convert the application payload, to a LoRa(WAN) payload
     copyPayload(applicationPayloadToSend);
     encryptPayload(applicationKey);
     prependHeader(theFramePort);
@@ -400,8 +397,9 @@ void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFram
     calculateAndAppendMic();
 
     // 2. Configure the radio, and transmit the payload
-    uint32_t txFrequency = theChannels.get(currentChannelIndex).frequency;
-    spreadingFactor csf = theDataRates.get(currentDataRateIndex).theSpreadingFactor;
+    currentChannelIndex  = theChannels.getRandomChannelIndex();
+    uint32_t txFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
+    spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     theRadio.configForTransmit(csf, txFrequency, rawMessage + headerOffset, payloadLength);
     theRadio.startTransmit(0);
 }

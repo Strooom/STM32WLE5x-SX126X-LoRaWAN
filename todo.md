@@ -1,9 +1,6 @@
 # TODO's LoRaWAN
 
-* set up an array of channels
-* randomize over channels
-
-
+* unit tests sensor - oversampling/prescaler 0 : disabled
 
 
 

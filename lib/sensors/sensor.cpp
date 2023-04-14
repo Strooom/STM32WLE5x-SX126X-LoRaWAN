@@ -48,10 +48,10 @@ void sensor::run() {
 
 float sensor::read() {
     switch (type) {
-        case infoChannelType::batteryLevel:
+        case measurementChannel::batteryLevel:
             break;
 
-        case infoChannelType::BME680SensorTemperature:
+        case measurementChannel::BME680SensorTemperature:
             // bme680::initialize();
             // bme680::readTemperature();
             // bme680::goSleep();

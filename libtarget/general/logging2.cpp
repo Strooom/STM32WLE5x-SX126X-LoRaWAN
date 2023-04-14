@@ -1,10 +1,8 @@
 
 #include "logging.h"        //
 #include "main.h"           // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS
-#include <cstdio> // TODO : check which is the correct lib
+#include <cstdio>
 #include <cstdarg>
-//#include <stdio.h>          // required for vsnprintf()
-//#include <stdarg.h>         // required for handling variable number of argument functions, in this case snprintf
 
 void logging::snprintf(const char *format, ...) {
     if (debugProbePresent) {

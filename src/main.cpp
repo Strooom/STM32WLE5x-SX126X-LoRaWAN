@@ -139,13 +139,13 @@ int main(void) {
     MX_SPI2_Init();
     MX_USART1_UART_Init();
     // MX_USART2_UART_Init(); // only initialized when USB power is connected
-    MX_SubGHz_Phy_Init();
+    // MX_SubGHz_Phy_Init(); // doesn't seem to do anything
     /* USER CODE BEGIN 2 */
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-    theMainController.initialize();        // application
+    theMainController.initialize();
 
     while (1) {
         /* USER CODE END WHILE */

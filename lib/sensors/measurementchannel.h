@@ -7,7 +7,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class infoChannelType : uint32_t {
+enum class measurementChannel : uint32_t {
     none         = 0x00,
     batteryLevel = 0x01,
 
@@ -24,7 +24,7 @@ enum class infoChannelType : uint32_t {
     events = 0xF0
 };
 
-const char* toString(infoChannelType aChannel);
+const char* toString(measurementChannel aChannel);
 
 // enum class sensorType : uint8_t {
 //     none = 0x00,

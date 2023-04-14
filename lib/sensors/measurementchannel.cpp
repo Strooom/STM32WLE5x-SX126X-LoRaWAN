@@ -4,19 +4,19 @@
 // ### License : CC 4.0 BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0/ ###
 // ######################################################################################
 
-#include "infochanneltype.h"
+#include "measurementchannel.h"
 
-const char* toString(infoChannelType type) {
+const char* toString(measurementChannel type) {
     switch (type) {
-        case infoChannelType::batteryLevel:
+        case measurementChannel::batteryLevel:
             return "batteryLevel";
             break;
 
-        case infoChannelType::BME680SensorTemperature:
+        case measurementChannel::BME680SensorTemperature:
             return "BME680 - Temperature";
             break;
 
-        case infoChannelType::TSL25911VisibleLight:
+        case measurementChannel::TSL25911VisibleLight:
             return "TSL25911 - Visible Light";
             break;
 
