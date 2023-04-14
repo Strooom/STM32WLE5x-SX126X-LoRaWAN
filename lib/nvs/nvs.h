@@ -16,64 +16,70 @@ class nvsBlock {
     const uint32_t length;
 };
 
-// Collection of all nvsBlocks
-
 class nvsMap {
+    // friend class nonVolatileStorage;
+
   public:
-    static constexpr uint32_t numberOfBlocks{7};
+    enum class blockIndex : uint32_t {
+        nvsMapVersion = 0,
+        unusedGeneral,
 
-  private:
-    friend class nonVolatileStorage;
-    nvsBlock block[numberOfBlocks] = {
-        // Note : if you change this list, then the new firmware will not be able to read the old non-volatile storage
-        {0, 4},         // uplinkFrameCounter : 32 bits
-        {4, 4},         // downlinkFrameCounter : 32 bits
-        {8, 2},         // joinDevNonce : 16 bits
-        {10, 8},        // applicationSessionKey : 128 bits
-        {18, 8},        // networkSessionKey : 128 bits
-        {26, 4},        // joinEUI : 64 bits
-        {30, 8},        // AppKey  : 128 bits
+        measurementWriteIndex,
+        oldestUnsentMeasurementIndex,
+        oldestUnconfirmedMeasurementindex,
+        unusedMeasurementDataManagement,
 
-        // Required Persistent Values for ABP Devcies In the event of a reset or loss of power, the following values must be persisted so that an ABP end device can return to the network connection session where it left off before the loss of power:
-        // DevEUI
-        // DevAddr
-        // SessionKeys
-        // Frame Counters (both uplink and downlink)
-        // Channel List (frequencies and enabled channels)
-        // Data rate
-        // TXPower
-        // NbTrans
-        // MaxDutyCycle
-        // RX2Frequency
-        // RX1DROffset
-        // RX2DataRate
-        // RXTimingDelay
-        // MaxEIRP
-        // DownlinkDwellTime
-        // UplinkDwellTime
+        DevEUI,
+        DevAddr,
+        uplinkFrameCounter,
+        downlinkFrameCounter,
+        applicationSessionKey,
+        networkSessionKey,
+        rx1Delay,
+        unusedLoRaWAN,
 
-        // Note for OTAA there is some delta
-        // not stored : DevAddr & Session Keys
-        // To be stored :
-        // JoinEUI
-        // Root Keys AppKey / NwkKey
-        // JoinNonce
-
+        numberOfBlocks
     };
-    bool hasOverlap();        // checks all blocks to ensure there is no overlap
+
+    // private:
+    const nvsBlock blocks[static_cast<uint32_t>(blockIndex::numberOfBlocks)] = {
+        {0, 1},          // nvsMapVersion : 1 byte
+        {1, 127},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 127 bytes
+
+        {128, 4},          // measurementWriteIndex : 32 bits
+        {132, 4},          // oldestUnsentMeasurementIndex : 32 bits
+        {136, 4},          // oldestUnconfirmedMeasurementindex : 32 bits
+        {140, 116},        // unusedMeasurementDataManagement : extra blocks can be inserted hereafter for a maximum of 116 bytes
+
+        {256, 8},          // DevEUI : 64 bits
+        {264, 4},          // DevAddr : 32 bits
+        {268, 4},          // uplinkFrameCounter : 32 bits
+        {272, 4},          // downlinkFrameCounter : 32 bits
+        {276, 16},         // applicationSessionKey : 128 bits
+        {292, 16},         // networkSessionKey : 128 bits
+        {308, 1},          // rx1Delay : 1 byte
+        {309, 203},        // unusedLoRaWAN : extra blocks can be inserted hereafter
+    };
 };
 
 class nonVolatileStorage {
   public:
     bool isReady();                                                        // testing if the EEPROM is found correctly on the I2C bus
+    bool isInitialized();                                                  // testing if the EEPROM is initialized or still has factory reset values of 0xFF
+    void reset();                                                          // reset the EEPROM to meaningfull values at our very first boot
+    void initialize();                                                     // initialize the nvsMap for subsequent boots
     void read(uint32_t blockIndex, uint8_t* destinationDataBuffer);        // reads the block from EEPROM and stores it in the destinationDataBuffer
     void write(uint32_t blockIndex, uint8_t* sourceDataBuffer);            // write data from sourceDataBuffer to the block in EEPROM
 
-    static constexpr uint8_t i2cAddress{0x50};        // default I2C address of the first EEPROM, the second one has an address i2cAddress+1, set by its A0 pin being ties to VDD
-    static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
-    static constexpr uint8_t halTimeout{0x10};        // ST HAL requires a 'timeout' in ms
+    static constexpr uint8_t i2cAddress{0x50};          // default I2C address of the first EEPROM, the second one has an address i2cAddress+1, set by its A0 pin being ties to VDD
+    static constexpr uint8_t halTrials{0x03};           // ST HAL requires a 'retry' parameters
+    static constexpr uint8_t halTimeout{0x10};          // ST HAL requires a 'timeout' in ms
+    bool blockIndexIsValid(uint32_t blockIndex);        // checks if the blockIndex is valid
 
   private:
     nvsMap theNvsMap;
-    bool blockIndexIsValid(uint32_t blockIndex);        // checks if the blockIndex is valid
+    uint32_t measurementWriteIndex{0};                    // measurement block index where we will write the next measurement
+    uint32_t oldestUnsentMeasurementIndex{0};             // measurement block index of the oldest unconfirmed measurement
+    uint32_t oldestUnconfirmedMeasurementindex{0};        // measurement block index of the oldest unsent measurement
+    uint32_t nmbrMeasurementBlocks{12288};                // (120*1024)/100 = 12288
 };
