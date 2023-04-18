@@ -5,7 +5,7 @@
 #include <cstdarg>
 
 void logging::snprintf(const char *format, ...) {
-    if (debugProbePresent) {
+    if (debugProbePresent) {        // if no debugprobe, then no tracing, so do not bother to calculate the output
         va_list argList;
         va_start(argList, format);
         uint32_t length = vsnprintf(buffer, bufferLength, format, argList);
@@ -18,5 +18,5 @@ void logging::snprintf(const char *format, ...) {
 }
 
 void logging::detectDebugProbe() {
-    debugProbePresent = (DBGMCU->CR & DBGMCU_CR_DBG_STANDBY) != 0;
+    debugProbePresent = (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk == 0x0001);        // This LSBit is 1 when the ST-Link is connected, 0 when disconnected
 }

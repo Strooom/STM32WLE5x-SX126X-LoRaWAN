@@ -16,8 +16,20 @@ const char* toString(measurementChannel type) {
             return "BME680 - Temperature";
             break;
 
+        case measurementChannel::BME680SensorRelativeHumidity:
+            return "BME680 - Relative Humidity";
+            break;
+
+        case measurementChannel::BME680SensorBarometricPressure:
+            return "BME680 - Barometer";
+            break;
+
         case measurementChannel::TSL25911VisibleLight:
             return "TSL25911 - Visible Light";
+            break;
+
+        case measurementChannel::TSL25911Infrared:
+            return "TSL25911 - Infrared Light";
             break;
 
         default:

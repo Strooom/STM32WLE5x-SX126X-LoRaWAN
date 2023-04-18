@@ -6,6 +6,9 @@
 
 #include "logging.h"        //
 
-#include <stdint.h>         // required for uint8_t and similar type definitions
-#include <string.h>         // required for strncpy()
+// #include <stdint.h>        // required for uint8_t and similar type definitions
+// #include <string.h>        // required for strncpy()
 
+bool logging::isDebugProbePresent() const {
+    return debugProbePresent;
+}

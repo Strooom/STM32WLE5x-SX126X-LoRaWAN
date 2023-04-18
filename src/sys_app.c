@@ -86,7 +86,7 @@ void SystemApp_Init(void)
 
 /* Set #if 0 if you want to keep the default HAL instead overcharge them*/
 /* USER CODE BEGIN Overload_HAL_weaks_1 */
-#if 1
+#if 0
 /* USER CODE END Overload_HAL_weaks_1 */
 
 /* USER CODE BEGIN Overload_HAL_weaks_1a */
@@ -96,49 +96,49 @@ void SystemApp_Init(void)
 /**
   * @note This function overwrites the __weak one from HAL
   */
-uint32_t HAL_GetTick(void)
-{
-  uint32_t ret = 0;
-  /* TIMER_IF can be based on other counter the SysTick e.g. RTC */
-  /* USER CODE BEGIN HAL_GetTick_1 */
-
-  /* USER CODE END HAL_GetTick_1 */
-  if (SYS_TimerInitialisedFlag == 0)
-  {
-    /* TIMER_IF_GetTimerValue should be used only once UTIL_TIMER_Init() is initialized */
-    /* If HAL_Delay or a TIMEOUT countdown is necessary during initialization phase */
-    /* please use temporarily another timebase source (SysTick or TIMx), which implies also */
-    /* to rework the above function HAL_InitTick() and to call HAL_IncTick() on the timebase IRQ */
-    /* Note: when TIMER_IF is based on RTC, stm32wlxx_hal_rtc.c calls this function before TimeServer is functional */
-    /* RTC TIMEOUT will not expire, i.e. if RTC has an hw problem it will keep looping in the RTC_Init function */
-    /* USER CODE BEGIN HAL_GetTick_EarlyCall */
-
-    /* USER CODE END HAL_GetTick_EarlyCall */
-  }
-  else
-  {
-    ret = TIMER_IF_GetTimerValue();
-  }
-  /* USER CODE BEGIN HAL_GetTick_2 */
-
-  /* USER CODE END HAL_GetTick_2 */
-  return ret;
-}
+//uint32_t HAL_GetTick(void)
+//{
+//  uint32_t ret = 0;
+//  /* TIMER_IF can be based on other counter the SysTick e.g. RTC */
+//  /* USER CODE BEGIN HAL_GetTick_1 */
+//
+//  /* USER CODE END HAL_GetTick_1 */
+//  if (SYS_TimerInitialisedFlag == 0)
+//  {
+//    /* TIMER_IF_GetTimerValue should be used only once UTIL_TIMER_Init() is initialized */
+//    /* If HAL_Delay or a TIMEOUT countdown is necessary during initialization phase */
+//    /* please use temporarily another timebase source (SysTick or TIMx), which implies also */
+//    /* to rework the above function HAL_InitTick() and to call HAL_IncTick() on the timebase IRQ */
+//    /* Note: when TIMER_IF is based on RTC, stm32wlxx_hal_rtc.c calls this function before TimeServer is functional */
+//    /* RTC TIMEOUT will not expire, i.e. if RTC has an hw problem it will keep looping in the RTC_Init function */
+//    /* USER CODE BEGIN HAL_GetTick_EarlyCall */
+//
+//    /* USER CODE END HAL_GetTick_EarlyCall */
+//  }
+//  else
+//  {
+//    ret = TIMER_IF_GetTimerValue();
+//  }
+//  /* USER CODE BEGIN HAL_GetTick_2 */
+//
+//  /* USER CODE END HAL_GetTick_2 */
+//  return ret;
+//}
 
 /**
   * @note This function overwrites the __weak one from HAL
   */
-void HAL_Delay(__IO uint32_t Delay)
-{
-  /* TIMER_IF can be based on other counter the SysTick e.g. RTC */
-  /* USER CODE BEGIN HAL_Delay_1 */
-
-  /* USER CODE END HAL_Delay_1 */
-  TIMER_IF_DelayMs(Delay);
-  /* USER CODE BEGIN HAL_Delay_2 */
-
-  /* USER CODE END HAL_Delay_2 */
-}
+//void HAL_Delay(__IO uint32_t Delay)
+//{
+//  /* TIMER_IF can be based on other counter the SysTick e.g. RTC */
+//  /* USER CODE BEGIN HAL_Delay_1 */
+//
+//  /* USER CODE END HAL_Delay_1 */
+//  TIMER_IF_DelayMs(Delay);
+//  /* USER CODE BEGIN HAL_Delay_2 */
+//
+//  /* USER CODE END HAL_Delay_2 */
+//}
 
 /* USER CODE BEGIN Overload_HAL_weaks_2 */
 #endif /* 1 default HAL overcharge */

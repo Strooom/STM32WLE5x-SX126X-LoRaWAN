@@ -60,5 +60,5 @@ float sensor::read() {
         default:
             break;
     }
-    return 0.123F;        // TODO : remove, test only
+    return static_cast<float>(type);        // TODO : remove, test only
 }

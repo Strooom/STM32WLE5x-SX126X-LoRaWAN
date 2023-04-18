@@ -233,7 +233,8 @@ void LoRaWAN::enterState(txRxCycleState newState) {
 }
 
 bool LoRaWAN::isReadyToTransmit() const {
-    return (theTxRxCycleState == txRxCycleState::idle);
+	return false;
+    // return (theTxRxCycleState == txRxCycleState::idle);
 }
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {

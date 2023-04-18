@@ -57,7 +57,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc;
 CRYP_HandleTypeDef hcryp;
-__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
+__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {0x00000000,
+                                                              0x00000000, 0x00000000, 0x00000000};
 I2C_HandleTypeDef hi2c2;
 LPTIM_HandleTypeDef hlptim1;
 RNG_HandleTypeDef hrng;
@@ -147,11 +148,12 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
     theMainController.initialize();
 
+
     while (1) {
         /* USER CODE END WHILE */
         // MX_SubGHz_Phy_Process();
-
         /* USER CODE BEGIN 3 */
+    	theLog.detectDebugProbe();
         thePowerControl.detectUsbConnectOrRemove();
         loraNetwork.handleEvents();
         theMainController.handleEvents();
@@ -395,7 +397,10 @@ static void MX_RTC_Init(void) {
     RTC_DateTypeDef sDate = {0};
 
     /* USER CODE BEGIN RTC_Init 1 */
-
+    char timeString[9]  = __TIME__;        // eg "10:20:30"
+    uint32_t hourNow    = (timeString[0] - '0') * 10 + (timeString[1] - '0');
+    uint32_t minutesNow = (timeString[3] - '0') * 10 + (timeString[4] - '0');
+    uint32_t secondsNow = (timeString[6] - '0') * 10 + (timeString[7] - '0');
     /* USER CODE END RTC_Init 1 */
 
     /** Initialize RTC Only
@@ -420,18 +425,18 @@ static void MX_RTC_Init(void) {
 
     /** Initialize RTC and set the Time and Date
      */
-    sTime.Hours          = 0x0;
-    sTime.Minutes        = 0x0;
-    sTime.Seconds        = 0x0;
+    sTime.Hours          = hourNow;
+    sTime.Minutes        = minutesNow;
+    sTime.Seconds        = secondsNow;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
         Error_Handler();
     }
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
-    sDate.Month   = RTC_MONTH_JANUARY;
-    sDate.Date    = 0x1;
-    sDate.Year    = 0x0;
+    sDate.Month   = RTC_MONTH_APRIL;
+    sDate.Date    = 0x17;
+    sDate.Year    = 0x23;
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
         Error_Handler();
@@ -601,10 +606,12 @@ static void MX_GPIO_Init(void) {
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB,                       displayDataCommand_Pin | displayChipSelect_Pin,                       GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB,                       writeProtect_Pin,                       GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin,
+                      GPIO_PIN_RESET);
 
     /*Configure GPIO pins : usbPowerPresent_Pin displayBusy_Pin */
     GPIO_InitStruct.Pin  = usbPowerPresent_Pin | displayBusy_Pin;
