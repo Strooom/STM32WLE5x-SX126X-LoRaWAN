@@ -52,13 +52,26 @@ float sensor::read() {
             break;
 
         case measurementChannel::BME680SensorTemperature:
-            // bme680::initialize();
-            // bme680::readTemperature();
-            // bme680::goSleep();
+            bme680::initialize();
+            bme680::readTemperature();
             break;
 
         default:
             break;
     }
     return static_cast<float>(type);        // TODO : remove, test only
+}
+
+void sensor::sleep() {
+    switch (type) {
+        case measurementChannel::batteryLevel:
+            break;
+
+        case measurementChannel::BME680SensorTemperature:
+            bme680::goSleep();
+            break;
+
+        default:
+            break;
+    }
 }

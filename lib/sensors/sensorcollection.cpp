@@ -12,9 +12,15 @@
 extern logging theLog;
 
 void sensorCollection::measure() {
+    // Keep the sensor awake as more measurements could be needed from the same sensor, eg BME68X
     for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
         theSensorCollection[sensorIndex].run();
     }
+    // Then after all measurements are done, check them all and put them to sleep if needed.
+        for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
+        theSensorCollection[sensorIndex].sleep();
+    }
+
 }
 
 void sensorCollection::discover() {

@@ -38,6 +38,8 @@
 #include "nvs.h"
 #include "measurementcollection.h"
 
+#include "bme680.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,7 +98,7 @@ static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-
+int testbme68x(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -146,6 +148,12 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
+    bme680::initialize();
+    bme680::readTemperature();
+
+    (void)testbme68x();
+
     theMainController.initialize();
 
 

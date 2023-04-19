@@ -12,6 +12,7 @@ class sensor {
   public:
     void run();          // checks if this sensor needs to be sampled, and if so, samples it
     float read();        // reads the sensor and store the value into to sample[] array
+    void sleep();        // puts the sensor in sleep mode
 
     static constexpr uint32_t maxPrescaler{4096};         // take a sample every x times of the 30 second RTC tick
     static constexpr uint32_t maxOversampling{16};        // average x samples before storing it in the sample collection

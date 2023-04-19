@@ -13,3 +13,6 @@
 
 * then use this presence in the logging class..
 * logging can be seen in CubeProgrammer under SWV
+
+
+test EPOCH stuff https://www.epochconverter.com/programming/c

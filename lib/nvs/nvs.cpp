@@ -65,6 +65,23 @@ void nonVolatileStorage::writeBlock(uint32_t blockIndex, uint8_t* sourceDataBuff
     }
 }
 
+uint32_t nonVolatileStorage::readBlock32(uint32_t blockIndex) {
+    uint8_t dataAsBytes[4];
+    uint32_t result;
+    readBlock(blockIndex, dataAsBytes);
+    result = (static_cast<uint32_t>(dataAsBytes[0]) << 24) | (static_cast<uint32_t>(dataAsBytes[1]) << 16) | (static_cast<uint32_t>(dataAsBytes[2]) << 8) | static_cast<uint32_t>(dataAsBytes[3]);
+    return result;
+}
+
+void nonVolatileStorage::writeBlock32(uint32_t blockIndex, uint32_t sourceData) {
+    uint8_t dataAsBytes[4];
+    dataAsBytes[0] = static_cast<uint8_t>((sourceData & 0xFF000000) >> 24);
+    dataAsBytes[1] = static_cast<uint8_t>((sourceData & 0x00FF0000) >> 16);
+    dataAsBytes[2] = static_cast<uint8_t>((sourceData & 0x0000FF00) >> 8);
+    dataAsBytes[3] = static_cast<uint8_t>((sourceData & 0x000000FF));
+    writeBlock(blockIndex, dataAsBytes);
+}
+
 void nonVolatileStorage::readMeasurement(uint32_t measurementIndex, measurement& destination) {
     measurementIndex      = measurementIndex % nmbrMeasurementBlocks;
     uint32_t startAddress = (measurementIndex * measurementBlockLength) + measurementsAddressOffset;
@@ -100,5 +117,4 @@ void nonVolatileStorage::writeMeasurement(measurement& source) {
     measurementWriteIndex = (measurementWriteIndex + 1) % nmbrMeasurementBlocks;
     // TODO : write measurementWriteIndex to NVS
     // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::measurementWriteIndex), data);
-
 }

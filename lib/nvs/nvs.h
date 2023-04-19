@@ -74,7 +74,8 @@ class nonVolatileStorage {
     // API to access the Settings section of the EEPROM
     void readBlock(uint32_t blockIndex, uint8_t* destinationDataBuffer);        // reads the block from EEPROM and stores it in the destinationDataBuffer
     void writeBlock(uint32_t blockIndex, uint8_t* sourceDataBuffer);            // write data from sourceDataBuffer to the block in EEPROM
-    bool blockIndexIsValid(uint32_t blockIndex);                                // checks if the blockIndex is valid
+    uint32_t readBlock32(uint32_t blockIndex);                                  // reads uint32_t from a block in EEPROM
+    void writeBlock32(uint32_t blockIndex, uint32_t sourceData);                // write uint32_t data to a block in EEPROM
 
     // API to access the Measurement section of the EEPROM
     void readMeasurement(uint32_t measurementIndex, measurement& destination);        // reads the measurement from EEPROM and stores it in the destination measurement object
@@ -96,6 +97,7 @@ class nonVolatileStorage {
     uint32_t measurementBlockLength{10};                  // 10 bytes
     uint32_t measurementsAddressOffset{4096};             // First 4K is for settings, Last 60K for measurements
 
-    void read(uint32_t startAddress, uint8_t* data, uint32_t dataLength);
-    void write(uint32_t startAddress, uint8_t* data, uint32_t dataLength);
+    bool blockIndexIsValid(uint32_t blockIndex);                                  // checks if the blockIndex is valid
+    void read(uint32_t startAddress, uint8_t* data, uint32_t dataLength);         // low-level I2C reading from EEPROM
+    void write(uint32_t startAddress, uint8_t* data, uint32_t dataLength);        // low-level I2C writing to EEPROM
 };

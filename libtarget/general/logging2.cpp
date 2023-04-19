@@ -18,5 +18,5 @@ void logging::snprintf(const char *format, ...) {
 }
 
 void logging::detectDebugProbe() {
-    debugProbePresent = (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk == 0x0001);        // This LSBit is 1 when the ST-Link is connected, 0 when disconnected
+    debugProbePresent = ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001);        // This LSBit is 1 when the ST-Link is connected, 0 when disconnected
 }
