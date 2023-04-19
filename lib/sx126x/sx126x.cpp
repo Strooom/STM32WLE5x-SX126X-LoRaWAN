@@ -6,7 +6,7 @@
 // #############################################################################
 
 #include "sx126x.h"
-#include "logging.h"	
+#include "logging.h"
 
 extern logging theLog;
 
@@ -31,6 +31,7 @@ void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequ
     setRfSwitch(rfSwitchState::rx);
     setRfFrequency(frequency);
     setModulationParameters(theSpreadingFactor, bandwidth::b125kHz, codingRate::cr4_5);
+    setPacketParametersReceive();
 }
 
 void sx126x::goSleep(sleepMode theSleepMode) {
@@ -56,6 +57,7 @@ void sx126x::startTransmit(uint32_t timeOut) {
 }
 
 void sx126x::startReceive(uint32_t timeOut) {
+    timeOut = 64000;
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
@@ -81,9 +83,9 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwid
     commandParameters[0] = static_cast<uint8_t>(theSpreadingFactor);        //
     commandParameters[1] = static_cast<uint8_t>(theBandwidth);              //
     commandParameters[2] = static_cast<uint8_t>(theCodingRate);             //
-    commandParameters[3] = 0x01;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
+    commandParameters[3] = 0x00;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
                                                                             // the remaining 4 bytes are empty 0x00 for LoRa
-    executeCommand(sx126xCommand::setPacketParameters, commandParameters, nmbrCommandParameters);
+    executeCommand(sx126xCommand::setModulationParams, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {

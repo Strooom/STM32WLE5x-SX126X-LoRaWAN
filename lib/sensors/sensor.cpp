@@ -21,28 +21,35 @@ void sensor::run() {
         oversampling = oversamplingLowPower;
         prescaler    = prescalerLowPower;
     }
-
-    if (prescaleCounter > prescaler) {        // when switching between low power and high power mode, the prescaleCounter could need to be reset in the appropriate range
-        prescaleCounter = prescaler;
-    }
-
-    if (oversamplingCounter > oversampling) {        // when switching between low power and high power mode, the oversamplingCounter could need to be reset in the appropriate range
-        oversamplingCounter = oversampling;
-    }
-
-    if (prescaleCounter == 0) {
-        theLog.snprintf("skipped\n");
-    } else {
-        sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
-        if (oversamplingCounter == 0) {
-            theLog.snprintf("measurement\n");
-            // average all samples & ouput this measurement to NVS
-            oversamplingCounter = oversampling;
-        } else {
-            theLog.snprintf("sampled\n");
-            oversamplingCounter--;
+    if (prescaler > 0) {                          // a value of 0 means we don't want to sample this sensor at all
+        if (prescaleCounter > prescaler) {        // when switching between low power and high power mode, the prescaleCounter could need to be reset in the appropriate range
             prescaleCounter = prescaler;
         }
+
+        if (oversamplingCounter > oversampling) {        // when switching between low power and high power mode, the oversamplingCounter could need to be reset in the appropriate range
+            oversamplingCounter = oversampling;
+        }
+
+        if (prescaleCounter <= 1) {
+            prescaleCounter             = prescaler;
+            sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
+            theLog.snprintf("sampled ");
+
+            if (oversamplingCounter == 0) {
+                store();        // average all samples & output this measurement to NVS
+                theLog.snprintf("measurement stored\n");
+                oversamplingCounter = oversampling;
+            } else {
+                theLog.snprintf("\n");
+                oversamplingCounter--;
+                prescaleCounter = prescaler;
+            }
+        } else {
+            theLog.snprintf("skipped\n");
+            prescaleCounter--;
+        }
+    } else {
+        theLog.snprintf("inactive\n");
     }
 }
 
@@ -74,4 +81,7 @@ void sensor::sleep() {
         default:
             break;
     }
+}
+
+void sensor::store() {
 }

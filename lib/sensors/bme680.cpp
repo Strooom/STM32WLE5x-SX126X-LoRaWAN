@@ -53,7 +53,9 @@ float bme680::readHumidity() {
     readRegisters(static_cast<uint16_t>(bme680::registers::hum_msb), nmbrRegisters, registerData);
     uint32_t rawDataHumidity = ((static_cast<uint32_t>(registerData[0]) << 8) | (static_cast<uint32_t>(registerData[1])));
 
-    return calculateRelativeHumidity(rawDataHumidity);
+//    return calculateRelativeHumidity(rawDataHumidity);
+
+    return 1.234F;
 }
 
 float bme680::readBarometricPressure() {

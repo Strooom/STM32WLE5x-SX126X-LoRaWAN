@@ -19,11 +19,16 @@ extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void LoRaWAN::initialize() {
     currentDataRateIndex = 3;
+    theLog.snprintf("dataRateIndex = %u\n", currentDataRateIndex);
     theRadio.initialize();
-    DevAddr.fromUint32(0x260B3B92);
+    DevAddr.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr)));
+    theLog.snprintf("devAddr = %04X\n", DevAddr.asUint32());
     applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
+    theLog.snprintf("applicationKey = %s\n", applicationKey.asASCII());
     networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-    uplinkFrameCount.fromUint32(0x1UL);
+    theLog.snprintf("networkKey = %s\n", networkKey.asASCII());
+    uplinkFrameCount.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter)));
+    theLog.snprintf("uplinkFrameCount = %u\n", uplinkFrameCount.asUint32());
 }
 
 void LoRaWAN::handleEvents() {
@@ -31,7 +36,7 @@ void LoRaWAN::handleEvents() {
         return;
     }
     loRaWanEvent theEvent = loraWanEventBuffer.pop();
-    theLog.snprintf("LoRaWAN event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
+    theLog.snprintf("LoRaWAN event [%u] : %s in state [%u] : %s \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
 
     switch (theTxRxCycleState) {
         case txRxCycleState::idle:
@@ -80,6 +85,7 @@ void LoRaWAN::handleEvents() {
                     uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                     theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                     theRadio.startReceive(rxTimeout);
+                    goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
                 } break;
                 default:
                     // unexpected event for this state..
@@ -159,7 +165,7 @@ void LoRaWAN::handleEvents() {
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    theLog.snprintf("LoRaWAN stateChange from [%d] %s to [%d] %s", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
+    theLog.snprintf("LoRaWAN stateChange from [%d] %s to [%d] %s\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
     exitState(theTxRxCycleState);
     theTxRxCycleState = newState;
     enterState(newState);
@@ -211,7 +217,8 @@ void LoRaWAN::enterState(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRx1Start:
-            startTimer(2048U);        // 1 second
+//            startTimer(2048U);        // 1 second
+            startTimer(1024);        // 0.5 second
             break;
 
         case txRxCycleState::waitForRx1CompleteOrTimeout:
@@ -233,12 +240,14 @@ void LoRaWAN::enterState(txRxCycleState newState) {
 }
 
 bool LoRaWAN::isReadyToTransmit() const {
-	return false;
+//    return false;
+    return true;
+
     // return (theTxRxCycleState == txRxCycleState::idle);
 }
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {
-    return 50;        // TODO : add real implementation, taking into account the region, data rate, etc
+    return theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength;
 }
 
 void LoRaWAN::copyPayload(byteBuffer& applicationPayloadToSend) {
@@ -372,15 +381,6 @@ void LoRaWAN::calculateAndAppendMic() {
     sourceData.Data    = rawMessage;
     sourceData.Counter = payloadLength + micBLockLength;
 
-    std::cout << "MIC Source Data : ";
-    for (uint32_t index = 0; index < sourceData.Counter; index++) {
-        std::cout << std::hex << (int)sourceData.Data[index] << " ";
-    }
-    std::cout << std::endl;
-
-    // sLoRa_Message* Message;
-    //  Calculate_MIC(&sourceData, networkKey.asUnsignedChar(), Message);
-
     Calculate_MIC2(&sourceData, networkKey.asUnsignedChar(), result);
     rawMessage[headerOffset + payloadLength]     = result[0];        // LSByte
     rawMessage[headerOffset + payloadLength + 1] = result[1];        //
@@ -402,7 +402,10 @@ void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFram
     uint32_t txFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     theRadio.configForTransmit(csf, txFrequency, rawMessage + headerOffset, payloadLength);
+    uplinkFrameCount.increment();
+    nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32());
     theRadio.startTransmit(0);
+    goTo(txRxCycleState::waitForTxComplete);
 }
 
 void LoRaWAN::getDownlinkMessage(byteBuffer& applicationPayloadReceived) {

@@ -29,8 +29,8 @@ class measurement {
 // Total bytes to transmit is 9 bytes,as we do not transmit the flags FTTB
 
 enum class transmitPriority : uint8_t {
-    doNotTransmit = 0b0000'0000,
-    low           = 0b0100'0000,
-    medium        = 0b1000'0000,
-    high          = 0b1100'0000,
+    doNotTransmit = 0b0000'0000,        // this will be stored in EEPROM, but not transmitted (over LoRaWAN) to the cloud
+    low           = 0b0100'0000,        // transmitted only when network payload is full
+    medium        = 0b1000'0000,        // this will be transmitted before the 'low', but only when the network payload is full
+    high          = 0b1100'0000,        // this will cause a immediate network transmission, so the measurement goes witout any delay to the cloud
 };

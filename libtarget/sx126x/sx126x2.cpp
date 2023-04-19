@@ -123,6 +123,16 @@ void sx126x::initializeRadio() {
     commandParameters[0] = 0x34;        // LoRa Syncword MSB
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
+
+    commandParameters[0] = 0xFF;
+    commandParameters[1] = 0xFF;
+    commandParameters[2] = 0xFF;
+    commandParameters[3] = 0xFF;
+    commandParameters[4] = 0x00;
+    commandParameters[5] = 0x00;
+    commandParameters[6] = 0x00;
+    commandParameters[7] = 0x00;
+    executeCommand(sx126xCommand::setDioIrqParams, commandParameters, 8);
 }
 
 void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
@@ -165,7 +175,7 @@ void sx126x::setRfSwitch(rfSwitchState newState) {
 }
 
 void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
-    theLog.snprintf("Command [%02X] %s", static_cast<uint8_t>(command), toString(command));
+    theLog.snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
     for (uint32_t index = 0; index < commandParametersLength; index++) {
         theLog.snprintf(" %02X", commandParameters[index]);
     }
@@ -174,7 +184,7 @@ void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, u
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
-    theLog.snprintf("Write Registers [%04X] %s", static_cast<uint16_t>(theRegister), toString(theRegister));
+    theLog.snprintf("Write Registers [%04X] %s : ", static_cast<uint16_t>(theRegister), toString(theRegister));
     for (uint32_t index = 0; index < dataLength; index++) {
         theLog.snprintf(" %02X", data[index]);
     }

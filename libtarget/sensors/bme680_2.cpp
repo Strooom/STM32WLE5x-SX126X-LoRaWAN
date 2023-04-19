@@ -18,7 +18,7 @@ bool bme680::testI2cAddress(uint8_t addressToTest) {
 uint8_t bme680::readRegister(registers registerAddress) {
     uint8_t result[1]{0};
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, static_cast<uint16_t>(registerAddress), I2C_MEMADD_SIZE_8BIT, result, 1, halTimeout);
-    theLog.snprintf("Read I2C : register = [%02X], data = [%02X] \n", registerAddress, result[0]);
+    //theLog.snprintf("Read I2C : register = [%02X], data = [%02X] \n", registerAddress, result[0]);
     return result[0];
 }
 
@@ -28,11 +28,11 @@ void bme680::writeRegister(registers registerAddress, uint8_t value) {
 
 void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
     HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_8BIT, destination, length, halTimeout);
-    theLog.snprintf("Read I2C : register = [%02X], data[%u] = [", startAddress, length);
-    for (uint32_t index = 0; index < length; index++) {
-        theLog.snprintf("%02X ", destination[index]);
-    }
-    theLog.snprintf("]\n");
+    // theLog.snprintf("Read I2C : register = [%02X], data[%u] = [", startAddress, length);
+    // for (uint32_t index = 0; index < length; index++) {
+    //     theLog.snprintf("%02X ", destination[index]);
+    // }
+    // theLog.snprintf("]\n");
 }
 
 

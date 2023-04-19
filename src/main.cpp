@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "app_subghz_phy.h"
+//#include "app_subghz_phy.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -37,7 +37,6 @@
 #include "sensorcollection.h"
 #include "nvs.h"
 #include "measurementcollection.h"
-
 #include "bme680.h"
 
 /* USER CODE END Includes */
@@ -98,7 +97,6 @@ static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-int testbme68x(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -141,18 +139,32 @@ int main(void) {
     MX_RTC_Init();
     MX_SPI2_Init();
     MX_USART1_UART_Init();
+    MX_SUBGHZ_Init();
     // MX_USART2_UART_Init(); // only initialized when USB power is connected
-    // MX_SubGHz_Phy_Init(); // doesn't seem to do anything
+    //MX_SubGHz_Phy_Init(); // doesn't seem to do anything
     /* USER CODE BEGIN 2 */
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    bme680::initialize();
-    bme680::readTemperature();
+    //bme680::initialize();
+    //bme680::readTemperature();
 
-    (void)testbme68x();
+    //(void)testbme68x();
+
+if (0) {
+
+    //nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);
+    //nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
+    
+    //writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
+    //writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
+    //applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
+    //networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
+}
+
+
 
     theMainController.initialize();
 
@@ -254,7 +266,7 @@ static void MX_ADC_Init(void) {
     hadc.Init.Overrun                    = ADC_OVR_DATA_PRESERVED;
     hadc.Init.SamplingTimeCommon1        = ADC_SAMPLETIME_79CYCLES_5;
     hadc.Init.SamplingTimeCommon2        = ADC_SAMPLETIME_79CYCLES_5;
-    hadc.Init.OversamplingMode           = ENABLE;
+    hadc.Init.OversamplingMode           = DISABLE;
     hadc.Init.Oversampling.Ratio         = ADC_OVERSAMPLING_RATIO_8;
     hadc.Init.Oversampling.RightBitShift = ADC_RIGHTBITSHIFT_NONE;
     hadc.Init.Oversampling.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
@@ -438,15 +450,26 @@ static void MX_RTC_Init(void) {
     sTime.Seconds        = secondsNow;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK) {
+    theLog.snprintf("Setting RTC to %02u:%02u:%02u\n", hourNow, minutesNow, secondsNow);
+
+    if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
         Error_Handler();
     }
+
+    RTC_TimeTypeDef currTime = {0};
+    RTC_DateTypeDef currDate = {0};
+
+    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+    theLog.snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
+
+
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
-    sDate.Date    = 0x17;
-    sDate.Year    = 0x23;
+    sDate.Date    = 19;
+    sDate.Year    = 23;
 
-    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK) {
+    if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
         Error_Handler();
     }
 

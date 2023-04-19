@@ -30,7 +30,7 @@ extern measurementCollection theMeasurements;
 extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
-    theLog.snprintf("MuMo v2 - build %s %s\n", __DATE__, __TIME__);
+    theLog.snprintf("MuMo v2 - build %s %s test \n", __DATE__, __TIME__);
 
     theLog.snprintf("Initializing...\n");
 
@@ -86,7 +86,7 @@ void mainController::handleEvents() {
                     theMeasurements.getNmbrToBeTransmitted();
                 if (((measurementToBeTransmitted + 1) * measurement::length) > maxUplinkPayloadNow) {
                     theLog.snprintf(
-                        "[%u] meaurement bytes to transmit, [%u] bytes payload available\n",
+                        "[%u] measurement bytes to transmit, [%u] bytes payload capacity\n",
                         (measurementToBeTransmitted + 1) * measurement::length,
                         maxUplinkPayloadNow);
                     if (loraNetwork.isReadyToTransmit()) {
@@ -96,6 +96,8 @@ void mainController::handleEvents() {
                             "000102030405060708090A0B0C0D0E0F");        // TODO - TEST msg
                         loraNetwork.sendUplink(thePayload, 0x10);
                     }
+                } else {
+                    theLog.snprintf("Not enough data to transmit\n");
                 }
             } break;
 

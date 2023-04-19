@@ -13,15 +13,15 @@
 
 enum class bandwidth : uint8_t {
     b7dot81kHz   = 0x0,
-    b10dot42kHz  = 0x1,
-    b157dot63kHz = 0x2,
-    b20dot83kHz  = 0x3,
-    b31dot25kHz  = 0x4,
-    b41dot67kHz  = 0x5,
-    b62dot5kHz   = 0x6,
-    b125kHz      = 0x7,
-    b250kHz      = 0x8,
-    b500kHz      = 0x9
+    b10dot42kHz  = 0x8,
+    b157dot63kHz = 0x1,
+    b20dot83kHz  = 0x9,
+    b31dot25kHz  = 0x2,
+    b41dot67kHz  = 0xA,
+    b62dot5kHz   = 0x3,
+    b125kHz      = 0x4,
+    b250kHz      = 0x5,
+    b500kHz      = 0x6
 };
 
 const char* toString(bandwidth aBandwidth);
