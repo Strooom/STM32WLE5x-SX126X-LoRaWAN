@@ -17,12 +17,13 @@ enum class txRxCycleState : uint32_t {
     waitForRx1CompleteOrTimeout,            // listening / Rx : either we receive a msg or we timeout
     waitForRx2Start,                        //
     waitForRx2CompleteOrTimeout,            // listening / Rx : either we receive a msg or we timeout
+    waitForRxMessageReadout,                // we received a message, we cannot go back to idle until we have read it out
 };
 
 const char* toString(txRxCycleState aState);
 
 enum class loRaWanEvent : uint8_t {
-    none = 0x00,
+    none = 0x00,             // when an eventBuffer underflows, it pops this dummy event
     sx126xCadEnd,            //
     sx126xTxComplete,        // transmit complete interrupt from the SX126x
     sx126xRxComplete,        // receive complete interrupt from the SX126x

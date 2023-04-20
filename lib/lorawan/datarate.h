@@ -7,45 +7,31 @@
 
 #pragma once
 #include <stdint.h>
-
-#include "bandwidth.h"
-#include "region.h"
 #include "spreadingfactor.h"
+#include "bandwidth.h"
 
-class data_rate {
+class dataRate {
   public:
-  private:
     spreadingFactor theSpreadingFactor;
     bandwidth theBandwidth;
     uint32_t maximumPayloadLength;
-    friend class dataRates;
+
+  private:
 };
 
 class dataRates {
   public:
-    void initialize();
-    void add(spreadingFactor aSpreadingFactor, bandwidth someBandWidth, uint32_t maxPayloadLength);
-    uint32_t getMaximumPayloadLength(uint32_t dataRateIndex);
-    static constexpr uint32_t maxNmbrDataRates{8};
-    uint32_t nmbrUsedDataRates{0};
+    static constexpr uint32_t nmbrUsedDataRates{6};
+    const dataRate theDataRates[nmbrUsedDataRates]{
+        // for some C++ language reason, I cannot make this constexpr..
+        {spreadingFactor::SF12, bandwidth::b125kHz, 51},
+        {spreadingFactor::SF11, bandwidth::b125kHz, 51},
+        {spreadingFactor::SF10, bandwidth::b125kHz, 51},
+        {spreadingFactor::SF9, bandwidth::b125kHz, 115},
+        {spreadingFactor::SF8, bandwidth::b125kHz, 242},
+        {spreadingFactor::SF7, bandwidth::b125kHz, 242},
+    };
+    static uint32_t getDownlinkDataRateIndex(uint32_t uplinkDataRateIndex, uint32_t Rx1DataRateOffset);
 
   private:
-    data_rate theDataRates[8];
 };
-
-enum class dataRate : uint32_t {
-    DR0 = 0,
-    DR1 = 1,
-    DR2 = 2,
-    DR3 = 3,
-    DR4 = 4,
-    DR5 = 5,
-    DR6 = 6,
-    DR7 = 7
-};
-
-const char* toString(dataRate aDataRate);
-
-uint32_t getMaximumPayloadLength(dataRate aDataRate);
-
-dataRate getDownlinkDataRate(dataRate uplinkDataRate, uint8_t Rx1DataRateOffset);

@@ -11,61 +11,97 @@
 #include "logging.h"
 #include "lorawan.h"
 #include "sensorcollection.h"
+#include "measurementcollection.h"
+#include "nvs.h"
+//#include "main.h"
 
-#include "main.h"
+// extern LPTIM_HandleTypeDef hlptim1;
+// extern RNG_HandleTypeDef hrng;
+// extern RTC_HandleTypeDef hrtc;
 
-extern LPTIM_HandleTypeDef hlptim1;
-extern RNG_HandleTypeDef hrng;
+// static void MX_USART2_UART_Init(void);
+// static void MX_USART2_UART_DeInit(void);
 
 extern logging theLog;
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 extern LoRaWAN loraNetwork;
 extern sensorCollection theSensors;
+extern measurementCollection theMeasurements;
+extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
+    // theLog.snprintf("Initializing mainController\n");
+
+    if (nvs.isReady()) {
+        // theLog.snprintf("128K EEPROM found\n");
+    }
+    if (!nvs.isInitialized()) {
+        nvs.initializeOnce();
+    }
+
+    theSensors.discover();
+    loraNetwork.initialize();        // LoRaWAN layer + the LoRa radio
+
+    // theLog.snprintf("mainController initialized\n");
 }
 
 void mainController::handleEvents() {
     if (applicationEventBuffer.hasEvents()) {
-        applicationEvent anEvent = applicationEventBuffer.pop();
-        theLog.snprintf("applicationEvent : %s\n", toString(anEvent));
-        switch (anEvent) {
+        applicationEvent theEvent = applicationEventBuffer.pop();
+        theLog.snprintf("Application Event [%u] : %s\n",
+                        static_cast<uint8_t>(theEvent), toString(theEvent));
+        switch (theEvent) {
             case applicationEvent::usbConnected:
-                // use UART and configure IOs
+                // MX_USART2_UART_Init();
                 break;
 
             case applicationEvent::usbRemoved:
-                // disable UART and disable IOs
+                // MX_USART2_UART_DeInit();
                 break;
 
-            case applicationEvent::downlinkMessageReceived: {
+            case applicationEvent::downlinkApplicationPayloadReceived: {
                 byteBuffer receivedData;
                 loraNetwork.getDownlinkMessage(receivedData);
             } break;
 
-            case applicationEvent::realTimeClockTick:
+            case applicationEvent::realTimeClockTick: {
+                // 0. Print Time to check clock is running
+                {
+                    // RTC_TimeTypeDef currTime = {0};
+                    // RTC_DateTypeDef currDate = {0};
+
+                    // HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+                    // HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+                    // theLog.snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
+                }
+
+                // 1. run all measurements
                 theSensors.measure();
-                // 1. get time from RTC
-                // 2. check sensorCollection if any of them needs to take a measurement
-                // 2.1 store all measurements in EEPROM
-                // 3. check if we have data to send uplink
-                // 3.1 unconfirmed msgs with more than 24 hours old data
-                // 3.2 new data that was not yet sent
-                break;
+
+                // 2. check if we have enough unsent data to send uplink
+                uint32_t maxUplinkPayloadNow =
+                    loraNetwork.getMaxApplicationPayloadLength();
+                uint32_t measurementToBeTransmitted =
+                    theMeasurements.getNmbrToBeTransmitted();
+                if (((measurementToBeTransmitted + 1) * measurement::length) > maxUplinkPayloadNow) {
+                    theLog.snprintf(
+                        "[%u] measurement bytes to transmit, [%u] bytes payload capacity\n",
+                        (measurementToBeTransmitted + 1) * measurement::length,
+                        maxUplinkPayloadNow);
+                    if (loraNetwork.isReadyToTransmit()) {
+                        theLog.snprintf("LoRaWAN layer ready to transmit\n");
+                        byteBuffer thePayload;        //
+                        thePayload.setFromHexAscii(
+                            "000102030405060708090A0B0C0D0E0F");        // TODO - TEST msg
+                        loraNetwork.sendUplink(thePayload, 0x10);
+                    }
+                } else {
+                    theLog.snprintf("Not enough data to transmit\n");
+                }
+            } break;
 
             default:
-                // if (txTimer.expired()) {
-                //     if (loraNetwork.isReadyToTransmit()) {
-                //         byteBuffer myData;
-                //         myData.set("testMessage");
-                //         loraNetwork.sendUplink(myData, 20U);
-                //     }
-                // }
-                // if (event == event::downlinkReceived) {
-                // }
                 break;
         }
     }
 }
-
-

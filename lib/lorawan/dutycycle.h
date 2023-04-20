@@ -10,12 +10,12 @@
 
 // We need to respect the amount of transmit airtime as follows:
 // ETSI 300 220 : 1% duty cycle for 868 MHz, measured over 1 hour ( < 36 seconds / hour)
-// The Thing Network : 30 seconds total transmission time, measured over 24 hours ( < 30 seconds / 24 hours)
+// The Things Network : 30 seconds total transmission time, measured over 24 hours ( < 30 seconds / 24 hours)
 // clearly the TTN requirement is more stringent than the ETSI requirement, so FTTB we only check this one.
 
 struct transmitRecord {
-    uint32_t timestamp;        // from RTC
-    uint32_t duration;         // [ms]
+    uint32_t timestamp{0};        // from RTC
+    uint32_t duration{0};         // [ms]
 };
 
 class dutyCycle {

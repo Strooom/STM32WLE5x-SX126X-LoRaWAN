@@ -88,7 +88,7 @@ void test_calculateMic1() {
     theKey.setFromASCII("2b7e151628aed2a6abf7158809cf4f3c");        // test key from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
 
     byteBuffer clearText;
-    clearText.setFromASCII("6bc1bee22e409f96e93d7e117393172a");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    clearText.setFromHexAscii("6bc1bee22e409f96e93d7e117393172a");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     sBuffer sourceData;
     sourceData.Data    = clearText.buffer;        // copy to an sBuffer as this is what the 3rd party library expects
     sourceData.Counter = clearText.length;        // idem
@@ -105,7 +105,7 @@ void test_calculateMic2() {
     theKey.setFromASCII("2b7e151628aed2a6abf7158809cf4f3c");        // test key from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
 
     byteBuffer clearText;
-    clearText.setFromASCII("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    clearText.setFromHexAscii("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     sBuffer sourceData;
     sourceData.Data    = clearText.buffer;        // copy to an sBuffer as this is what the 3rd party library expects
     sourceData.Counter = clearText.length;        // idem
@@ -122,7 +122,7 @@ void test_calculateMic3() {
     theKey.setFromASCII("2b7e151628aed2a6abf7158809cf4f3c");        // test key from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
 
     byteBuffer clearText;
-    clearText.setFromASCII("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
+    clearText.setFromHexAscii("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710");        // test vector from rfc4493 : https://www.rfc-editor.org/rfc/rfc4493
     sBuffer sourceData;
     sourceData.Data    = clearText.buffer;        // copy to an sBuffer as this is what the 3rd party library expects
     sourceData.Counter = clearText.length;        // idem

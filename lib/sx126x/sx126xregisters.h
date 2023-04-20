@@ -11,13 +11,14 @@
 // Note : I think most of these registers are of no use for the standard LoRa case...
 
 enum class sx126xRegister : uint16_t {
-    LoRaSyncWordMSB  = 0x740,
-    LoRaSyncWordLSB  = 0x741,
-    TxClampConfig    = 0x8D8,
-    OCPConfiguration = 0x8E7,
-    XTAtrim          = 0x911,
+    LoRaSyncWordMSB          = 0x740,
+    LoRaSyncWordLSB          = 0x741,
+    TxClampConfig            = 0x8D8,
+    OCPConfiguration         = 0x8E7,
+    XTAtrim                  = 0x911,
     DIO3outputVoltageControl = 0x920,
-    
+    smpsMaximumDrive         = 0x923,
+
     // unknown = 0x923
     // hoppingEnable = 0x0385,
     // packetLength  = 0x0386,

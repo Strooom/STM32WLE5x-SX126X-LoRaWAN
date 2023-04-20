@@ -71,4 +71,5 @@ firmware.elf
 # #############################
 # ### FreeFileSync          ###
 # #############################
-src/sync.ffs_db
+*.ffs_db
+*.ffs_gui

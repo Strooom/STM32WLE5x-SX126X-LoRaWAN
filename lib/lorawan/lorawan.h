@@ -8,40 +8,43 @@
 #pragma once
 #include <stdint.h>
 
-#include "aeskey.h"
-#include "bytebuffer.h"
-#include "deviceaddress.h"
-#include "dutycycle.h"
-#include "framecount.h"
 #include "frameport.h"
-#include "linkdirection.h"
-#include "macheader.h"
-#include "mic.h"
+#include "messagetype.h"
 #include "txrxcycle.h"
-
+#include "collisionavoidancestrategy.h"
+#include "macheader.h"
+#include "deviceaddress.h"
+#include "aeskey.h"
+#include "framecount.h"
+#include "dutycycle.h"
+#include "mic.h"
+#include "datarate.h"
+#include "channel.h"
+#include "transmitpower.h"
+#include "linkdirection.h"
+#include "spreadingfactor.h"
+#include "bytebuffer.h"
 
 class LoRaWAN {
   public:
-    LoRaWAN();
-    void initialize();
-
-    void handleEvents();
-    bool isReadyToTransmit() const;
-    uint32_t getMaxApplicationPayloadLength() const;
+    void initialize();                                      // initialize the LoRaWAN layer
+    void handleEvents();                                    // handle timeouts and tx/rxComplete
+    bool isReadyToTransmit() const;                         // is the LoRaWAN layer in a state, ready to transmit a message?
+    uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
 
     void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
-    //    void sendUplinkConfirmed(byteBuffer& applicationPayloadToSend); // wait for succes or fail from LoRA LAYER
+
+    messageType decodeMessage();        // is it for the application, for the MAC layer, or invalid msg
+
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
-    void runMAC();        // taking care of all the MAC layer logic
-
-    // TODO : we need a reference to NVS so we can store keys etc in EEPROM
-
   private:
-    txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tacking the TxRxCycle state machine
+    txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine
     void goTo(txRxCycleState newState);                            // move the state of the TxRxCycle state machine
     void exitState(txRxCycleState currentState);                   // actions when leaving a state
     void enterState(txRxCycleState newState);                      // actions when entering a state
+
+    collisionAvoidanceStrategy theCollisionAvoidanceStrategy{collisionAvoidanceStrategy::none};
 
     macHeader MHDR;               // macHeader used for constructing and parsing LoRaWAN messages
     deviceAddress DevAddr;        // device address
@@ -53,7 +56,13 @@ class LoRaWAN {
     dutyCycle theDutyCycle;
     messageIntegrityCode mic;
 
-    uint8_t rawMessage[272];          // 256 bytes as this is the maximum we can send to the S126x radio. 16 extra bytes in front, needed to calculate the MIC (they are not part of the message sent to the radio)
+    dataRates theDataRates;
+    uint32_t currentDataRateIndex{0};
+    loRaChannels theChannels;
+    uint32_t currentChannelIndex{0};
+    transmitPower theTransmitPower{transmitPower::max};
+
+    uint8_t rawMessage[272]{};        // 256 bytes as this is the maximum we can send to the S126x radio. 16 extra bytes in front, needed to calculate the MIC (they are not part of the message sent to the radio)
     uint32_t payloadLength{0};        // length of the application payload
 
     static constexpr uint32_t macHeaderLength{1};                                                                      // total length of MHDR in [bytes]
@@ -74,8 +83,9 @@ class LoRaWAN {
     void calculateAndAppendMic();                                                              // calculate the MIC
     void prepareBlockAi(uint8_t* aBlock, uint32_t blockIndex, linkDirection theDirection);
 
+    static uint32_t getRandomNumber();
+    static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
+    static void stopTimer();
 
-    uint32_t getRandomNumber();
-    void startTimer(uint32_t timeOut);
-    void stopTimer();
+    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 };

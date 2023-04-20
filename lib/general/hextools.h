@@ -13,5 +13,5 @@ bool isHexCharacter(uint8_t aCharacter);
 uint8_t valueFromHexCharacter(uint8_t aCharacter);
 uint8_t hexCharacterFromValue(uint8_t aValue);
 
-void hexStringToBinaryArray(const char* aHexString, uint8_t* aBinaryArray);        // convert HEX-ASCII string to binary array
+void hexStringToBinaryArray(const char* aHexString, uint8_t* aBinaryArray);                                     // convert HEX-ASCII string to binary array
 void binaryArrayToHexString(const uint8_t* aBinaryArray, uint32_t aBinaryArrayLength, char* aHexString);        // convert binary array to HEX-ASCII string

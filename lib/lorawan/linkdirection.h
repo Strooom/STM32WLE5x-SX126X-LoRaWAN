@@ -14,4 +14,3 @@ enum class linkDirection : uint8_t {
 };
 
 
-const char* toString(linkDirection theDirection);

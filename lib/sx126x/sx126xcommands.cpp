@@ -74,6 +74,12 @@ const char* toString(sx126xCommand command) {
         case sx126xCommand::setBufferBaseAddress:
             return "setBufferBaseAddress";
             break;
+        case sx126xCommand::setDIO3AsTcxoCtrl:
+            return "setDIO3AsTcxoCtrl";
+            break;
+        case sx126xCommand::setDioIrqParams:
+            return "setDIO3AsTcxoCtrl";
+            break;
         default:
             return "unknown command";
             break;

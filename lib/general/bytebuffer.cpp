@@ -6,24 +6,6 @@ void byteBuffer::clear() {
     length = 0;
 }
 
-// void byteBuffer::append(macHeader& aMacHeader) {
-//     buffer[length] = aMacHeader.asByte();
-//     length += aMacHeader.length;
-// }
-
-// void byteBuffer::append(macPayload& aPayload) {
-//     // buffer[length] = aPayload.asByte();
-//     length += aPayload.length();
-// }
-
-// void byteBuffer::append(messageIntegrityCode& aMic) {
-//     buffer[length] = aMic[0];
-//     buffer[length] = aMic[1];
-//     buffer[length] = aMic[2];
-//     buffer[length] = aMic[3];
-//     length += aMic.length;
-// }
-
 void byteBuffer::set(const uint8_t* newData, uint32_t newDataLength) {
     if (newDataLength <= maxLength) {
         for (uint32_t byteIndex = 0; byteIndex < newDataLength; byteIndex++) {
@@ -31,7 +13,7 @@ void byteBuffer::set(const uint8_t* newData, uint32_t newDataLength) {
         }
         length = newDataLength;
     } else {
-        // TODO : error trying to send too much data
+        // TODO : error trying to set too much data
     }
 }
 
@@ -41,7 +23,7 @@ void byteBuffer::set(const char* newDataAsString) {
         strncpy((char*)buffer, newDataAsString, newDataLength);
         length = newDataLength;
     } else {
-        // TODO : error trying to send too much data
+        // TODO : error trying to set too much data
     }
 }
 

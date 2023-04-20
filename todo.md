@@ -1,15 +1,15 @@
 # TODO's LoRaWAN
-* get LowPower Timer working for timing the TxRx1Rx2Cycle
-* finalize TxRex stateMachine
 
+* unit tests sensor - oversampling/prescaler 0 : disabled
+* after booting, add an event into the measurements, with immediate priority so we send something immediately and we can monitor that at the livedata from the gateway
 
 
 # General
-* detect if a debug-probe is present : The debugger can be detected by examining the DBGMCU_CR, the control register for the debug peripheral within the MCU.  The bottom 3 bits default to 0 after a power-on reset, but the debugging session will set some or all of them high when it attaches (except in very specific circumstances where you’re changing the debugger settings).  So we can just examine these bits to infer if a debugger is attached:
+* make logging class completely static
+* check other classes to become static as well
 
-// Set this appropriate to your stm32 processor. 
-#include "stm32fxxx.h" 
-#define IS_DEBUGGER_ATTACHED() (DBGMCU-&gt;CR &amp; 0x07)
+test EPOCH stuff https://www.epochconverter.com/programming/c
 
-* then use this presence in the logging class..
-* logging can be seen in CubeProgrammer under SWV
+# Performance Improvements
+* For all channels, I could precalculate the frequency register value and store it in the channel object.
+

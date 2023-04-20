@@ -11,9 +11,9 @@ uint32_t LoRaWAN::getRandomNumber() {
 }
 
 void LoRaWAN::startTimer(uint32_t timeOut) {
-    HAL_LPTIM_TimeOut_Start_IT(&hlptim1, timeOut, timeOut);
+    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
 }
 
 void LoRaWAN::stopTimer() {
-    HAL_LPTIM_Counter_Stop(&hlptim1);
+    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 }
