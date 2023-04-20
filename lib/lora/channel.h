@@ -27,4 +27,3 @@ class loRaChannels {
     uint32_t getRandomNumber();
 };
 
-// TODO : For all channels, I could precalculate the frequency register value and store it in the channel object.

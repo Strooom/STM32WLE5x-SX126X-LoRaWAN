@@ -9,6 +9,6 @@
 // #include <stdint.h>        // required for uint8_t and similar type definitions
 // #include <string.h>        // required for strncpy()
 
-bool logging::isDebugProbePresent() const {
+bool logging::isDebugProbePresent(){
     return debugProbePresent;
 }

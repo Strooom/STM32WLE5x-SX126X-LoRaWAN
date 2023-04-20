@@ -7,5 +7,5 @@ void measurementCollection::get() {
 }
 
 uint32_t measurementCollection::getNmbrToBeTransmitted() {
-    return 20; // TODO - implement
+    return 50; // TODO - implement
 }

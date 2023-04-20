@@ -60,9 +60,6 @@ class eventBuffer {
         return level;
     };
 
-        // uint32_t getLevelMax() {
-        //     return levelMax;
-        // };        // TODO, this should reset the levelMax after reading it
 
 #ifndef unitTesting
 //  private:

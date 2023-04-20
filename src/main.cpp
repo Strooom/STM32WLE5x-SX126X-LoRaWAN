@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-//#include "app_subghz_phy.h"
+// #include "app_subghz_phy.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -77,7 +77,6 @@ eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
 LoRaWAN loraNetwork;
 mainController theMainController;
-power thePowerControl;
 cli theCli;
 sensorCollection theSensors;
 measurementCollection theMeasurements;
@@ -131,6 +130,7 @@ int main(void) {
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
+    logging::detectDebugProbe();
     MX_ADC_Init();
     MX_AES_Init();
     MX_I2C2_Init();
@@ -139,45 +139,43 @@ int main(void) {
     MX_RTC_Init();
     MX_SPI2_Init();
     MX_USART1_UART_Init();
-    MX_SUBGHZ_Init();
+
+    // MX_SUBGHZ_Init();  Initialized from SX126x.intialize()
     // MX_USART2_UART_Init(); // only initialized when USB power is connected
-    //MX_SubGHz_Phy_Init(); // doesn't seem to do anything
+    // MX_SubGHz_Phy_Init(); // doesn't seem to do anything
     /* USER CODE BEGIN 2 */
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    //bme680::initialize();
-    //bme680::readTemperature();
+    // bme680::initialize();
+    // bme680::readTemperature();
 
     //(void)testbme68x();
 
-if (0) {
+    // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
 
-    //nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);
-    //nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
-    
-    //writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
-    //writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
-    //applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
-    //networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-}
+    if (0) {
+        // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);
 
-
+        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
+        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
+        // applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
+        // networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
+    }
 
     theMainController.initialize();
-
 
     while (1) {
         /* USER CODE END WHILE */
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
-    	theLog.detectDebugProbe();
-        thePowerControl.detectUsbConnectOrRemove();
+        logging::detectDebugProbe();
+        power::detectUsbConnectOrRemove();
         loraNetwork.handleEvents();
         theMainController.handleEvents();
-        if (thePowerControl.isUsbConnected()) {
+        if (power::isUsbConnected()) {
             theCli.handleRxEvent();
             theCli.handleEvents();
         } else {
@@ -450,7 +448,7 @@ static void MX_RTC_Init(void) {
     sTime.Seconds        = secondsNow;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
-    theLog.snprintf("Setting RTC to %02u:%02u:%02u\n", hourNow, minutesNow, secondsNow);
+    logging::snprintf("Setting RTC to %02u:%02u:%02u\n", hourNow, minutesNow, secondsNow);
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
         Error_Handler();
@@ -461,8 +459,7 @@ static void MX_RTC_Init(void) {
 
     HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
-    theLog.snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
-
+    logging::snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
 
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
@@ -637,8 +634,8 @@ static void MX_GPIO_Init(void) {
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOB,                       displayDataCommand_Pin | displayChipSelect_Pin,                       GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB,                       writeProtect_Pin,                       GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, displayDataCommand_Pin | displayChipSelect_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin,
@@ -654,14 +651,14 @@ static void MX_GPIO_Init(void) {
     GPIO_InitStruct.Pin   = writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /*Configure GPIO pins : displayReset_Pin rfControl1_Pin rfControl2_Pin */
-    GPIO_InitStruct.Pin   = displayReset_Pin | rfControl1_Pin | rfControl2_Pin;
+    GPIO_InitStruct.Pin   = displayReset_Pin | rfControl1_Pin | rfControl2_Pin | loraTiming_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 

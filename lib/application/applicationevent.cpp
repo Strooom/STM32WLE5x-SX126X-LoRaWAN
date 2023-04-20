@@ -22,6 +22,10 @@ const char* toString(applicationEvent anEvent) {
             return "downlink Application Payload Received";
             break;
 
+        case applicationEvent::downlinkMacCommandReceived:
+            return "downlink MAC Command Received";
+            break;
+
         default:
             return "unknown application event";
             break;

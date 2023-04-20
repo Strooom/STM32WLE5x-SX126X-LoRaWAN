@@ -8,7 +8,6 @@
 #pragma once
 #include <stdint.h>
 
-#include "bytebuffer.h"
 #include "frameport.h"
 #include "messagetype.h"
 #include "txrxcycle.h"
@@ -24,6 +23,7 @@
 #include "transmitpower.h"
 #include "linkdirection.h"
 #include "spreadingfactor.h"
+#include "bytebuffer.h"
 
 class LoRaWAN {
   public:

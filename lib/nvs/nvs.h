@@ -87,6 +87,8 @@ class nonVolatileStorage {
     static constexpr uint8_t halTimeout{100};          // ST HAL requires a 'timeout' in ms
     static constexpr uint8_t writeCycleTime{4};        // [ms] : the BR24G512xxx EEPROM requires a wait time of 3.5 ms after writing to internally store the data
 
+    bool blockIndexIsValid(uint32_t blockIndex);                                  // checks if the blockIndex is valid
+
   private:
     nvsMap theNvsMap;
     uint32_t measurementWriteIndex{0};                    // measurement block index where we will write the next measurement
@@ -97,7 +99,6 @@ class nonVolatileStorage {
     uint32_t measurementBlockLength{10};                  // 10 bytes
     uint32_t measurementsAddressOffset{4096};             // First 4K is for settings, Last 60K for measurements
 
-    bool blockIndexIsValid(uint32_t blockIndex);                                  // checks if the blockIndex is valid
     void read(uint32_t startAddress, uint8_t* data, uint32_t dataLength);         // low-level I2C reading from EEPROM
     void write(uint32_t startAddress, uint8_t* data, uint32_t dataLength);        // low-level I2C writing to EEPROM
 };

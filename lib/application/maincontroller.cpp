@@ -13,11 +13,11 @@
 #include "sensorcollection.h"
 #include "measurementcollection.h"
 #include "nvs.h"
-#include "main.h"
+//#include "main.h"
 
-extern LPTIM_HandleTypeDef hlptim1;
-extern RNG_HandleTypeDef hrng;
-extern RTC_HandleTypeDef hrtc;
+// extern LPTIM_HandleTypeDef hlptim1;
+// extern RNG_HandleTypeDef hrng;
+// extern RTC_HandleTypeDef hrtc;
 
 // static void MX_USART2_UART_Init(void);
 // static void MX_USART2_UART_DeInit(void);
@@ -30,12 +30,10 @@ extern measurementCollection theMeasurements;
 extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
-    theLog.snprintf("MuMo v2 - build %s %s test \n", __DATE__, __TIME__);
-
-    theLog.snprintf("Initializing...\n");
+    // theLog.snprintf("Initializing mainController\n");
 
     if (nvs.isReady()) {
-        theLog.snprintf("128K EEPROM found\n");
+        // theLog.snprintf("128K EEPROM found\n");
     }
     if (!nvs.isInitialized()) {
         nvs.initializeOnce();
@@ -43,7 +41,8 @@ void mainController::initialize() {
 
     theSensors.discover();
     loraNetwork.initialize();        // LoRaWAN layer + the LoRa radio
-    theLog.snprintf("... Ready\n");
+
+    // theLog.snprintf("mainController initialized\n");
 }
 
 void mainController::handleEvents() {
@@ -68,12 +67,12 @@ void mainController::handleEvents() {
             case applicationEvent::realTimeClockTick: {
                 // 0. Print Time to check clock is running
                 {
-                    RTC_TimeTypeDef currTime = {0};
-                    RTC_DateTypeDef currDate = {0};
+                    // RTC_TimeTypeDef currTime = {0};
+                    // RTC_DateTypeDef currDate = {0};
 
-                    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
-                    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
-                    theLog.snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
+                    // HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+                    // HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+                    // theLog.snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
                 }
 
                 // 1. run all measurements

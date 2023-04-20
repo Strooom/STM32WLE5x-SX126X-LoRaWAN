@@ -10,14 +10,12 @@
 
 class logging {
   public:
-    void detectDebugProbe();                              // check if a debug probe is connected by reading the DBGMCU_CR register
-    bool isDebugProbePresent() const;                     // return true if a debug probe is connected
-    static constexpr uint32_t bufferLength = 1024;        //
-    void snprintf(const char *format, ...);
-
-    uint32_t regValue;
+    static void detectDebugProbe();                      // check if a debug probe is connected by reading the DBGMCU_CR register
+    static bool isDebugProbePresent();                   // return true if a debug probe is connected
+    static constexpr uint32_t bufferLength{1024};        //
+    static void snprintf(const char *format, ...);
 
   private:
-    char buffer[bufferLength]{};         // Transmit buffer
-    bool debugProbePresent{true};        // remembers if we detected a debug probe present or not.
+    static char buffer[bufferLength];        // Transmit buffer
+    static bool debugProbePresent;           // remembers if we detected a debug probe present or not.
 };

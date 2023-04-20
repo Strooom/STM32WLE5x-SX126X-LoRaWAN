@@ -1,8 +1,10 @@
-
 #include "logging.h"        //
 #include "main.h"           // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS
 #include <cstdio>
 #include <cstdarg>
+
+char logging::buffer[bufferLength]{};          // Transmit buffer
+bool logging::debugProbePresent{false};        // remembers if we detected a debug probe present or not.
 
 void logging::snprintf(const char *format, ...) {
     if (debugProbePresent) {        // if no debugprobe, then no tracing, so do not bother to calculate the output

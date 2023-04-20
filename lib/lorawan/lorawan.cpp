@@ -11,24 +11,23 @@
 #include "nvs.h"
 #include "applicationevent.h"
 
-extern logging theLog;
 extern nonVolatileStorage nvs;
 extern sx126x theRadio;
 extern eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void LoRaWAN::initialize() {
-    currentDataRateIndex = 3;
-    theLog.snprintf("dataRateIndex = %u\n", currentDataRateIndex);
+    currentDataRateIndex = 5;
+    logging::snprintf("dataRateIndex = %u\n", currentDataRateIndex);
     theRadio.initialize();
     DevAddr.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr)));
-    theLog.snprintf("devAddr = %04X\n", DevAddr.asUint32());
+    logging::snprintf("devAddr = %04X\n", DevAddr.asUint32());
     applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
-    theLog.snprintf("applicationKey = %s\n", applicationKey.asASCII());
+    logging::snprintf("applicationKey = %s\n", applicationKey.asASCII());
     networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-    theLog.snprintf("networkKey = %s\n", networkKey.asASCII());
+    logging::snprintf("networkKey = %s\n", networkKey.asASCII());
     uplinkFrameCount.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter)));
-    theLog.snprintf("uplinkFrameCount = %u\n", uplinkFrameCount.asUint32());
+    logging::snprintf("uplinkFrameCount = %u\n", uplinkFrameCount.asUint32());
 }
 
 void LoRaWAN::handleEvents() {
@@ -36,7 +35,7 @@ void LoRaWAN::handleEvents() {
         return;
     }
     loRaWanEvent theEvent = loraWanEventBuffer.pop();
-    theLog.snprintf("LoRaWAN event [%u] : %s in state [%u] : %s \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+    logging::snprintf("LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
 
     switch (theTxRxCycleState) {
         case txRxCycleState::idle:
@@ -67,7 +66,9 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForTxComplete:
             switch (theEvent) {
                 case loRaWanEvent::sx126xTxComplete:
-                    goTo(txRxCycleState::waitForRx1Start);        // Start Timer for Rx1Start
+                    //            startTimer(2048U);        // 1 second
+                    startTimer(1024);        // 0.5 second
+                    goTo(txRxCycleState::waitForRx1Start);
                     break;
                 case loRaWanEvent::sx126xTimeout:
                     break;
@@ -80,7 +81,9 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForRx1Start:
             switch (theEvent) {
                 case loRaWanEvent::timeOut: {
-                    // Start Timer for Rx2Start
+                    logging::snprintf("RX1 start\n");
+                    stopTimer();
+                    startTimer(2048U);        // 1 second ffrom now until Rx2Start
                     uint32_t rxFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
                     uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                     theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
@@ -96,6 +99,7 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForRx1CompleteOrTimeout:
             switch (theEvent) {
                 case loRaWanEvent::sx126xRxComplete: {
+                    logging::snprintf("### Message Received in RX1 :-) ###\n");
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
@@ -112,6 +116,7 @@ void LoRaWAN::handleEvents() {
                     }
                 } break;
                 case loRaWanEvent::sx126xTimeout:
+                    logging::snprintf("nothing received in RX1\n");
                     goTo(txRxCycleState::waitForRx2Start);
                     break;
                 default:
@@ -123,10 +128,13 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForRx2Start:
             switch (theEvent) {
                 case loRaWanEvent::timeOut: {
+                    stopTimer();
+                    logging::snprintf("RX2 start\n");
                     uint32_t rxFrequency = theChannels.rx2ChannelFrequency;
-                    uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF12);
-                    theRadio.configForReceive(spreadingFactor::SF12, rxFrequency);
+                    uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
+                    theRadio.configForReceive(spreadingFactor::SF9, rxFrequency);
                     theRadio.startReceive(rxTimeout);
+                    goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
                 } break;
                 default:
                     // unexpected event for this state..
@@ -137,6 +145,7 @@ void LoRaWAN::handleEvents() {
         case txRxCycleState::waitForRx2CompleteOrTimeout:
             switch (theEvent) {
                 case loRaWanEvent::sx126xRxComplete: {
+                    logging::snprintf("### Message Received in RX2 :-) ###\n");
                     messageType receivedMessageType = decodeMessage();
                     switch (receivedMessageType) {
                         case messageType::application:
@@ -153,6 +162,8 @@ void LoRaWAN::handleEvents() {
                     }
                 } break;
                 case loRaWanEvent::sx126xTimeout:
+                    logging::snprintf("nothing received in RX2\n");
+                    goTo(txRxCycleState::idle);
                     break;
                 default:
                     // unexpected event for this state..
@@ -165,7 +176,7 @@ void LoRaWAN::handleEvents() {
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    theLog.snprintf("LoRaWAN stateChange from [%d] %s to [%d] %s\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
+    logging::snprintf("LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
     exitState(theTxRxCycleState);
     theTxRxCycleState = newState;
     enterState(newState);
@@ -184,14 +195,12 @@ void LoRaWAN::exitState(txRxCycleState currentState) {
             break;
 
         case txRxCycleState::waitForRx1Start:
-            stopTimer();
             break;
 
         case txRxCycleState::waitForRx1CompleteOrTimeout:
             break;
 
         case txRxCycleState::waitForRx2Start:
-            stopTimer();
             break;
 
         case txRxCycleState::waitForRx2CompleteOrTimeout:
@@ -205,7 +214,7 @@ void LoRaWAN::exitState(txRxCycleState currentState) {
 void LoRaWAN::enterState(txRxCycleState newState) {
     switch (newState) {
         case txRxCycleState::idle:
-            theRadio.goSleep();
+            // theRadio.goSleep();
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
@@ -217,15 +226,12 @@ void LoRaWAN::enterState(txRxCycleState newState) {
             break;
 
         case txRxCycleState::waitForRx1Start:
-//            startTimer(2048U);        // 1 second
-            startTimer(1024);        // 0.5 second
             break;
 
         case txRxCycleState::waitForRx1CompleteOrTimeout:
             break;
 
         case txRxCycleState::waitForRx2Start:
-            startTimer(2048U);        // 1 more second
             break;
 
         case txRxCycleState::waitForRx2CompleteOrTimeout:
@@ -240,10 +246,7 @@ void LoRaWAN::enterState(txRxCycleState newState) {
 }
 
 bool LoRaWAN::isReadyToTransmit() const {
-//    return false;
-    return true;
-
-    // return (theTxRxCycleState == txRxCycleState::idle);
+    return (theTxRxCycleState == txRxCycleState::idle);
 }
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {

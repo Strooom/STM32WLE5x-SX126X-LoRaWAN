@@ -3,9 +3,11 @@
 #include "applicationevent.h"
 #include "main.h"
 
+
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 extern ADC_HandleTypeDef hadc;
 
+bool power::usbPower{false};
 
 bool power::isUsbConnected() {
     return usbPower;
@@ -36,9 +38,8 @@ void power::measureBatteryLevel() {
     HAL_ADC_ConfigChannel(&hadc, &theAdcConfig);
     HAL_ADC_Start(&hadc);
     HAL_ADC_PollForConversion(&hadc, 1);
-    uint32_t adcRawResult    = HAL_ADC_GetValue(&hadc);
-    voltageInMillivolt = __HAL_ADC_CALC_VREFANALOG_VOLTAGE((adcRawResult), ADC_RESOLUTION_12B);
-
+    uint32_t adcRawResult = HAL_ADC_GetValue(&hadc);
+    voltageInMillivolt    = __HAL_ADC_CALC_VREFANALOG_VOLTAGE((adcRawResult), ADC_RESOLUTION_12B);
 }
 
 uint32_t power::calculateVoltageFromRaw(uint32_t adcRaw) {

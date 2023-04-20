@@ -19,11 +19,6 @@
 #include "bandwidth.h"
 #include "bytebuffer.h"
 
-#include "codingrate.h"
-#include "crctype.h"
-#include "headertype.h"
-#include "invertiq.h"
-#include "lowdatarateoptimize.h"
 #include "spreadingfactor.h"
 #include "sx126packettypes.h"
 #include "sx126xcommands.h"
@@ -57,7 +52,7 @@ class sx126x {
     void initializeInterface();        // configures the SPI between the MCU and the SX126x
     void initializeRadio();            //
 
-    void setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth, codingRate theCodingRate);
+    void setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth);
     void setRfFrequency(uint32_t frequency);
 
     void setPacketParametersTransmit(uint8_t payloadLength);
@@ -77,8 +72,4 @@ class sx126x {
 
     void readBuffer(uint8_t *payload, uint32_t payloadLength);
     void writeBuffer(uint8_t *payload, uint32_t payloadLength);
-
-    // void setPacketType(packetType thePacketType);
-    // void initializeModem();                 //
-    // void setPowerAmplifierConfig(uint8_t paDutyCycle, uint8_t hpMax, uint8_t deviceSel, uint8_t paLut);
 };

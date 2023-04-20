@@ -8,7 +8,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "mainstate.h"
+// #include "mainstate.h"
 
 class mainController {
   public:
@@ -18,5 +18,5 @@ class mainController {
   private:
     // ### Properties ###
     // ### StateMachines ###
-    mainState theMainState = mainState::boot;
+    // mainState theMainState{mainState::boot};
 };

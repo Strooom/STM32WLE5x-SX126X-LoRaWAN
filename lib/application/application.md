@@ -3,7 +3,7 @@
 * each peripheral remembers its initialized state, so we don't initialize when this is already done
 * only at the end, we de-initialize the peripherals, as many sensors may need the same I2C bus
 
-## when we use upling time randomization, we randomize over 15 seconds = 1/2 of the RTC tick
+## when we use uplink time randomization, we randomize over 15 seconds = 1/2 of the RTC tick
 
 
 ## for the display
