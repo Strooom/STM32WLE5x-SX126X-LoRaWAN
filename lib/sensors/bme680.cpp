@@ -6,94 +6,97 @@
 
 #include "bme680.h"
 
-float bme680::calibCoefT1;
+// Definition of NON-CONST STATIC variables
+bool bme680::awake{false};
+
+uint32_t bme680::rawDataTemperature;
+uint32_t bme680::rawDataBarometricPressure;
+uint32_t bme680::rawDataRelativeHumidity;
+
+float bme680::calibrationCoefficientTemperature1;
 float bme680::calibrationCoefficientTemperature2;
 float bme680::calibrationCoefficientTemperature3;
 
-void bme680::initialize() {
-    // read the calibration data from the sensor
-    uint8_t registerData[64]{};
-    readRegisters(0x8A, 23, registerData);
-    readRegisters(0xE1, 14, registerData + 23);
-    readRegisters(0x00, 5, registerData + 37);
-
-    calibCoefT1                        = static_cast<float>((static_cast<uint32_t>(registerData[32]) << 8) + static_cast<uint32_t>(registerData[31]));
-    calibrationCoefficientTemperature2 = static_cast<float>((static_cast<uint32_t>(registerData[1]) << 8) + static_cast<uint32_t>(registerData[0]));
-    calibrationCoefficientTemperature3 = static_cast<float>(registerData[2]);
+bool bme680::isAwake() {
+    return awake;
 }
 
-float bme680::readTemperature() {
-    writeRegister(bme680::registers::ctrl_hum, 0);                  // select only temperature measurement, no oversampling
-    writeRegister(bme680::registers::ctrl_meas, 0b00100001);        // select only temperature measurement, no oversampling
+void bme680::initialize() {
+    uint8_t registerData[64]{};
+    readRegisters(0x8A, 23, registerData);             // read all calibration data from the sensor and convert to proper coefficients
+    readRegisters(0xE1, 14, registerData + 23);        //
+    readRegisters(0x00, 5, registerData + 37);         //
+
+    calibrationCoefficientTemperature1 = static_cast<float>((static_cast<uint32_t>(registerData[32]) << 8) + static_cast<uint32_t>(registerData[31]));
+    calibrationCoefficientTemperature2 = static_cast<float>((static_cast<uint32_t>(registerData[1]) << 8) + static_cast<uint32_t>(registerData[0]));
+    calibrationCoefficientTemperature3 = static_cast<float>(registerData[2]);
+
+    static uint16_t calibrationCoefficientHumidity1;
+    static int16_t calibrationCoefficientHumidity2;
+    static uint8_t calibrationCoefficientHumidity3;
+    static int16_t calibrationCoefficientHumidity4;
+    static int16_t calibrationCoefficientHumidity5;
+    static int8_t calibrationCoefficientHumidity6;
+    static int8_t calibrationCoefficientHumidity7;
+
+    static uint16_t calibrationCoefficientPressure1;
+    static uint16_t calibrationCoefficientPressure2;
+    static uint8_t calibrationCoefficientPressure3;
+    static int16_t calibrationCoefficientPressure4;
+    static int16_t calibrationCoefficientPressure5;
+    static int8_t calibrationCoefficientPressure6;
+    static int8_t calibrationCoefficientPressure7;
+    static int16_t calibrationCoefficientPressure8;
+    static int16_t calibrationCoefficientPressure9;
+    static int8_t calibrationCoefficientPressure10;
+}
+
+void bme680::run() {
+    awake = true;
+    // run a ADC conversion cycle for Temp Hum and Presure, and when ready, read and store all raw ADC results
+    writeRegister(bme680::registers::ctrl_hum, 0);
+    writeRegister(bme680::registers::ctrl_meas, 0b00100001);
     bool hasNewData{false};
     while (!hasNewData) {
-        hasNewData = readRegister(bme680::registers::meas_status) & 0x80;        // wait until conversion is done
+        hasNewData = readRegister(bme680::registers::meas_status) & 0x80;        // wait until conversion is done TODO : this could be an endless loop !!
     }
 
     constexpr uint32_t nmbrRegisters{3};
     uint8_t registerData[nmbrRegisters];
+
+    // TODO : read all registers in one go
+
     readRegisters(static_cast<uint16_t>(bme680::registers::temp_msb), nmbrRegisters, registerData);
-    uint32_t rawDataTemperature = ((static_cast<uint32_t>(registerData[0]) << 12) |
-                                   (static_cast<uint32_t>(registerData[1]) << 4) |
-                                   (static_cast<uint32_t>(registerData[2]) >> 4));
 
-    return calculateTemperature(rawDataTemperature);
-}
-
-float bme680::readHumidity() {
-    writeRegister(bme680::registers::ctrl_hum, 0);                  // select only humidity, no oversampling
-    writeRegister(bme680::registers::ctrl_meas, 0b00100001);        // select only humidity measurement, no oversampling
-    bool hasNewData{false};
-    while (!hasNewData) {
-        hasNewData = readRegister(bme680::registers::meas_status) & 0x80;        // wait until conversion is done
-    }
-
-    constexpr uint32_t nmbrRegisters{2};
-    uint8_t registerData[nmbrRegisters];
     readRegisters(static_cast<uint16_t>(bme680::registers::hum_msb), nmbrRegisters, registerData);
     uint32_t rawDataHumidity = ((static_cast<uint32_t>(registerData[0]) << 8) | (static_cast<uint32_t>(registerData[1])));
 
-    //    return calculateRelativeHumidity(rawDataHumidity);
-
-    return 1.234F;
-}
-
-float bme680::readBarometricPressure() {
-    writeRegister(bme680::registers::ctrl_hum, 0);                  // select only temperature measurement, no oversampling
-    writeRegister(bme680::registers::ctrl_meas, 0b00100001);        // select only temperature measurement, no oversampling
-    bool hasNewData{false};
-    while (!hasNewData) {
-        hasNewData = readRegister(bme680::registers::meas_status) & 0x80;        // wait until conversion is done
-    }
-
-    constexpr uint32_t nmbrRegisters{3};
-    uint8_t registerData[nmbrRegisters];
-    readRegisters(static_cast<uint16_t>(bme680::registers::temp_msb), nmbrRegisters, registerData);
     uint32_t rawDataTemperature = ((static_cast<uint32_t>(registerData[0]) << 12) |
                                    (static_cast<uint32_t>(registerData[1]) << 4) |
                                    (static_cast<uint32_t>(registerData[2]) >> 4));
-
-    return calculateTemperature(rawDataTemperature);
 }
 
-float bme680::calculateTemperature(uint32_t rawData) {
+float bme680::getTemperature() {
     // TODO : this can be made more efficient by precalculating the terms where actual data has no influence
     // also take one conversion to float from rawData io several..
     /* calculate var1 data */
-    float var1 = ((((float)rawData / 16384.0f) - (calibCoefT1 / 1024.0f)) * (calibrationCoefficientTemperature2));
-
+    float var1 = ((((float)rawDataTemperature / 16384.0f) - (calibrationCoefficientTemperature1 / 1024.0f)) * (calibrationCoefficientTemperature2));
     /* calculate var2 data */
-    float var2 = (((((float)rawData / 131072.0f) - (calibCoefT1 / 8192.0f)) * (((float)rawData / 131072.0f) - (calibCoefT1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
-
+    float var2 = (((((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f)) * (((float)rawDataTemperature / 131072.0f) - (calibrationCoefficientTemperature1 / 8192.0f))) * (calibrationCoefficientTemperature3 * 16.0f));
     /* compensated temperature data*/
     return ((var1 + var2) / 5120.0f);
 }
-void bme680::calculateBarometricPressure() {
+
+float bme680::getRelativeHumidity() {
+    return 1.234F;
 }
-void bme680::calculateRelativeHumidity() {
+
+float bme680::getBarometricPressure() {
+    return 2.3456F;
 }
 
 void bme680::goSleep() {
+    awake = false;
 }
 
 void bme680::reset() {
@@ -147,6 +150,19 @@ void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* dest
 
 #else
 
-// TODO : a desktop console version goes here
+bool bme680::testI2cAddress(uint8_t addressToTest) {
+    return false;
+}
+
+uint8_t bme680::readRegister(registers registerAddress) {
+    uint8_t result[1]{0};
+    return result[0];
+}
+
+void bme680::writeRegister(registers registerAddress, uint8_t value) {
+}
+
+void bme680::readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination) {
+}
 
 #endif

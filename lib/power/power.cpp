@@ -1,11 +1,13 @@
 #include "power.h"
 
 bool power::usbPower{false};
+uint32_t power::batteryPercentCharged{0};
+uint32_t power::voltageInMillivolt{0};
 
-uint32_t power::calculateVoltageFromRaw(uint32_t adcRaw) {
-    // return (VREFINT_CAL_VREF * 1510) / adcRaw;
-    return 0;
+bool power::hasUsbPower() {
+    return usbPower;
 }
+
 uint32_t power::calculatePercentFromVoltage(uint32_t voltage) {
     return 0;
 }
@@ -15,7 +17,7 @@ uint32_t power::getBatteryVoltage() {
 }
 
 uint32_t power::getBatteryPercent() {
-    return percentCharged;
+    return batteryPercentCharged;
 }
 
 #ifndef environment_desktop
@@ -61,6 +63,15 @@ void power::measureBatteryLevel() {
 
 #else
 
-// TODO : a desktop console version goes here
+bool power::isUsbConnected() {
+    return false;
+}
+
+bool power::isUsbRemoved() {
+    return false;
+}
+
+void power::measureBatteryLevel() {
+}
 
 #endif

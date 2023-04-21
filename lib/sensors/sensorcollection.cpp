@@ -9,18 +9,15 @@
 #include "tsl2591.h"
 #include "logging.h"
 
-extern logging theLog;
-
 void sensorCollection::measure() {
     // Keep the sensor awake as more measurements could be needed from the same sensor, eg BME68X
     for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
         theSensorCollection[sensorIndex].run();
     }
     // Then after all measurements are done, check them all and put them to sleep if needed.
-        for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
-        theSensorCollection[sensorIndex].sleep();
+    for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
+        theSensorCollection[sensorIndex].goSleep();
     }
-
 }
 
 void sensorCollection::discover() {
@@ -40,7 +37,7 @@ void sensorCollection::discover() {
 
 void sensorCollection::addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) {
     if (actualNumberOfSensors < maxNumberOfSensors) {
-        theLog.snprintf("%u : Added Sensor [%s]\n", (actualNumberOfSensors + 1), toString(aType));
+        logging::snprintf("%u : Added Sensor [%s]\n", (actualNumberOfSensors + 1), toString(aType));
         if (oversamplingLowPower > sensor::maxOversampling) {
             oversamplingLowPower = sensor::maxOversampling;
         }

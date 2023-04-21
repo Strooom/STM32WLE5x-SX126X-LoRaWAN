@@ -24,11 +24,11 @@ class aesKey {
     uint8_t key[binaryKeyLength];
     uint8_t keyAsASCII[asciiKeyLength];
 
-    // TODO : the key could be expanded upfront to save time during encryption - as the key doesn't change, the expanded key should be constant as well
+    // TODO : the key could be expanded upfront to save time during encryption - as the key doesn't change, the expanded keys should be constant as well
 };
 
 
-// NOTEs : 
+// NOTES : 
 // * I think implementation could be faster if keys are defined as uint32_t[4] instead of uint8_t[16]
 // * We need an additional 10 keys for the 10 rounds of the AES algorithm - they can be precomputed from the original key
 // * As a single bit-change in the keys, has dramatic effects, it's maybe a good idea to have some kind of checksum and integrity check on the aesKEy object

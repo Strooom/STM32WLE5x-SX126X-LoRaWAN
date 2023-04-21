@@ -41,7 +41,8 @@ void logging::detectDebugProbe() {
 }
 
 #else
-
-// TODO : a desktop console version goes here
+bool logging::debugProbePresent{false};
+void logging::detectDebugProbe() {}
+void logging::snprintf(const char *format, ...) {}
 
 #endif

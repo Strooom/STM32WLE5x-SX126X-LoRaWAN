@@ -150,7 +150,7 @@ int main(void) {
     /* USER CODE BEGIN WHILE */
 
     // bme680::initialize();
-    // bme680::readTemperature();
+    // bme680::getTemperature();
 
     //(void)testbme68x();
 

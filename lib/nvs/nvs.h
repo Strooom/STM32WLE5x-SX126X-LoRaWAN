@@ -47,10 +47,12 @@ class nvsMap {
         // Important note : make sure that none of the blocks are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes
         {0, 1},          // nvsMapVersion : 1 byte
         {1, 127},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 127 bytes
+        // TODO : add a setting displayVersion
 
-        {128, 4},          // measurementWriteIndex : 32 bits
-        {132, 4},          // oldestUnsentMeasurementIndex : 32 bits
-        {136, 4},          // oldestUnconfirmedMeasurementindex : 32 bits
+        {128, 4},        // measurementWriteIndex : 32 bits
+        {132, 4},        // oldestUnsentMeasurementIndex : 32 bits
+        {136, 4},        // oldestUnconfirmedMeasurementindex : 32 bits
+        // TODO add a setting to enable resending unconfirmed measurements
         {140, 116},        // unusedMeasurementDataManagement : extra blocks can be inserted hereafter for a maximum of 116 bytes
 
         {256, 8},          // DevEUI : 64 bits

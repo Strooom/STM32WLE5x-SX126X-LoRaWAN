@@ -17,6 +17,7 @@ extern eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void LoRaWAN::initialize() {
+    // TODO : all of this should come from NVS
     currentDataRateIndex = 5;
     logging::snprintf("dataRateIndex = %u\n", currentDataRateIndex);
     theRadio.initialize();

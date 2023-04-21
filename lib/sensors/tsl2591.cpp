@@ -67,6 +67,16 @@ void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
 
 #else
 
-// TODO : a desktop console version goes here
+bool tsl2591::testI2cAddress(uint8_t addressToTest) {
+    return false;
+}
+
+uint8_t tsl2591::readRegister(registers registerAddress) {
+    uint8_t result[1]{0};
+    return result[0];
+}
+
+void tsl2591::writeRegister(registers registerAddress, uint8_t value) {
+}
 
 #endif

@@ -1,20 +1,19 @@
 #include "logging.h"
-extern logging theLog;
 #include "sensor.h"
+#include "power.h"
 
 // List of all sensors we know about
-#include "power.h"
-extern power thePowerControl;
+
 #include "bme680.h"
 #include "tsl2591.h"
 
 void sensor::run() {
-    theLog.snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
+    logging::snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
 
     uint32_t oversampling;
     uint32_t prescaler;
 
-    if (thePowerControl.isUsbConnected()) {
+    if (power::hasUsbPower()) {
         oversampling = oversamplingHighPower;
         prescaler    = prescalerHighPower;
     } else {
@@ -33,43 +32,60 @@ void sensor::run() {
         if (prescaleCounter <= 1) {
             prescaleCounter             = prescaler;
             sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
-            theLog.snprintf("sampled ");
+            logging::snprintf("sampled, value = %f", sample[oversamplingCounter]);
 
             if (oversamplingCounter == 0) {
                 store();        // average all samples & output this measurement to NVS
-                theLog.snprintf("measurement stored\n");
+                logging::snprintf("measurement stored\n");
                 oversamplingCounter = oversampling;
             } else {
-                theLog.snprintf("\n");
+                logging::snprintf("\n");
                 oversamplingCounter--;
                 prescaleCounter = prescaler;
             }
         } else {
-            theLog.snprintf("skipped\n");
+            logging::snprintf("skipped\n");
             prescaleCounter--;
         }
     } else {
-        theLog.snprintf("inactive\n");
+        logging::snprintf("inactive\n");
     }
 }
 
 float sensor::read() {
     switch (type) {
         case measurementChannel::batteryLevel:
+            return 3.3F;
             break;
 
         case measurementChannel::BME680SensorTemperature:
-            bme680::initialize();
-            bme680::readTemperature();
+            if (!bme680::isAwake()) {
+                bme680::run();
+            }
+            return bme680::getTemperature();
+            break;
+
+        case measurementChannel::BME680SensorRelativeHumidity:
+            if (!bme680::isAwake()) {
+                bme680::run();
+            }
+            return bme680::getRelativeHumidity();
+            break;
+
+        case measurementChannel::BME680SensorBarometricPressure:
+            if (!bme680::isAwake()) {
+                bme680::run();
+            }
+            return bme680::getBarometricPressure();
             break;
 
         default:
+            return 0.0F;
             break;
     }
-    return static_cast<float>(type);        // TODO : remove, test only
 }
 
-void sensor::sleep() {
+void sensor::goSleep() {
     switch (type) {
         case measurementChannel::batteryLevel:
             break;
@@ -84,4 +100,20 @@ void sensor::sleep() {
 }
 
 void sensor::store() {
+}
+
+void sensor::initalize() {
+    switch (type) {
+        case measurementChannel::batteryLevel:
+            break;
+
+        case measurementChannel::BME680SensorTemperature:
+        case measurementChannel::BME680SensorRelativeHumidity:
+        case measurementChannel::BME680SensorBarometricPressure:
+            bme680::initialize();
+            break;
+
+        default:
+            break;
+    }
 }

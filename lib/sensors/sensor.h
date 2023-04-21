@@ -10,15 +10,18 @@
 
 class sensor {
   public:
-    void run();          // checks if this sensor needs to be sampled, and if so, samples it
-    float read();        // reads the sensor and store the value into to sample[] array
-    void store();        // calculates a measurement from samples, and stores it into the measurementCollection
-    void sleep();        // puts the sensor in sleep mode
+    void initalize();        // initializes the sensor after booting, reads/performs calibration data, etc.
+    void run();              // checks if this sensor needs to be sampled, and if so, samples it
+    float read();            // reads the sensor and store the value into to sample[] array
+    void store();            // calculates a measurement from samples, and stores it into the measurementCollection
+    void goSleep();          // puts the sensor in sleep mode
 
     static constexpr uint32_t maxPrescaler{4095};         // take a sample every x times of the 30 second RTC tick
-    static constexpr uint32_t maxOversampling{15};        // average x samples before storing it in the sample collection
+    static constexpr uint32_t maxOversampling{16};        // average x samples before storing it in the sample collection
 
+#ifndef unitTesting
   private:
+#endif
     measurementChannel type{measurementChannel::none};        // defines the type of sensor
 
     // Note : prescaler runs from 1 to 4095, meaning that you sample every 1 to 4095 times the 30 second RTC tick
@@ -30,7 +33,7 @@ class sensor {
     uint32_t oversamplingHighPower{0};        // high power mode : on USB power
     uint32_t prescalerHighPower{0};           //
 
-    float sample[maxOversampling];
+    float sample[maxOversampling]{};
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
 
