@@ -8,15 +8,13 @@
 #include "sx126x.h"
 #include "logging.h"
 
-extern logging theLog;
-
 void sx126x::initialize() {
     initializeInterface();
     initializeRadio();
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
-    theLog.snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
+    //logging::snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
     goStandby();
     setRfSwitch(rfSwitchState::tx);
     setRfFrequency(frequency);
@@ -36,7 +34,7 @@ void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t freq
 }
 
 void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency) {
-    theLog.snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
+    //logging::snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
     goStandby();
     setRfSwitch(rfSwitchState::rx);
     setRfFrequency(frequency);
@@ -189,7 +187,7 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0xDB;
     executeCommand(sx126xCommand::calibrateImage, commandParameters, 2);
 
-    commandParameters[0] = 0x01; // packetType::LoRa;
+    commandParameters[0] = 0x01;        // packetType::LoRa;
     executeCommand(sx126xCommand::setPacketType, commandParameters, 1);
 
     commandParameters[0] = 0x36;
@@ -212,7 +210,6 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
 }
-
 
 #ifndef environment_desktop
 
@@ -344,6 +341,22 @@ void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t d
 
 #else
 
-// TODO : a desktop console version goes here
+void sx126x::initializeInterface() {
+}
+
+void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
+}
+
+void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
+}
+
+void sx126x::setRfSwitch(rfSwitchState newState) {
+}
+
+void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
+}
+
+void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
+}
 
 #endif

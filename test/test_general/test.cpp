@@ -11,7 +11,7 @@ void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
 
 void test_initialize() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 int main(int argc, char **argv) {
