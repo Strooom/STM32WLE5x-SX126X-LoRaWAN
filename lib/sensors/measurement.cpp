@@ -1,4 +1,7 @@
 #include "measurement.h"
+
+#ifndef environment_desktop
+
 #include "main.h"
 
 extern RTC_HandleTypeDef hrtc;
@@ -15,6 +18,11 @@ uint32_t measurement::getTimeStamp() const {
     return ((days * 86400) + seconds);
 
     //((36525 * Year) / 100) + ((306001 * (Month + 1)) / 10000) + Day - 719606;
-    //Second += (Minute * 60) + (Hour * 3600);
-
+    // Second += (Minute * 60) + (Hour * 3600);
 }
+
+#else
+
+// TODO : a desktop console version goes here
+
+#endif

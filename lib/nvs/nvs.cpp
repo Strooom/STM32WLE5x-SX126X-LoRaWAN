@@ -7,21 +7,13 @@
 #include "nvs.h"
 #include "logging.h"
 
-extern logging theLog;
-
 bool nonVolatileStorage::blockIndexIsValid(uint32_t blockIndex) {
     return (blockIndex < static_cast<uint32_t>(nvsMap::blockIndex::numberOfBlocks));
 }
 
 bool nonVolatileStorage::isInitialized() {
-    uint8_t nvsMapVersion;
-    readBlock(static_cast<uint32_t>(nvsMap::blockIndex::nvsMapVersion), &nvsMapVersion);        // read the first block in NVS
-    if (nvsMapVersion == 0xFF) {                                                                // if it's 0xFF, the EEPROM has not been initialized yet
-        theLog.snprintf("EEPROM blank\n");                                                      //
-    }
-    theLog.snprintf("nvsMap version [%u]\n", nvsMapVersion);        //
-    return (nvsMapVersion != 0xFF);                                 // if it's still 0xFF, the EEPROM has not been initialized yet
-};
+    return (0xFF != readBlock8(static_cast<uint32_t>(nvsMap::blockIndex::nvsMapVersion)));
+}
 
 void nonVolatileStorage::initializeOnce() {
     uint8_t data[16]{0};
@@ -73,6 +65,16 @@ uint32_t nonVolatileStorage::readBlock32(uint32_t blockIndex) {
     return result;
 }
 
+void nonVolatileStorage::writeBlock8(uint32_t blockIndex, uint8_t sourceData) {
+    writeBlock(blockIndex, &sourceData);
+}
+
+uint8_t nonVolatileStorage::readBlock8(uint32_t blockIndex) {
+    uint8_t result;
+    readBlock(blockIndex, &result);
+    return result;
+}
+
 void nonVolatileStorage::writeBlock32(uint32_t blockIndex, uint32_t sourceData) {
     uint8_t dataAsBytes[4];
     dataAsBytes[0] = static_cast<uint8_t>((sourceData & 0xFF000000) >> 24);
@@ -118,3 +120,53 @@ void nonVolatileStorage::writeMeasurement(measurement& source) {
     // TODO : write measurementWriteIndex to NVS
     // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::measurementWriteIndex), data);
 }
+
+
+
+
+#ifndef environment_desktop
+
+#include "main.h"
+
+extern I2C_HandleTypeDef hi2c2;
+
+bool nonVolatileStorage::isReady() {
+    if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, i2cAddress << 1, halTrials, halTimeout)) {        // testing presence of the first bank of 64K (U7)
+        return false;
+    }
+    if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, (i2cAddress << 1) + 1, halTrials, halTimeout)) {        // testing presence of the second bank of 64K (U8)
+        return false;
+    }
+    return true;
+}
+
+void nonVolatileStorage::read(uint32_t startAddress, uint8_t *data, uint32_t dataLength) {
+    HAL_I2C_Mem_Read(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, data, dataLength, halTimeout);        //
+}
+void nonVolatileStorage::write(uint32_t startAddress, uint8_t *data, uint32_t dataLength) {
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_RESET);        // Drive writeProtect LOW = enable write
+    HAL_I2C_Mem_Write(&hi2c2, i2cAddress << 1, startAddress, I2C_MEMADD_SIZE_16BIT, data, dataLength, halTimeout);
+    HAL_Delay(writeCycleTime);                                       // the EEPROM needs 3.5 ms to internally write the data, if WriteProtect goes HIGH too early, the data is not written
+    HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);        // disable write
+}
+
+#else
+
+#include <cstring>
+
+static uint8_t memory[60 * 1024];
+
+bool nonVolatileStorage::isReady() {
+    return true;
+}
+
+void nonVolatileStorage::read(uint32_t startAddress, uint8_t *data, uint32_t dataLength) {
+    memcpy(data, memory + startAddress, dataLength);
+}
+void nonVolatileStorage::write(uint32_t startAddress, uint8_t *data, uint32_t dataLength) {
+    memcpy(memory + startAddress, data, dataLength);
+}
+
+// TODO : a desktop console version goes here
+
+#endif

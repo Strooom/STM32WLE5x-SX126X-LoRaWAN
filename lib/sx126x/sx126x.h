@@ -20,7 +20,6 @@
 #include "bytebuffer.h"
 
 #include "spreadingfactor.h"
-#include "sx126packettypes.h"
 #include "sx126xcommands.h"
 #include "sx126xramptime.h"
 #include "sx126xregisters.h"

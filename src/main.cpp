@@ -172,7 +172,7 @@ int main(void) {
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
         logging::detectDebugProbe();
-        power::detectUsbConnectOrRemove();
+
         loraNetwork.handleEvents();
         theMainController.handleEvents();
         if (power::isUsbConnected()) {

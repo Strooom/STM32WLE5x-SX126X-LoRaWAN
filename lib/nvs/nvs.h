@@ -72,10 +72,12 @@ class nonVolatileStorage {
     void initialize();            // initialize the nvsMap for subsequent boots
 
     // API to access the Settings section of the EEPROM
-    void readBlock(uint32_t blockIndex, uint8_t* destinationDataBuffer);        // reads the block from EEPROM and stores it in the destinationDataBuffer
-    void writeBlock(uint32_t blockIndex, uint8_t* sourceDataBuffer);            // write data from sourceDataBuffer to the block in EEPROM
+    uint8_t readBlock8(uint32_t blockIndex);                                    // reads uint8_t from a block in EEPROM
+    void writeBlock8(uint32_t blockIndex, uint8_t sourceData);                  // write uint8_t data to a block in EEPROM
     uint32_t readBlock32(uint32_t blockIndex);                                  // reads uint32_t from a block in EEPROM
     void writeBlock32(uint32_t blockIndex, uint32_t sourceData);                // write uint32_t data to a block in EEPROM
+    void readBlock(uint32_t blockIndex, uint8_t* destinationDataBuffer);        // reads the block from EEPROM and stores it in the destinationDataBuffer
+    void writeBlock(uint32_t blockIndex, uint8_t* sourceDataBuffer);            // write data from sourceDataBuffer to the block in EEPROM
 
     // API to access the Measurement section of the EEPROM
     void readMeasurement(uint32_t measurementIndex, measurement& destination);        // reads the measurement from EEPROM and stores it in the destination measurement object
@@ -87,7 +89,7 @@ class nonVolatileStorage {
     static constexpr uint8_t halTimeout{100};          // ST HAL requires a 'timeout' in ms
     static constexpr uint8_t writeCycleTime{4};        // [ms] : the BR24G512xxx EEPROM requires a wait time of 3.5 ms after writing to internally store the data
 
-    bool blockIndexIsValid(uint32_t blockIndex);                                  // checks if the blockIndex is valid
+    bool blockIndexIsValid(uint32_t blockIndex);        // checks if the blockIndex is valid
 
   private:
     nvsMap theNvsMap;

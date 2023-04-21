@@ -9,7 +9,6 @@
 #include "main.h"
 
 extern I2C_HandleTypeDef hi2c2;
-extern logging theLog;
 
 bool nonVolatileStorage::isReady() {
     if (HAL_OK != HAL_I2C_IsDeviceReady(&hi2c2, i2cAddress << 1, halTrials, halTimeout)) {        // testing presence of the first bank of 64K (U7)

@@ -5,8 +5,11 @@
 // ######################################################################################
 
 #include "nvs.h"
+#include "nvs2.h"
 #include <stdio.h>
 #include <string.h>
+
+some syntax error
 
 extern uint8_t memory[60 * 1024];
 
