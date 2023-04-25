@@ -17,7 +17,7 @@ class bme680 {
     static bool isAwake();                       // check if sampling already done
     static void run();                           // wakeUp and do the sampling
     static float getTemperature();               //
-    static float getRelativeHumidity();                  //
+    static float getRelativeHumidity();          //
     static float getBarometricPressure();        //
     static void goSleep();                       //
 
@@ -82,25 +82,26 @@ class bme680 {
     static float calibrationCoefficientTemperature1;
     static float calibrationCoefficientTemperature2;
     static float calibrationCoefficientTemperature3;
+    static float calibrationCoefficientTemperature4;
 
-    static uint16_t calibrationCoefficientPressure1;
-    static uint16_t calibrationCoefficientPressure2;
-    static uint8_t calibrationCoefficientPressure3;
-    static int16_t calibrationCoefficientPressure4;
-    static int16_t calibrationCoefficientPressure5;
-    static int8_t calibrationCoefficientPressure6;
-    static int8_t calibrationCoefficientPressure7;
-    static int16_t calibrationCoefficientPressure8;
-    static int16_t calibrationCoefficientPressure9;
-    static int8_t calibrationCoefficientPressure10;
+    static float calibrationCoefficientPressure1;
+    static float calibrationCoefficientPressure2;
+    static float calibrationCoefficientPressure3;
+    static float calibrationCoefficientPressure4;
+    static float calibrationCoefficientPressure5;
+    static float calibrationCoefficientPressure6;
+    static float calibrationCoefficientPressure7;
+    static float calibrationCoefficientPressure8;
+    static float calibrationCoefficientPressure9;
+    static float calibrationCoefficientPressure10;
 
-    static uint16_t calibrationCoefficientHumidity1;
-    static int16_t calibrationCoefficientHumidity2;
-    static uint8_t calibrationCoefficientHumidity3;
-    static int16_t calibrationCoefficientHumidity4;
-    static int16_t calibrationCoefficientHumidity5;
-    static int8_t calibrationCoefficientHumidity6;
-    static int8_t calibrationCoefficientHumidity7;
+    static float calibrationCoefficientHumidity1;
+    static float calibrationCoefficientHumidity2;
+    static float calibrationCoefficientHumidity3;
+    static float calibrationCoefficientHumidity4;
+    static float calibrationCoefficientHumidity5;
+    static float calibrationCoefficientHumidity6;
+    static float calibrationCoefficientHumidity7;
 };
 
 /*

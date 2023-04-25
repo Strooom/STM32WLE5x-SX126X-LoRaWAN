@@ -38,6 +38,8 @@
 #include "nvs.h"
 #include "measurementcollection.h"
 #include "bme680.h"
+#include "tsl2591.h"
+#include "Adafruit_TSL2591.h"
 
 /* USER CODE END Includes */
 
@@ -71,7 +73,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 nonVolatileStorage nvs;
-logging theLog;
+// logging theLog;
 eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
@@ -95,6 +97,7 @@ static void MX_RTC_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+void testbme68x(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -155,6 +158,19 @@ int main(void) {
     //(void)testbme68x();
 
     // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
+
+    if (tsl2591::isPresent()) {
+        tsl2591::initialize();
+    }
+
+    //Adafruit_TSL2591 theTls;
+    //theTls.begin();
+
+    while (1) {
+        //uint32_t flum = theTls.getFullLuminosity();
+        float vs      = tsl2591::readVisibleLight();
+        HAL_Delay(1000);
+    }
 
     if (0) {
         // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);

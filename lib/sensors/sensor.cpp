@@ -1,4 +1,3 @@
-#include "logging.h"
 #include "sensor.h"
 #include "power.h"
 
@@ -7,20 +6,25 @@
 #include "bme680.h"
 #include "tsl2591.h"
 
-void sensor::run() {
-    logging::snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
+// #define sensorLogging
+// #include "logging.h"
 
+void sensor::run() {
+#ifdef sensorLogging
+    logging::snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
+#endif
     uint32_t oversampling;
     uint32_t prescaler;
 
-    if (power::hasUsbPower()) {
-        oversampling = oversamplingHighPower;
-        prescaler    = prescalerHighPower;
-    } else {
-        oversampling = oversamplingLowPower;
-        prescaler    = prescalerLowPower;
-    }
-    if (prescaler > 0) {                          // a value of 0 means we don't want to sample this sensor at all
+    if (active) {
+        if (power::hasUsbPower()) {
+            oversampling = oversamplingHighPower;
+            prescaler    = prescalerHighPower;
+        } else {
+            oversampling = oversamplingLowPower;
+            prescaler    = prescalerLowPower;
+        }
+
         if (prescaleCounter > prescaler) {        // when switching between low power and high power mode, the prescaleCounter could need to be reset in the appropriate range
             prescaleCounter = prescaler;
         }
@@ -29,26 +33,35 @@ void sensor::run() {
             oversamplingCounter = oversampling;
         }
 
-        if (prescaleCounter <= 1) {
+        if (prescaleCounter == 0) {
             prescaleCounter             = prescaler;
             sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
+#ifdef sensorLogging
             logging::snprintf("sampled, value = %f", sample[oversamplingCounter]);
-
+#endif
             if (oversamplingCounter == 0) {
                 store();        // average all samples & output this measurement to NVS
+#ifdef sensorLogging
                 logging::snprintf("measurement stored\n");
+#endif
                 oversamplingCounter = oversampling;
             } else {
+#ifdef sensorLogging
                 logging::snprintf("\n");
+#endif
                 oversamplingCounter--;
                 prescaleCounter = prescaler;
             }
         } else {
+#ifdef sensorLogging
             logging::snprintf("skipped\n");
+#endif
             prescaleCounter--;
         }
     } else {
+#ifdef sensorLogging
         logging::snprintf("inactive\n");
+#endif
     }
 }
 
@@ -91,7 +104,16 @@ void sensor::goSleep() {
             break;
 
         case measurementChannel::BME680SensorTemperature:
-            bme680::goSleep();
+        case measurementChannel::BME680SensorRelativeHumidity:
+        case measurementChannel::BME680SensorBarometricPressure:
+            if (bme680::isAwake()) {
+                bme680::goSleep();
+            }
+            break;
+
+        case measurementChannel::TSL25911Infrared:
+        case measurementChannel::TSL25911VisibleLight:
+            tsl2591::goSleep();
             break;
 
         default:
