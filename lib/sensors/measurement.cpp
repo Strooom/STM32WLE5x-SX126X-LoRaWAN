@@ -6,7 +6,7 @@
 
 extern RTC_HandleTypeDef hrtc;
 
-uint32_t measurement::getTimeStamp() const {
+uint32_t measurement::getTimeStamp() {
     RTC_TimeTypeDef currTime;
     RTC_DateTypeDef currDate;
 
@@ -23,6 +23,8 @@ uint32_t measurement::getTimeStamp() const {
 
 #else
 
-// TODO : a desktop console version goes here
+uint32_t measurement::getTimeStamp() {
+    return 0;
+}
 
 #endif

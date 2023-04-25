@@ -6,13 +6,7 @@
 #include "bme680.h"
 #include "tsl2591.h"
 
-// #define sensorLogging
-// #include "logging.h"
-
-void sensor::run() {
-#ifdef sensorLogging
-    logging::snprintf("Run Sensor [%d] %s : ", static_cast<uint8_t>(type), toString(type));
-#endif
+sensor::runResult sensor::run() {
     uint32_t oversampling;
     uint32_t prescaler;
 
@@ -28,40 +22,28 @@ void sensor::run() {
         if (prescaleCounter > prescaler) {        // when switching between low power and high power mode, the prescaleCounter could need to be reset in the appropriate range
             prescaleCounter = prescaler;
         }
-
         if (oversamplingCounter > oversampling) {        // when switching between low power and high power mode, the oversamplingCounter could need to be reset in the appropriate range
             oversamplingCounter = oversampling;
         }
 
         if (prescaleCounter == 0) {
-            prescaleCounter             = prescaler;
-            sample[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
-#ifdef sensorLogging
-            logging::snprintf("sampled, value = %f", sample[oversamplingCounter]);
-#endif
+            prescaleCounter              = prescaler;
+            samples[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
             if (oversamplingCounter == 0) {
-                store();        // average all samples & output this measurement to NVS
-#ifdef sensorLogging
-                logging::snprintf("measurement stored\n");
-#endif
+                lastMeasurement     = average(oversampling + 1);        // average all samples & output this measurement to NVS
                 oversamplingCounter = oversampling;
+                return runResult::measured;
             } else {
-#ifdef sensorLogging
-                logging::snprintf("\n");
-#endif
                 oversamplingCounter--;
                 prescaleCounter = prescaler;
+                return runResult::sampled;
             }
         } else {
-#ifdef sensorLogging
-            logging::snprintf("skipped\n");
-#endif
             prescaleCounter--;
+            return runResult::prescaled;
         }
     } else {
-#ifdef sensorLogging
-        logging::snprintf("inactive\n");
-#endif
+        return runResult::inactive;
     }
 }
 
@@ -121,7 +103,12 @@ void sensor::goSleep() {
     }
 }
 
-void sensor::store() {
+float sensor::average(uint32_t nmbrOfSamples) {
+    float sum{0.0F};
+    for (uint32_t i = 0; i < nmbrOfSamples; i++) {
+        sum += samples[i];
+    }
+    return (sum / nmbrOfSamples);
 }
 
 void sensor::initalize() {

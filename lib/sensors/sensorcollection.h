@@ -7,6 +7,7 @@
 #pragma once
 #include <stdint.h>
 #include "sensor.h"
+#include "measurement.h"
 
 class sensorCollection {
   public:
@@ -19,5 +20,10 @@ class sensorCollection {
     static constexpr uint32_t maxNumberOfSensors{8};
     uint32_t actualNumberOfSensors{0};
     sensor theSensorCollection[maxNumberOfSensors];
+
+    measurement latestMeasurements[maxNumberOfSensors];        // collects the measurements of all sensors during a run
+    uint32_t actualNumberOfMeasurements{0};                    // counts the number of measurements in the latestMeasurements array
+
     void addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower);
+    void addMeasurement(measurementChannel aType, float aValue);
 };

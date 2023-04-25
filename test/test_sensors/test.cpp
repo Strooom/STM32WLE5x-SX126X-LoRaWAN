@@ -48,62 +48,19 @@ void test_sensor_initialization() {
     TEST_ASSERT_EQUAL_UINT32(0, aSensor.oversamplingCounter);
     TEST_ASSERT_EQUAL_UINT32(0, aSensor.prescaleCounter);
     for (uint32_t index = 0; index < sensor::maxOversampling; index++) {
-        TEST_ASSERT_EQUAL_FLOAT(0.0F, aSensor.sample[index]);
+        TEST_ASSERT_EQUAL_FLOAT(0.0F, aSensor.samples[index]);
     }
 }
 
 void test_sensor_run_inactive() {
     sensor aSensor;
     aSensor.type = measurementChannel::batteryLevel;
-    for (uint32_t index = 0; index < 20; index++) {
-        aSensor.run();
+
+    for (uint32_t index = 0; index < 8; index++) {
+        TEST_ASSERT_EQUAL(sensor::runResult::inactive, aSensor.run());
     }
     TEST_ASSERT_EQUAL_UINT32(0, aSensor.prescaleCounter);
     TEST_ASSERT_EQUAL_UINT32(0, aSensor.oversamplingCounter);
-}
-
-void test_sensor_run_active_prescaling() {
-    const uint32_t prescalerTestValue{3};
-    sensor aSensor;
-    aSensor.type                 = measurementChannel::batteryLevel;
-    aSensor.prescalerLowPower    = prescalerTestValue;        // this makes us take a sample every (preprescalerTestValuescaler + 1) runs
-    aSensor.oversamplingLowPower = 0;
-    aSensor.active               = true;
-
-    aSensor.run();
-    TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
-    TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower, aSensor.oversamplingCounter);
-
-    for (uint32_t index = 0; index < (prescalerTestValue); index++) {
-        aSensor.run();
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.prescaleCounter);
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.oversamplingCounter);
-    TEST_ASSERT_EQUAL_FLOAT(3.3F, aSensor.sample[0]);
-    TEST_ASSERT_EQUAL_FLOAT(0.0F, aSensor.sample[1]);
-}
-
-void test_sensor_run_active_oversampling() {
-    const uint32_t oversamplingTestValue{3};
-    sensor aSensor;
-    aSensor.type                 = measurementChannel::batteryLevel;
-    aSensor.prescalerLowPower    = 0;                            // this makes us take a sample every run
-    aSensor.oversamplingLowPower = oversamplingTestValue;        // this makes us average (oversamplingTestValue + 1) samples into a measurement
-    aSensor.active               = true;
-
-    aSensor.run();
-    TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
-    TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower, aSensor.oversamplingCounter);
-
-    for (uint32_t index = 0; index < (oversamplingTestValue); index++) {
-        aSensor.run();
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.prescaleCounter);
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.oversamplingCounter);
-
-    for (uint32_t index = 0; index < (oversamplingTestValue + 1); index++) {
-        TEST_ASSERT_EQUAL_FLOAT(3.3F, aSensor.sample[0]);
-    }
 }
 
 void test_sensor_run_active_prescaling_and_oversampling() {
@@ -113,20 +70,48 @@ void test_sensor_run_active_prescaling_and_oversampling() {
     aSensor.type                 = measurementChannel::batteryLevel;
     aSensor.prescalerLowPower    = prescalerTestValue;           // this makes us take a sample every (prescalerTestValue + 1) runs
     aSensor.oversamplingLowPower = oversamplingTestValue;        // this makes us average (oversamplingTestValue + 1) samples into a measurement
+    aSensor.prescaleCounter      = aSensor.prescalerLowPower;
+    aSensor.oversamplingCounter  = aSensor.oversamplingLowPower;
     aSensor.active               = true;
 
-    aSensor.run();
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::sampled, aSensor.run());
+
+    TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower - 1, aSensor.oversamplingCounter);
+
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::sampled, aSensor.run());
+
+    TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower - 2, aSensor.oversamplingCounter);
+
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::sampled, aSensor.run());
+
+    TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
+    TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower - 3, aSensor.oversamplingCounter);
+
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::prescaled, aSensor.run());
+    TEST_ASSERT_EQUAL(sensor::runResult::measured, aSensor.run());
+
     TEST_ASSERT_EQUAL_UINT32(aSensor.prescalerLowPower, aSensor.prescaleCounter);
     TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower, aSensor.oversamplingCounter);
 
-    for (uint32_t index = 0; index < (((oversamplingTestValue + 1) * (prescalerTestValue + 1)) - 1); index++) {
-        aSensor.run();
-    }
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.prescaleCounter);
-    TEST_ASSERT_EQUAL_UINT32(0, aSensor.oversamplingCounter);
-
     for (uint32_t index = 0; index < (oversamplingTestValue + 1); index++) {
-        TEST_ASSERT_EQUAL_FLOAT(3.3F, aSensor.sample[0]);
+        TEST_ASSERT_EQUAL_FLOAT(3.3F, aSensor.samples[index]);
+    }
+
+    for (uint32_t index = (oversamplingTestValue + 1); index < sensor::maxOversampling; index++) {
+        TEST_ASSERT_EQUAL_FLOAT(0.0F, aSensor.samples[index]);
     }
 }
 
@@ -145,6 +130,17 @@ void test_sensor_transition_high_low_power() {
     TEST_ASSERT_EQUAL_UINT32(aSensor.oversamplingLowPower, aSensor.oversamplingCounter);
 }
 
+void test_sensor_average() {
+    sensor aSensor;
+    aSensor.samples[0] = 0.0F;
+    aSensor.samples[1] = 1.0F;
+    aSensor.samples[2] = 2.0F;
+    aSensor.samples[3] = 3.0F;
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, aSensor.average(1));
+    TEST_ASSERT_EQUAL_FLOAT(0.5F, aSensor.average(2));
+    TEST_ASSERT_EQUAL_FLOAT(1.5F, aSensor.average(4));
+}
+
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_sensorCollection_initalize);
@@ -153,9 +149,8 @@ int main(int argc, char **argv) {
     RUN_TEST(test_sensorCollection_discover);
     RUN_TEST(test_sensor_initialization);
     RUN_TEST(test_sensor_run_inactive);
-    RUN_TEST(test_sensor_run_active_prescaling);
-    RUN_TEST(test_sensor_run_active_oversampling);
     RUN_TEST(test_sensor_run_active_prescaling_and_oversampling);
     RUN_TEST(test_sensor_transition_high_low_power);
+    RUN_TEST(test_sensor_average);
     UNITY_END();
 }

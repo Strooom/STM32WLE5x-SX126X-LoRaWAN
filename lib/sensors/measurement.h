@@ -21,8 +21,9 @@ class measurement {
     uint32_t value;                 // value can be of any data type, but I assume it always fits in 4 bytes..
     measurementChannel type;        // defines what data the measurement contains, eg temperature, humidity, pressure, etc
     uint8_t flags;                  // flags to indicate if the measurement has been transmitted to the cloud, and if it has been acknowledged by the cloud, etc..
+    static uint32_t getTimeStamp();
+  
   private:
-    uint32_t getTimeStamp() const;
 };
 
 // Notes: total storage per measurement is 10 bytes.

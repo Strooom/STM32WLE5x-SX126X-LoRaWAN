@@ -39,7 +39,7 @@
 #include "measurementcollection.h"
 #include "bme680.h"
 #include "tsl2591.h"
-#include "Adafruit_TSL2591.h"
+
 
 /* USER CODE END Includes */
 
@@ -97,7 +97,7 @@ static void MX_RTC_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
-void testbme68x(void);
+
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -151,35 +151,6 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
-
-    // bme680::initialize();
-    // bme680::getTemperature();
-
-    //(void)testbme68x();
-
-    // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
-
-    if (tsl2591::isPresent()) {
-        tsl2591::initialize();
-    }
-
-    //Adafruit_TSL2591 theTls;
-    //theTls.begin();
-
-    while (1) {
-        //uint32_t flum = theTls.getFullLuminosity();
-        float vs      = tsl2591::readVisibleLight();
-        HAL_Delay(1000);
-    }
-
-    if (0) {
-        // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);
-
-        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
-        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
-        // applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
-        // networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-    }
 
     theMainController.initialize();
 

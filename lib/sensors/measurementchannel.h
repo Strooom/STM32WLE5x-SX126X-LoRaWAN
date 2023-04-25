@@ -25,16 +25,3 @@ enum class measurementChannel : uint32_t {
 };
 
 const char* toString(measurementChannel aChannel);
-
-// enum class sensorType : uint8_t {
-//     none = 0x00,
-
-//     batteryVoltage = 0x08,
-
-//     bme68xTemperature = 0x10,
-//     bme68xHumidity = 0x11,
-//     bme68xBarometricPressure = 0x12,
-
-//     tsl2591Light1 = 0x18,
-//     tsl2591Light2 = 0x19,
-// };

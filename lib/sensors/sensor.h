@@ -10,11 +10,19 @@
 
 class sensor {
   public:
-    void initalize();        // initializes the sensor after booting, reads/performs calibration data, etc.
-    void run();              // checks if this sensor needs to be sampled, and if so, samples it
-    float read();            // reads the sensor and store the value into to sample[] array
-    void store();            // calculates a measurement from samples, and stores it into the measurementCollection
-    void goSleep();          // puts the sensor in sleep mode
+    void initalize();                             // initializes the sensor after booting, reads/performs calibration data, etc.
+    float read();                                 // reads the sensor and store the value into to sample[] array
+    void goSleep();                               // puts the sensor in sleep mode
+
+    enum class runResult : uint32_t {
+        inactive,
+        prescaled,
+        sampled,
+        measured
+    };
+
+    runResult run();                    // TODO : clarify this // checks if this sensor needs to be sampled, and if so, samples it
+    float lastMeasurement{0.0F};        // TODO : make private and add getter
 
     static constexpr uint32_t maxPrescaler{4095};         // take a sample every x times of the 30 second RTC tick
     static constexpr uint32_t maxOversampling{15};        // average x samples before storing it in the sample collection
@@ -34,9 +42,11 @@ class sensor {
     uint32_t oversamplingHighPower{0};        // high power mode : on USB power
     uint32_t prescalerHighPower{0};           //
 
-    float sample[maxOversampling + 1]{};
+    float samples[maxOversampling + 1]{};
     uint32_t oversamplingCounter{0};
     uint32_t prescaleCounter{0};
+
+    float average(uint32_t nmbrOfSamples);        // calculates a measurement from samples
 
     friend class sensorCollection;        // collection is allowed access to the internals of each sensor in its collection
 };
