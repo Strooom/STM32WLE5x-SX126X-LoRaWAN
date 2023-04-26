@@ -40,7 +40,6 @@
 #include "bme680.h"
 #include "tsl2591.h"
 
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -159,10 +158,16 @@ int main(void) {
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
         logging::detectDebugProbe();
+        if (power::isUsbConnected()) {
+            applicationEventBuffer.push(applicationEvent::usbConnected);
+        }
+        if (power::isUsbRemoved()) {
+            applicationEventBuffer.push(applicationEvent::usbRemoved);
+        }
 
         loraNetwork.handleEvents();
         theMainController.handleEvents();
-        if (power::isUsbConnected()) {
+        if (power::hasUsbPower()) {
             theCli.handleRxEvent();
             theCli.handleEvents();
         } else {
