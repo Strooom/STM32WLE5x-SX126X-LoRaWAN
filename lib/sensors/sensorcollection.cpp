@@ -9,7 +9,7 @@
 #include "tsl2591.h"
 #include "logging.h"
 
-void sensorCollection::measure() {
+sensorCollection::runResult sensorCollection::run() {
     actualNumberOfMeasurements = 0;        // reset the array of measurements
 
     for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
@@ -18,10 +18,13 @@ void sensorCollection::measure() {
             case sensor::runResult::inactive:
                 break;
             case sensor::runResult::prescaled:
+                // logging::snprintf("Sensor %s : prescale tick\n", toString(theSensorCollection[sensorIndex].type));
                 break;
             case sensor::runResult::sampled:
+                // logging::snprintf("Sensor %s : sampled %.2f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastSample);
                 break;
             case sensor::runResult::measured:
+                // logging::snprintf("Sensor %s : measurement %.4f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastMeasurement);
                 addMeasurement(theSensorCollection[sensorIndex].type, theSensorCollection[sensorIndex].lastMeasurement);
                 break;
         }
@@ -31,26 +34,32 @@ void sensorCollection::measure() {
     for (uint32_t sensorIndex = 0; sensorIndex < actualNumberOfSensors; sensorIndex++) {
         theSensorCollection[sensorIndex].goSleep();
     }
+
+    if (actualNumberOfMeasurements > 0) {
+        return runResult::newMeasurements;
+    } else {
+        return runResult::none;
+    }
 }
 
 void sensorCollection::discover() {
-    addSensor(measurementChannel::batteryLevel, 7, 359, 7, 15);        // one measurement per day on battery, one per hour on USB power
+    // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 15);        // one measurement per day on battery, one per hour on USB power
+    addSensor(measurementChannel::batteryLevel, 11, 9, 5, 4);        // test Version - one measurement per hour on battery, one per 15 minutes on USB power
 
     if (bme680::isPresent()) {
         addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
         addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
-        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 29, 3, 29);        // one measurement per 60 minutes
+        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
     }
 
     if (tsl2591::isPresent()) {
-        addSensor(measurementChannel::TSL25911VisibleLight, 3, 9, 3, 9);        //
-        addSensor(measurementChannel::TSL25911Infrared, 3, 9, 3, 9);            //
+        //        addSensor(measurementChannel::TSL25911VisibleLight, 3, 9, 3, 9);        //
+        //        addSensor(measurementChannel::TSL25911Infrared, 3, 9, 3, 9);            //
     }
 }
 
 void sensorCollection::addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) {
     if (actualNumberOfSensors < maxNumberOfSensors) {
-        logging::snprintf("%u : Added Sensor [%s]\n", (actualNumberOfSensors + 1), toString(aType));
         if (oversamplingLowPower > sensor::maxOversampling) {
             oversamplingLowPower = sensor::maxOversampling;
         }
@@ -80,10 +89,10 @@ void sensorCollection::addSensor(measurementChannel aType, uint32_t oversampling
 
 void sensorCollection::addMeasurement(measurementChannel aType, float aValue) {
     if (actualNumberOfMeasurements < maxNumberOfSensors) {
-        latestMeasurements[actualNumberOfMeasurements].timestamp = measurement::getTimeStamp();
-        latestMeasurements[actualNumberOfMeasurements].type      = aType;
-        latestMeasurements[actualNumberOfMeasurements].value     = aValue;
-        latestMeasurements[actualNumberOfMeasurements].flags     = 0;
+        latestMeasurements[actualNumberOfMeasurements].timestampAsUInt32 = measurement::getTimeStamp();
+        latestMeasurements[actualNumberOfMeasurements].type              = aType;
+        latestMeasurements[actualNumberOfMeasurements].valueAsFloat      = aValue;
+        latestMeasurements[actualNumberOfMeasurements].flags             = 0;
         actualNumberOfMeasurements++;
     }
 }

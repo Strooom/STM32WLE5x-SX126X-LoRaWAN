@@ -1,8 +1,8 @@
 #include "power.h"
 
 bool power::usbPower{false};
-uint32_t power::batteryPercentCharged{0};
-uint32_t power::voltageInMillivolt{0};
+float power::batteryPercentCharged{0};
+float power::batteryVoltage{0};
 
 bool power::hasUsbPower() {
     return usbPower;
@@ -12,11 +12,11 @@ uint32_t power::calculatePercentFromVoltage(uint32_t voltage) {
     return 0;
 }
 
-uint32_t power::getBatteryVoltage() {
-    return voltageInMillivolt;
+float power::getBatteryVoltage() {
+    return batteryVoltage;
 }
 
-uint32_t power::getBatteryPercent() {
+float power::getBatteryPercent() {
     return batteryPercentCharged;
 }
 
@@ -58,7 +58,7 @@ void power::measureBatteryLevel() {
     HAL_ADC_Start(&hadc);
     HAL_ADC_PollForConversion(&hadc, 1);
     uint32_t adcRawResult = HAL_ADC_GetValue(&hadc);
-    voltageInMillivolt    = __HAL_ADC_CALC_VREFANALOG_VOLTAGE((adcRawResult), ADC_RESOLUTION_12B);
+    batteryVoltage        = static_cast<float>(__HAL_ADC_CALC_VREFANALOG_VOLTAGE((adcRawResult), ADC_RESOLUTION_12B)) / 1000.0f;
 }
 
 #else
@@ -72,6 +72,7 @@ bool power::isUsbRemoved() {
 }
 
 void power::measureBatteryLevel() {
+    batteryVoltage = 3.3F;        // simultate 3.3V battery reading, to make unit tests work
 }
 
 #endif

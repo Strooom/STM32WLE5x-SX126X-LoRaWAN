@@ -12,13 +12,13 @@ class power {
     static bool isUsbConnected();        // detect insertion of USB cable event
     static bool isUsbRemoved();          // detect removal of USB cable event
     static bool hasUsbPower();
-    static void measureBatteryLevel();          // samples vRefint with ADC, then calculate voltage and % charged
-    static uint32_t getBatteryVoltage();        // [mV]
-    static uint32_t getBatteryPercent();        // [0-100]
+    static void measureBatteryLevel();        // samples vRefint with ADC, then calculate voltage and % charged
+    static float getBatteryVoltage();         // [mV]
+    static float getBatteryPercent();         // [0-100]
 
   private:
-    static uint32_t batteryPercentCharged;
-    static uint32_t voltageInMillivolt;
+    static float batteryPercentCharged;                                   // [0..100]
+    static float batteryVoltage;                                          // [V]
     static uint32_t calculatePercentFromVoltage(uint32_t voltage);        //
     static bool usbPower;                                                 // remembers previous usbPresent state
     static uint8_t percentFromVoltage[256];                               // lookup table for % charged from voltage : 0-255 -> 0-100%

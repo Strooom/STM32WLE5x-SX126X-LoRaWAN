@@ -8,20 +8,19 @@
 #include <stdint.h>
 
 enum class measurementChannel : uint32_t {
-    none         = 0x00,
-    batteryLevel = 0x01,
+    none = 0x00,
 
-    mcuTemperature = 0x08,
-
-    BME680SensorTemperature        = 0x0A,
-    BME680SensorRelativeHumidity   = 0x10,
-    BME680SensorBarometricPressure = 0x18,
-
-    TSL25911VisibleLight = 0x20,
-    TSL25911Infrared = 0x21,
-
-    status = 0xE0,
-    events = 0xF0
+    batteryLevel                   = 0x01,
+    BME680SensorTemperature        = 0x10,
+    BME680SensorRelativeHumidity   = 0x11,
+    BME680SensorBarometricPressure = 0x12,
+    TSL25911VisibleLight           = 0x20,
+    TSL25911Infrared               = 0x21,
+    status                         = 0xE0,
+    events                         = 0xF0
 };
 
 const char* toString(measurementChannel aChannel);
+
+
+// °C

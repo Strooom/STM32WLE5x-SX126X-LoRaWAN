@@ -28,7 +28,8 @@ sensor::runResult sensor::run() {
 
         if (prescaleCounter == 0) {
             prescaleCounter              = prescaler;
-            samples[oversamplingCounter] = read();        // take a new sample for this sensor and store it in the array of samples
+            lastSample                   = read();            // take a new sample for this sensor and ...
+            samples[oversamplingCounter] = lastSample;        // ... store it in the array of samples
             if (oversamplingCounter == 0) {
                 lastMeasurement     = average(oversampling + 1);        // average all samples & output this measurement to NVS
                 oversamplingCounter = oversampling;
@@ -50,7 +51,8 @@ sensor::runResult sensor::run() {
 float sensor::read() {
     switch (type) {
         case measurementChannel::batteryLevel:
-            return 3.3F;
+            power::measureBatteryLevel();
+            return power::getBatteryVoltage();
             break;
 
         case measurementChannel::BME680SensorTemperature:

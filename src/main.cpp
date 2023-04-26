@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-// #include "app_subghz_phy.h"
+// #include "app_subghz_phy.h" change here for recompile
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -450,7 +450,7 @@ static void MX_RTC_Init(void) {
 
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
-    sDate.Date    = 19;
+    sDate.Date    = 26;
     sDate.Year    = 23;
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {

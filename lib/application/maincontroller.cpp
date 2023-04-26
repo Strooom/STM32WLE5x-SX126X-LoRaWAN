@@ -45,7 +45,7 @@ void mainController::initialize() {
 }
 
 void mainController::handleEvents() {
-    if (applicationEventBuffer.hasEvents()) {
+    while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
         logging::snprintf("Application Event [%u] : %s\n",
                           static_cast<uint8_t>(theEvent), toString(theEvent));
@@ -64,36 +64,51 @@ void mainController::handleEvents() {
             } break;
 
             case applicationEvent::realTimeClockTick: {
-                // 0. Print Time to check clock is running
-                // RTC_TimeTypeDef currTime = {0};
-                // RTC_DateTypeDef currDate = {0};
-                // HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
-                // HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
-                // logging::snprintf("Time = %02u:%02u:%02u\n", currTime.Hours, currTime.Minutes, currTime.Seconds);
-
                 // 1. run all measurements
-                theSensors.measure();
+                sensorCollection::runResult theResult = theSensors.run();
+                if (theResult == sensorCollection::runResult::newMeasurements) {
+                    // 2. Send them as payload in an UpLink message
+                    uint8_t tempData[256]{};
+                    uint32_t tempDataIndex{0};
+                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {
+                        tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
+
+                        tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[0];
+                        tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[1];
+                        tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[2];
+                        tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[3];
+
+                        tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[0];
+                        tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[1];
+                        tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[2];
+                        tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[3];
+
+                        tempDataIndex += 9;
+                    }
+
+                    byteBuffer thePayload;
+                    thePayload.set(tempData, tempDataIndex);
+                    loraNetwork.sendUplink(thePayload, 0x10);
+                }
 
                 // 2. check if we have enough unsent data to send uplink
-                uint32_t maxUplinkPayloadNow =
-                    loraNetwork.getMaxApplicationPayloadLength();
-                uint32_t measurementToBeTransmitted =
-                    theMeasurements.getNmbrToBeTransmitted();
-                if (((measurementToBeTransmitted + 1) * measurement::length) > maxUplinkPayloadNow) {
-                    logging::snprintf(
-                        "[%u] measurement bytes to transmit, [%u] bytes payload capacity\n",
-                        (measurementToBeTransmitted + 1) * measurement::length,
-                        maxUplinkPayloadNow);
-                    if (loraNetwork.isReadyToTransmit()) {
-                        logging::snprintf("LoRaWAN layer ready to transmit\n");
-                        byteBuffer thePayload;        //
-                        thePayload.setFromHexAscii(
-                            "000102030405060708090A0B0C0D0E0F");        // TODO - TEST msg
-                        loraNetwork.sendUplink(thePayload, 0x10);
-                    }
-                } else {
-                    logging::snprintf("Not enough data to transmit\n");
-                }
+                //                uint32_t maxUplinkPayloadNow =                     loraNetwork.getMaxApplicationPayloadLength();
+                //                uint32_t measurementToBeTransmitted =                     theMeasurements.getNmbrToBeTransmitted();
+                //                if (((measurementToBeTransmitted + 1) * measurement::length) > maxUplinkPayloadNow) {
+                //                    logging::snprintf(
+                //                        "[%u] measurement bytes to transmit, [%u] bytes payload capacity\n",
+                //                        (measurementToBeTransmitted + 1) * measurement::length,
+                //                        maxUplinkPayloadNow);
+                //                    if (loraNetwork.isReadyToTransmit()) {
+                //                        logging::snprintf("LoRaWAN layer ready to transmit\n");
+                //                        byteBuffer thePayload;        //
+                //                        thePayload.setFromHexAscii(
+                //                            "000102030405060708090A0B0C0D0E0F");        // TODO - TEST msg
+                //                        loraNetwork.sendUplink(thePayload, 0x10);
+                //                    }
+                //                } else {
+                //                    logging::snprintf("Not enough data to transmit\n");
+                //                }
             } break;
 
             default:

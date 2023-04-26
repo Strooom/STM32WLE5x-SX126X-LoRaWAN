@@ -10,9 +10,9 @@
 
 class sensor {
   public:
-    void initalize();                             // initializes the sensor after booting, reads/performs calibration data, etc.
-    float read();                                 // reads the sensor and store the value into to sample[] array
-    void goSleep();                               // puts the sensor in sleep mode
+    void initalize();        // initializes the sensor after booting, reads/performs calibration data, etc.
+    float read();            // reads the sensor and store the value into to sample[] array
+    void goSleep();          // puts the sensor in sleep mode
 
     enum class runResult : uint32_t {
         inactive,
@@ -22,6 +22,7 @@ class sensor {
     };
 
     runResult run();                    // TODO : clarify this // checks if this sensor needs to be sampled, and if so, samples it
+    float lastSample{0.0F};             // TODO : make private and add getter
     float lastMeasurement{0.0F};        // TODO : make private and add getter
 
     static constexpr uint32_t maxPrescaler{4095};         // take a sample every x times of the 30 second RTC tick
