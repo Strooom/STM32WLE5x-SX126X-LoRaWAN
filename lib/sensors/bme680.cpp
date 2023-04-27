@@ -61,8 +61,7 @@ void bme680::initialize() {
     calibrationCoefficientHumidity6 = static_cast<float>(static_cast<uint8_t>(registerData[29]));
     calibrationCoefficientHumidity7 = static_cast<float>(static_cast<int8_t>(registerData[30]));
 
-
-// TODO, set coefficients for pressure with correct signed type
+    // TODO, set coefficients for pressure with correct signed type
     calibrationCoefficientPressure1  = static_cast<float>((static_cast<uint16_t>(registerData[5]) << 8) | static_cast<uint16_t>(registerData[4]));
     calibrationCoefficientPressure2  = static_cast<float>(static_cast<int16_t>((static_cast<uint16_t>(registerData[7]) << 8) | static_cast<uint16_t>(registerData[6])));
     calibrationCoefficientPressure3  = static_cast<float>(static_cast<int8_t>(registerData[8]));
@@ -138,6 +137,8 @@ float bme680::getBarometricPressure() {
     } else {
         result = 0;
     }
+
+    result = result / 100.0F;        // use hPa as unit
 
     return result;
 }

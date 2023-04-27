@@ -18,13 +18,13 @@ sensorCollection::runResult sensorCollection::run() {
             case sensor::runResult::inactive:
                 break;
             case sensor::runResult::prescaled:
-                // logging::snprintf("Sensor %s : prescale tick\n", toString(theSensorCollection[sensorIndex].type));
+                logging::snprintf("Sensor %s : prescale tick\n", toString(theSensorCollection[sensorIndex].type));
                 break;
             case sensor::runResult::sampled:
-                // logging::snprintf("Sensor %s : sampled %.2f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastSample);
+                logging::snprintf("Sensor %s : sampled %.2f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastSample);
                 break;
             case sensor::runResult::measured:
-                // logging::snprintf("Sensor %s : measurement %.4f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastMeasurement);
+                logging::snprintf("Sensor %s : measurement %.4f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastMeasurement);
                 addMeasurement(theSensorCollection[sensorIndex].type, theSensorCollection[sensorIndex].lastMeasurement);
                 break;
         }
@@ -44,12 +44,17 @@ sensorCollection::runResult sensorCollection::run() {
 
 void sensorCollection::discover() {
     // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 15);        // one measurement per day on battery, one per hour on USB power
-    addSensor(measurementChannel::batteryLevel, 11, 9, 5, 4);        // test Version - one measurement per hour on battery, one per 15 minutes on USB power
+    addSensor(measurementChannel::batteryLevel, 9, 0, 4, 0);        // test Version
 
     if (bme680::isPresent()) {
-        addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
-        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
-        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
+        bme680::initialize();        // this reads the calibration data from the sensor
+
+        //        addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
+        //        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
+        //        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
+        addSensor(measurementChannel::BME680SensorTemperature, 9, 0, 3, 0);               // test
+        addSensor(measurementChannel::BME680SensorRelativeHumidity, 7, 0, 2, 0);          // test
+        addSensor(measurementChannel::BME680SensorBarometricPressure, 8, 0, 1, 0);        // test
     }
 
     if (tsl2591::isPresent()) {
