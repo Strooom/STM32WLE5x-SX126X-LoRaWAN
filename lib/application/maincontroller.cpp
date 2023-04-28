@@ -70,7 +70,11 @@ void mainController::handleEvents() {
                     // 2. Send them as payload in an UpLink message
                     uint8_t tempData[256]{};
                     uint32_t tempDataIndex{0};
-                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {
+
+                    tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0); // first byte of payload identifies how the rest should be interpreted
+                    tempDataIndex ++;
+
+                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) { // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
                         tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
 
                         tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[0];

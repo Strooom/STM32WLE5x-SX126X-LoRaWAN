@@ -39,7 +39,6 @@
 #include "measurementcollection.h"
 #include "bme680.h"
 #include "tsl2591.h"
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -81,6 +80,7 @@ mainController theMainController;
 cli theCli;
 sensorCollection theSensors;
 measurementCollection theMeasurements;
+
 
 /* USER CODE END PV */
 
