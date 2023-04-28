@@ -44,7 +44,7 @@ sensorCollection::runResult sensorCollection::run() {
 
 void sensorCollection::discover() {
     // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 15);        // one measurement per day on battery, one per hour on USB power
-    addSensor(measurementChannel::batteryLevel, 9, 0, 4, 0);        // test Version
+    addSensor(measurementChannel::batteryLevel, 7, 15, 7, 15);        // test Version
 
     if (bme680::isPresent()) {
         bme680::initialize();        // this reads the calibration data from the sensor
@@ -52,9 +52,9 @@ void sensorCollection::discover() {
         //        addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
         //        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
         //        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
-        addSensor(measurementChannel::BME680SensorTemperature, 9, 0, 3, 0);               // test
-        addSensor(measurementChannel::BME680SensorRelativeHumidity, 7, 0, 2, 0);          // test
-        addSensor(measurementChannel::BME680SensorBarometricPressure, 8, 0, 1, 0);        // test
+        addSensor(measurementChannel::BME680SensorTemperature, 3, 14, 3, 14);               // test
+        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 14, 3, 14);          // test
+        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 14, 3, 14);        // test
     }
 
     if (tsl2591::isPresent()) {
