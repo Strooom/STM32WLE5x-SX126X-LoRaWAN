@@ -12,9 +12,7 @@ aesKey::aesKey() {
     keyAsASCII[asciiKeyLength - 1] = 0;        // terminate the string
 }
 
-bool aesKey::setFromASCII(const char* asciiKey) {
-    // TODO : to be safe, check the strnlen of what we receive
-
+void aesKey::setFromASCII(const char* asciiKey) {
     for (uint32_t index = 0; index < binaryKeyLength; index++) {
         uint8_t leftCharacter  = asciiKey[index * 2];
         uint8_t rightCharacter = asciiKey[(index * 2) + 1];
@@ -24,25 +22,26 @@ bool aesKey::setFromASCII(const char* asciiKey) {
             key[index]                  = (valueFromHexCharacter(leftCharacter) << 4) + valueFromHexCharacter(rightCharacter);
             keyAsASCII[index * 2]       = leftCharacter;
             keyAsASCII[(index * 2) + 1] = rightCharacter;
-        } else {
-            return false;        // any non-hex character is an error, and makes us quit the conversion
         }
     }
     keyAsASCII[asciiKeyLength - 1] = 0x00;        // terminate the string
-    return true;
 }
 
-const uint8_t* aesKey::asASCII() const {
+void aesKey::setFromBinary(const uint8_t* binaryKey) {
+    for (uint32_t index = 0; index < binaryKeyLength; index++) {
+        key[index] = binaryKey[index];
+    }
+    binaryArrayToHexString(key, binaryKeyLength, (char*)keyAsASCII);
+}
+
+ uint8_t* aesKey::asASCII()  {
     return keyAsASCII;
 }
 
-const uint8_t* aesKey::asBinary() const {
+ uint8_t* aesKey::asBinary()  {
     return key;
 }
 
 unsigned char* aesKey::asUnsignedChar() {
-    return (unsigned char*) key;
+    return (unsigned char*)key;
 }
-
-   
-

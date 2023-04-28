@@ -81,7 +81,6 @@ cli theCli;
 sensorCollection theSensors;
 measurementCollection theMeasurements;
 
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -150,6 +149,17 @@ int main(void) {
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
+
+    if (0)        // initializing NVS storage
+    {
+        aesKey appKey;
+        appKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
+        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), appKey.asBinary());
+
+        aesKey netKey;
+        netKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
+        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), netKey.asBinary());
+    }
 
     theMainController.initialize();
 

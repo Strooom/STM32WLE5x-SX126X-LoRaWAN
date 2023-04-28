@@ -104,5 +104,5 @@ class nonVolatileStorage {
     uint32_t measurementsAddressOffset{4096};             // First 4K is for settings, Last 60K for measurements
 
     void read(uint32_t startAddress, uint8_t* data, uint32_t dataLength);         // low-level I2C reading from EEPROM
-    void write(uint32_t startAddress, uint8_t* data, uint32_t dataLength);        // low-level I2C writing to EEPROM
+    void write(uint32_t startAddress,  uint8_t* data, uint32_t dataLength);        // low-level I2C writing to EEPROM
 };

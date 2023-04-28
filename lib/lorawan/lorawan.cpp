@@ -23,10 +23,16 @@ void LoRaWAN::initialize() {
     theRadio.initialize();
     DevAddr.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr)));
     logging::snprintf("devAddr = %04X\n", DevAddr.asUint32());
-    applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
+
+    uint8_t tmpKeyArray[aesKey::binaryKeyLength];
+    nvs.readBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKeyArray);
+    applicationKey.setFromBinary(tmpKeyArray);
+    nvs.readBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKeyArray);
+    networkKey.setFromBinary(tmpKeyArray);
+
     logging::snprintf("applicationKey = %s\n", applicationKey.asASCII());
-    networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
     logging::snprintf("networkKey = %s\n", networkKey.asASCII());
+
     uplinkFrameCount.fromUint32(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter)));
     logging::snprintf("uplinkFrameCount = %u\n", uplinkFrameCount.asUint32());
 }
