@@ -17,6 +17,7 @@ extern eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 extern eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 
 void LoRaWAN::initialize() {
+    // TODO : all of this should come from NVS
     currentDataRateIndex = 5;
     logging::snprintf("dataRateIndex = %u\n", currentDataRateIndex);
     theRadio.initialize();
@@ -31,150 +32,148 @@ void LoRaWAN::initialize() {
 }
 
 void LoRaWAN::handleEvents() {
-    if (!loraWanEventBuffer.hasEvents()) {
-        return;
-    }
-    loRaWanEvent theEvent = loraWanEventBuffer.pop();
-    logging::snprintf("LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+    while (loraWanEventBuffer.hasEvents()) {
+        loRaWanEvent theEvent = loraWanEventBuffer.pop();
+        logging::snprintf("LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
 
-    switch (theTxRxCycleState) {
-        case txRxCycleState::idle:
-            // unexpected event for this state.. Radio is OFF and LPTIM is stopped
-            break;
+        switch (theTxRxCycleState) {
+            case txRxCycleState::idle:
+                // unexpected event for this state.. Radio is OFF and LPTIM is stopped
+                break;
 
-        case txRxCycleState::waitForCadEnd:
-            switch (theEvent) {
-                case loRaWanEvent::sx126xCadEnd:
-                    break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForCadEnd:
+                switch (theEvent) {
+                    case loRaWanEvent::sx126xCadEnd:
+                        break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForRandomTimeBeforeTransmit:
-            switch (theEvent) {
-                case loRaWanEvent::timeOut:
-                    // goTo(txRxCycleState::waitForTxComplete);
-                    break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForRandomTimeBeforeTransmit:
+                switch (theEvent) {
+                    case loRaWanEvent::timeOut:
+                        // goTo(txRxCycleState::waitForTxComplete);
+                        break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForTxComplete:
-            switch (theEvent) {
-                case loRaWanEvent::sx126xTxComplete:
-                    //            startTimer(2048U);        // 1 second
-                    startTimer(1024);        // 0.5 second
-                    goTo(txRxCycleState::waitForRx1Start);
-                    break;
-                case loRaWanEvent::sx126xTimeout:
-                    break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForTxComplete:
+                switch (theEvent) {
+                    case loRaWanEvent::sx126xTxComplete:
+                        //            startTimer(2048U);        // 1 second
+                        startTimer(1024);        // 0.5 second
+                        goTo(txRxCycleState::waitForRx1Start);
+                        break;
+                    case loRaWanEvent::sx126xTimeout:
+                        break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForRx1Start:
-            switch (theEvent) {
-                case loRaWanEvent::timeOut: {
-                    logging::snprintf("RX1 start\n");
-                    stopTimer();
-                    startTimer(2048U);        // 1 second ffrom now until Rx2Start
-                    uint32_t rxFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
-                    uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
-                    theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
-                    theRadio.startReceive(rxTimeout);
-                    goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
-                } break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForRx1Start:
+                switch (theEvent) {
+                    case loRaWanEvent::timeOut: {
+                        logging::snprintf("RX1 start\n");
+                        stopTimer();
+                        startTimer(2048U);        // 1 second ffrom now until Rx2Start
+                        uint32_t rxFrequency = theChannels.txRxChannelFrequency[currentChannelIndex];
+                        uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
+                        theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
+                        theRadio.startReceive(rxTimeout);
+                        goTo(txRxCycleState::waitForRx1CompleteOrTimeout);
+                    } break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForRx1CompleteOrTimeout:
-            switch (theEvent) {
-                case loRaWanEvent::sx126xRxComplete: {
-                    logging::snprintf("### Message Received in RX1 :-) ###\n");
-                    messageType receivedMessageType = decodeMessage();
-                    switch (receivedMessageType) {
-                        case messageType::application:
-                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
-                            goTo(txRxCycleState::waitForRxMessageReadout);
-                            break;
-                        case messageType::lorawanMac:
-                            // handle it directly
-                            break;
-                        default:
-                        case messageType::invalid:
-                            goTo(txRxCycleState::waitForRx2Start);
-                            break;
-                    }
-                } break;
-                case loRaWanEvent::sx126xTimeout:
-                    logging::snprintf("nothing received in RX1\n");
-                    goTo(txRxCycleState::waitForRx2Start);
-                    break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForRx1CompleteOrTimeout:
+                switch (theEvent) {
+                    case loRaWanEvent::sx126xRxComplete: {
+                        logging::snprintf("### Message Received in RX1 :-) ###\n");
+                        messageType receivedMessageType = decodeMessage();
+                        switch (receivedMessageType) {
+                            case messageType::application:
+                                applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
+                                goTo(txRxCycleState::waitForRxMessageReadout);
+                                break;
+                            case messageType::lorawanMac:
+                                // handle it directly
+                                break;
+                            default:
+                            case messageType::invalid:
+                                goTo(txRxCycleState::waitForRx2Start);
+                                break;
+                        }
+                    } break;
+                    case loRaWanEvent::sx126xTimeout:
+                        logging::snprintf("nothing received in RX1\n");
+                        goTo(txRxCycleState::waitForRx2Start);
+                        break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForRx2Start:
-            switch (theEvent) {
-                case loRaWanEvent::timeOut: {
-                    stopTimer();
-                    logging::snprintf("RX2 start\n");
-                    uint32_t rxFrequency = theChannels.rx2ChannelFrequency;
-                    uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
-                    theRadio.configForReceive(spreadingFactor::SF9, rxFrequency);
-                    theRadio.startReceive(rxTimeout);
-                    goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
-                } break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
+            case txRxCycleState::waitForRx2Start:
+                switch (theEvent) {
+                    case loRaWanEvent::timeOut: {
+                        stopTimer();
+                        logging::snprintf("RX2 start\n");
+                        uint32_t rxFrequency = theChannels.rx2ChannelFrequency;
+                        uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
+                        theRadio.configForReceive(spreadingFactor::SF9, rxFrequency);
+                        theRadio.startReceive(rxTimeout);
+                        goTo(txRxCycleState::waitForRx2CompleteOrTimeout);
+                    } break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
 
-        case txRxCycleState::waitForRx2CompleteOrTimeout:
-            switch (theEvent) {
-                case loRaWanEvent::sx126xRxComplete: {
-                    logging::snprintf("### Message Received in RX2 :-) ###\n");
-                    messageType receivedMessageType = decodeMessage();
-                    switch (receivedMessageType) {
-                        case messageType::application:
-                            applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
-                            goTo(txRxCycleState::waitForRxMessageReadout);
-                            break;
-                        case messageType::lorawanMac:
-                            // handle it directly
-                            break;
-                        default:
-                        case messageType::invalid:
-                            goTo(txRxCycleState::idle);
-                            break;
-                    }
-                } break;
-                case loRaWanEvent::sx126xTimeout:
-                    logging::snprintf("nothing received in RX2\n");
-                    goTo(txRxCycleState::idle);
-                    break;
-                default:
-                    // unexpected event for this state..
-                    break;
-            }
-            break;
-        default:
-            break;
+            case txRxCycleState::waitForRx2CompleteOrTimeout:
+                switch (theEvent) {
+                    case loRaWanEvent::sx126xRxComplete: {
+                        logging::snprintf("### Message Received in RX2 :-) ###\n");
+                        messageType receivedMessageType = decodeMessage();
+                        switch (receivedMessageType) {
+                            case messageType::application:
+                                applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
+                                goTo(txRxCycleState::waitForRxMessageReadout);
+                                break;
+                            case messageType::lorawanMac:
+                                // handle it directly
+                                break;
+                            default:
+                            case messageType::invalid:
+                                goTo(txRxCycleState::idle);
+                                break;
+                        }
+                    } break;
+                    case loRaWanEvent::sx126xTimeout:
+                        logging::snprintf("nothing received in RX2\n");
+                        goTo(txRxCycleState::idle);
+                        break;
+                    default:
+                        // unexpected event for this state..
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
     }
 }
-
 void LoRaWAN::goTo(txRxCycleState newState) {
     logging::snprintf("LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
     exitState(theTxRxCycleState);
@@ -455,3 +454,30 @@ uint32_t LoRaWAN::getReceiveTimeout(spreadingFactor aSpreadingFactor) {
             return 128 * baseTimeout;
     }
 }
+
+#ifndef environment_desktop
+
+#include "main.h"
+
+extern RNG_HandleTypeDef hrng;
+extern LPTIM_HandleTypeDef hlptim1;
+
+uint32_t LoRaWAN::getRandomNumber() {
+    uint32_t result{0};
+    HAL_RNG_GenerateRandomNumber(&hrng, &result);
+    return result;
+}
+
+void LoRaWAN::startTimer(uint32_t timeOut) {
+    HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
+}
+
+void LoRaWAN::stopTimer() {
+    HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
+}
+
+#else
+
+// TODO : a desktop console version goes here
+
+#endif

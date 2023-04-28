@@ -3,7 +3,6 @@
 #include "bme68x.h"
 #include "main.h"
 
-extern logging theLog;
 extern I2C_HandleTypeDef hi2c2;
 
 
@@ -51,7 +50,7 @@ int testbme68x(void) {
     rslt                  = bme68x_set_heatr_conf(BME68X_FORCED_MODE, &heatr_conf, &bme);
     // bme68x_check_rslt("bme68x_set_heatr_conf", rslt);
 
-    while (sample_count <= 10) {
+    while (sample_count <= 1) {
         rslt = bme68x_set_op_mode(BME68X_FORCED_MODE, &bme);
         // bme68x_check_rslt("bme68x_set_op_mode", rslt);
 
@@ -66,7 +65,7 @@ int testbme68x(void) {
         // bme68x_check_rslt("bme68x_get_data", rslt);
 
         if (n_fields) {
-            theLog.snprintf("%u, %.2f, %.2f, %.2f\n", sample_count, data.temperature, data.pressure, data.humidity);
+            //logging::snprintf("T %.3f / %.3f / %.3f\n", data.temperature, data.humidity, data.pressure);
             sample_count++;
         }
     }
@@ -79,22 +78,25 @@ int testbme68x(void) {
 BME68X_INTF_RET_TYPE bme68x_i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr) {
     HAL_I2C_Mem_Read(&hi2c2, 0x76 << 1, static_cast<uint16_t>(reg_addr), I2C_MEMADD_SIZE_8BIT, reg_data, len, 0x10);
 
-    theLog.snprintf("Read I2C : register = [%02X], data[%u] = [", reg_addr, len);
-    for (uint32_t index = 0; index < len; index++) {
-        theLog.snprintf("%02X ", reg_data[index]);
-    }
-    theLog.snprintf("]\n");
+    // logging::snprintf("Read I2C : register = [%02X], data[%u] = [", reg_addr, len);
+    // for (uint32_t index = 0; index < len; index++) {
+    // 	logging::snprintf("%02X ", reg_data[index]);
+    // }
+    // logging::snprintf("]\n");
     return BME68X_INTF_RET_SUCCESS;
 }
 
 BME68X_INTF_RET_TYPE bme68x_i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr) {
-    theLog.snprintf("Write I2C : register = [%02X], data[%u] = [", reg_addr, len);
-    for (uint32_t index = 0; index < len; index++) {
-        theLog.snprintf("%02X ", reg_data[index]);
-    }
-    theLog.snprintf("]\n");
+    // logging::snprintf("Write I2C : register = [%02X], data[%u] = [", reg_addr, len);
+    // for (uint32_t index = 0; index < len; index++) {
+    // 	logging::snprintf("%02X ", reg_data[index]);
+    // }
+    // logging::snprintf("]\n");
 
     HAL_I2C_Mem_Write(&hi2c2, 0x76 << 1, static_cast<uint16_t>(reg_addr), I2C_MEMADD_SIZE_8BIT, (uint8_t *)reg_data, len, 0x10);
     return BME68X_INTF_RET_SUCCESS;
 }
 
+
+
+void bme68x_delay();

@@ -1,5 +1,4 @@
 #include <unity.h>
-
 #include "nvs.h"
 
 void setUp(void) {}           // before test

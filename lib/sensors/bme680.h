@@ -6,20 +6,20 @@
 
 #pragma once
 #include <stdint.h>
-
 #include "sensor.h"
 
 // Represents a Bosch BME680 sensor
 
 class bme680 {
   public:
-    static bool isPresent();                      // detect if there is an BME680 on the I2C bus
-    static void reset();                          // soft-reset
-    static void initialize();                     //
-    static float readTemperature();               //
-    static float readHumidity();                  //
-    static float readBarometricPressure();        //
-    static void goSleep();                        //
+    static bool isPresent();                     // detect if there is an BME680 on the I2C bus
+    static void initialize();                    //
+    static bool isAwake();                       // check if sampling already done
+    static void run();                           // wakeUp and do the sampling
+    static float getTemperature();               //
+    static float getRelativeHumidity();          //
+    static float getBarometricPressure();        //
+    static void goSleep();                       //
 
     static constexpr uint8_t i2cAddress{0x76};        // default I2C address for this sensor, DSO tied to GND on our hardware
     static constexpr uint8_t halTrials{0x03};         // ST HAL requires a 'retry' parameters
@@ -66,40 +66,43 @@ class bme680 {
     static constexpr uint8_t chipIdValue{0x61};        // value to expect at the chipIdregister, this allows to discover/recognize the BME68x
 
   private:
+    static void reset();                                                                            // soft-reset
     static bool testI2cAddress(uint8_t addressToTest);                                              //
     static uint8_t readRegister(registers aRegister);                                               // read a single register
     static void readRegisters(uint16_t startAddress, uint16_t length, uint8_t* destination);        // read a range of registers into a buffer
     static void writeRegister(registers aRegister, const uint8_t value);                            // write a single register
 
-    static float calculateTemperature(uint32_t rawData);        //
-    static void calculateBarometricPressure();                  //
-    static void calculateRelativeHumidity();                    //
+    static uint32_t rawDataTemperature;
+    static uint32_t rawDataBarometricPressure;
+    static uint32_t rawDataRelativeHumidity;
+
+    static bool awake;
 
     // Calibration data
-    static float calibCoefT1;
+    static float calibrationCoefficientTemperature1;
     static float calibrationCoefficientTemperature2;
     static float calibrationCoefficientTemperature3;
+    static float calibrationCoefficientTemperature4;
 
-    static uint16_t calibrationCoefficientPressure1;
-    static uint16_t calibrationCoefficientPressure2;
-    static uint8_t calibrationCoefficientPressure3;
-    static int16_t calibrationCoefficientPressure4;
-    static int16_t calibrationCoefficientPressure5;
-    static int8_t calibrationCoefficientPressure6;
-    static int8_t calibrationCoefficientPressure7;
-    static int16_t calibrationCoefficientPressure8;
-    static int16_t calibrationCoefficientPressure9;
-    static int8_t calibrationCoefficientPressure10;
+    static float calibrationCoefficientPressure1;
+    static float calibrationCoefficientPressure2;
+    static float calibrationCoefficientPressure3;
+    static float calibrationCoefficientPressure4;
+    static float calibrationCoefficientPressure5;
+    static float calibrationCoefficientPressure6;
+    static float calibrationCoefficientPressure7;
+    static float calibrationCoefficientPressure8;
+    static float calibrationCoefficientPressure9;
+    static float calibrationCoefficientPressure10;
 
-    static uint16_t calibrationCoefficientHumidity1;
-    static int16_t calibrationCoefficientHumidity2;
-    static uint8_t calibrationCoefficientHumidity3;
-    static int16_t calibrationCoefficientHumidity4;
-    static int16_t calibrationCoefficientHumidity5;
-    static int8_t calibrationCoefficientHumidity6;
-    static int8_t calibrationCoefficientHumidity7;
+    static float calibrationCoefficientHumidity1;
+    static float calibrationCoefficientHumidity2;
+    static float calibrationCoefficientHumidity3;
+    static float calibrationCoefficientHumidity4;
+    static float calibrationCoefficientHumidity5;
+    static float calibrationCoefficientHumidity6;
+    static float calibrationCoefficientHumidity7;
 };
-
 
 /*
 Initialization
@@ -133,47 +136,47 @@ Read I2C : register = [50], data[1] = [00 ]
 Read I2C : register = [64], data[1] = [59 ]
 
 
-par_h1	uint16_t	893	
-par_h2	uint16_t	987	
-par_h3	int8_t	0 '\0'	
-par_h4	int8_t	45 '-'	
-par_h5	int8_t	20 '\024'	
-par_h6	uint8_t	120 'x'	
-par_h7	int8_t	-100 '\234'	
-par_gh1	int8_t	-5 'û'	
-par_gh2	int16_t	-9045	
-par_gh3	int8_t	18 '\022'	
+par_h1	uint16_t	893
+par_h2	uint16_t	987
+par_h3	int8_t	0 '\0'
+par_h4	int8_t	45 '-'
+par_h5	int8_t	20 '\024'
+par_h6	uint8_t	120 'x'
+par_h7	int8_t	-100 '\234'
+par_gh1	int8_t	-5 'û'
+par_gh2	int16_t	-9045
+par_gh3	int8_t	18 '\022'
 
-par_t1	uint16_t	26038	
-par_t2	int16_t	26466	
+par_t1	uint16_t	26038
+par_t2	int16_t	26466
 par_t3	int8_t	3
 
-par_p1	uint16_t	37007	
-par_p2	int16_t	-10392	
-par_p3	int8_t	88 'X'	
-par_p4	int16_t	8760	
-par_p5	int16_t	-158	
-par_p6	int8_t	30 '\036'	
-par_p7	int8_t	44 ','	
-par_p8	int16_t	-2959	
-par_p9	int16_t	-2469	
-par_p10	uint8_t	30 '\036'	
-t_fine	float	107711.469	
-res_heat_range	uint8_t	1 '\001'	
-res_heat_val	int8_t	40 '('	
-range_sw_err	int8_t	0 '\0'	
+par_p1	uint16_t	37007
+par_p2	int16_t	-10392
+par_p3	int8_t	88 'X'
+par_p4	int16_t	8760
+par_p5	int16_t	-158
+par_p6	int8_t	30 '\036'
+par_p7	int8_t	44 ','
+par_p8	int16_t	-2959
+par_p9	int16_t	-2469
+par_p10	uint8_t	30 '\036'
+t_fine	float	107711.469
+res_heat_range	uint8_t	1 '\001'
+res_heat_val	int8_t	40 '('
+range_sw_err	int8_t	0 '\0'
 
-adc_temp	uint32_t	484376	
+adc_temp	uint32_t	484376
 
 mine :
-rawData1	uint8_t	16 '\020'	
-rawData2	uint8_t	143 '\217'	
-rawData3	uint8_t	144 '\220'	
-rawData	uint32_t	67833	
+rawData1	uint8_t	16 '\020'
+rawData2	uint8_t	143 '\217'
+rawData3	uint8_t	144 '\220'
+rawData	uint32_t	67833
  theirs
- buff[5]	uint8_t	119 'w'	
-buff[6]	uint8_t	16 '\020'	
-buff[7]	uint8_t	128 '\200'	
+ buff[5]	uint8_t	119 'w'
+buff[6]	uint8_t	16 '\020'
+buff[7]	uint8_t	128 '\200'
 
 My READ
 Read I2C : register = [8A], data[23] = [62 67 03 10 8F 90 68 D7 58 00 38 22 62 FF 2C 1E 00 00 71 F4 5B F6 1E ]

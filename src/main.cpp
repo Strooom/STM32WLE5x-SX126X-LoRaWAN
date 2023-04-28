@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-// #include "app_subghz_phy.h"
+// #include "app_subghz_phy.h" change here for recompile
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -38,7 +38,7 @@
 #include "nvs.h"
 #include "measurementcollection.h"
 #include "bme680.h"
-
+#include "tsl2591.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,7 +71,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 nonVolatileStorage nvs;
-logging theLog;
+// logging theLog;
 eventBuffer<loRaWanEvent, 16U> loraWanEventBuffer;
 eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
@@ -80,6 +80,7 @@ mainController theMainController;
 cli theCli;
 sensorCollection theSensors;
 measurementCollection theMeasurements;
+
 
 /* USER CODE END PV */
 
@@ -95,6 +96,7 @@ static void MX_RTC_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -149,22 +151,6 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    // bme680::initialize();
-    // bme680::readTemperature();
-
-    //(void)testbme68x();
-
-    // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1);
-
-    if (0) {
-        // nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B3B92);
-
-        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
-        // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
-        // applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
-        // networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-    }
-
     theMainController.initialize();
 
     while (1) {
@@ -172,10 +158,16 @@ int main(void) {
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
         logging::detectDebugProbe();
-        power::detectUsbConnectOrRemove();
+        if (power::isUsbConnected()) {
+            applicationEventBuffer.push(applicationEvent::usbConnected);
+        }
+        if (power::isUsbRemoved()) {
+            applicationEventBuffer.push(applicationEvent::usbRemoved);
+        }
+
         loraNetwork.handleEvents();
         theMainController.handleEvents();
-        if (power::isUsbConnected()) {
+        if (power::hasUsbPower()) {
             theCli.handleRxEvent();
             theCli.handleEvents();
         } else {
@@ -463,7 +455,7 @@ static void MX_RTC_Init(void) {
 
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month   = RTC_MONTH_APRIL;
-    sDate.Date    = 19;
+    sDate.Date    = 26;
     sDate.Year    = 23;
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {

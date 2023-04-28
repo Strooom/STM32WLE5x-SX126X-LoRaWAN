@@ -24,6 +24,7 @@
 #include "linkdirection.h"
 #include "spreadingfactor.h"
 #include "bytebuffer.h"
+#include "payloadencoder.h"
 
 class LoRaWAN {
   public:

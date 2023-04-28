@@ -1,9 +1,6 @@
 #include <unity.h>
-
 #include "block.h"
 #include "aeskey.h"
-
-
 #include "Struct.h"
 #include "Encrypt.h"
 #include "bytebuffer.h"
@@ -65,27 +62,27 @@ void test_xorBlock() {
 }
 
 void test_substituteBytes() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 void test_addRoundKey() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 void test_shiftRows() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 void test_mixColumns() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 void test_keyExpansion() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 void test_keyGeneration() {
-    TEST_FAIL_MESSAGE("to be implemented");
+    TEST_IGNORE_MESSAGE("to be implemented");
 }
 
 // what tests do we need?

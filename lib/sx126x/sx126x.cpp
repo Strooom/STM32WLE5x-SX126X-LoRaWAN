@@ -8,15 +8,13 @@
 #include "sx126x.h"
 #include "logging.h"
 
-extern logging theLog;
-
 void sx126x::initialize() {
     initializeInterface();
     initializeRadio();
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
-    theLog.snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
+    //logging::snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
     goStandby();
     setRfSwitch(rfSwitchState::tx);
     setRfFrequency(frequency);
@@ -36,7 +34,7 @@ void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t freq
 }
 
 void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency) {
-    theLog.snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
+    //logging::snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
     goStandby();
     setRfSwitch(rfSwitchState::rx);
     setRfFrequency(frequency);
@@ -189,7 +187,7 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0xDB;
     executeCommand(sx126xCommand::calibrateImage, commandParameters, 2);
 
-    commandParameters[0] = static_cast<uint8_t>(packetType::LoRa);
+    commandParameters[0] = 0x01;        // packetType::LoRa;
     executeCommand(sx126xCommand::setPacketType, commandParameters, 1);
 
     commandParameters[0] = 0x36;
@@ -212,3 +210,153 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
 }
+
+#ifndef environment_desktop
+
+#include "main.h"
+// #define showSpiCommunication
+
+extern SUBGHZ_HandleTypeDef hsubghz;
+
+// Notes on the SX126x to STM32WLE interface
+// The SX126x RESET is connected to RCC_CSR:15 (RFRST) for driving it, and RCC_CSR:14 (RFRSTF) for reading it
+// The SX126x BUSY is connected to PWR_SR2:1 (RFBUSY)
+// The SX126x SPI NSS
+// * the functionality is enabled by PWR_CR1:3 (SUBGHZSPINSSSEL)
+// * the NSS is driven by PWR_SUBGHZSPICR:14 (NSS)
+/*----------------------- SPI CR1 Configuration ----------------------------*
+ *             SPI Mode: Master                                             *
+ *   Communication Mode: 2 lines (Full-Duplex)                              *
+ *       Clock polarity: Low                                                *
+ *                phase: 1st Edge                                           *
+ *       NSS management: Internal (Done with External bit inside PWR        *
+ *  Communication speed: BaudratePrescaler                             *
+ *            First bit: MSB                                                *
+ *      CRC calculation: Disable                                            *
+ *--------------------------------------------------------------------------*/
+// constexpr uint32_t MSTR{2};
+// SPI_SX126X_CR1.setBit(MSTR);        // All other bits are 0 and this is what we need
+/*----------------------- SPI CR2 Configuration ----------------------------*
+ *            Data Size: 8bits                                              *
+ *              TI Mode: Disable                                            *
+ *            NSS Pulse: Disable                                            *
+ *    Rx FIFO Threshold: 8bits                                              *
+ *--------------------------------------------------------------------------*/
+// constexpr uint32_t FRXTH{12};
+// SPI_SX126X_CR2.setBit(FRXTH);
+//  SPI_SX126X_CR2.writeBits(0xF << 8, 0x7 << 8); // 8 bits data size is already the default
+// constexpr uint32_t SPE{6};
+// SPI_SX126X_CR1.setBit(SPE); /* Enable SUBGHZSPI Peripheral */
+// peripheralRegister SPI_SX126X_CR1(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x00));
+// peripheralRegister SPI_SX126X_CR2(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x04));
+// peripheralRegister SPI_SX126X_SR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x08));
+// peripheralRegister SPI_SX126X_DR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x0C));
+// peripheralRegister SPI_SX126X_CRCPR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x10));
+// peripheralRegister SPI_SX126X_RXCRCR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x14));
+// peripheralRegister SPI_SX126X_CTXCRCR(reinterpret_cast<volatile uint32_t *const>(SUBGHZSPI_BASE + 0x18));
+// extern peripheralRegister RCC_APB3ENR;
+// extern peripheralRegister RCC_CSR;
+// extern peripheralRegister PWR_SR2;
+
+void sx126x::initializeInterface() {
+    HAL_SUBGHZ_Init(&hsubghz);
+}
+
+// void sx126x::reset() {
+// constexpr uint32_t RFRST{15};
+// constexpr uint32_t RFRSTF{14};
+// constexpr uint32_t RFBUSYS{1};
+// RCC_CSR.setBit(RFRSTF);          // activate reset
+//                                  // How long should we wait ? 1 ms
+// RCC_CSR.clearBit(RFRSTF);        // deactivate reset line
+// (void)SUBGHZ_WaitOnBusy(hsubghz);
+//}
+
+void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
+#ifdef showSpiCommunication
+    logging::snprintf("Write Buffer : length = [%u], data = ", payloadLength);
+    for (uint32_t index = 0; index < payloadLength; index++) {
+        logging::snprintf("%02X ", payload[index]);
+    }
+    logging::snprintf("\n");
+#endif
+    HAL_SUBGHZ_WriteBuffer(&hsubghz, 0U, payload, payloadLength);        // copy the raw LoRa message into the transmitBuffer of the SX126
+}
+
+void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
+    HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
+#ifdef showSpiCommunication
+    logging::snprintf("Read Buffer : length = [%u], data = ", payloadLength);
+    for (uint32_t index = 0; index < payloadLength; index++) {
+        logging::snprintf("%02X ", payload[index]);
+    }
+    logging::snprintf("\n");
+#endif
+}
+
+void sx126x::setRfSwitch(rfSwitchState newState) {
+#ifdef showSpiCommunication
+    logging::snprintf("Set RF Switch [%s] \n", toString(newState));
+#endif
+    switch (newState) {
+        case rfSwitchState::off:
+        default:
+            HAL_GPIO_WritePin(GPIOA, rfControl1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOA, rfControl2_Pin, GPIO_PIN_RESET);
+            break;
+
+        case rfSwitchState::tx:
+            HAL_GPIO_WritePin(GPIOA, rfControl1_Pin, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(GPIOA, rfControl2_Pin, GPIO_PIN_SET);
+            break;
+
+        case rfSwitchState::rx:
+            HAL_GPIO_WritePin(GPIOA, rfControl1_Pin, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(GPIOA, rfControl2_Pin, GPIO_PIN_RESET);
+            break;
+    }
+}
+
+void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
+#ifdef showSpiCommunication
+    logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
+    for (uint32_t index = 0; index < commandParametersLength; index++) {
+        logging::snprintf(" %02X", commandParameters[index]);
+    }
+    logging::snprintf("\n");
+#endif
+    HAL_SUBGHZ_ExecSetCmd(&hsubghz, static_cast<SUBGHZ_RadioSetCmd_t>(command), commandParameters, commandParametersLength);
+}
+
+void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
+#ifdef showSpiCommunication
+    logging::snprintf("Write Registers [%04X] %s : ", static_cast<uint16_t>(theRegister), toString(theRegister));
+    for (uint32_t index = 0; index < dataLength; index++) {
+        logging::snprintf(" %02X", data[index]);
+    }
+    logging::snprintf("\n");
+#endif
+    HAL_SUBGHZ_WriteRegisters(&hsubghz, static_cast<uint16_t>(theRegister), data, dataLength);
+}
+
+#else
+
+void sx126x::initializeInterface() {
+}
+
+void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
+}
+
+void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
+}
+
+void sx126x::setRfSwitch(rfSwitchState newState) {
+}
+
+void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
+}
+
+void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
+}
+
+#endif

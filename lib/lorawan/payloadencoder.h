@@ -4,18 +4,14 @@
 // ### Author(s) : Pascal Roobrouck - @strooom                               ###
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
-#include <unity.h>
-#include "datarate.h"
 
-void setUp(void) {}           // before test
-void tearDown(void) {}        // after test
+#pragma once
+#include <stdint.h>
 
-void test_initialize() {
-    TEST_IGNORE_MESSAGE("to be implemented");
-}
+enum class payloadEncodingVersion : uint8_t {
+    unknown   = 0x00,
+    mumo_v1   = 0x01,        // for backward compatibility with version 1
+    mumo_v2_0 = 0x02,        // sending a list of measurements, each one contains type, timestamp and value
+    mumo_v2_1 = 0x03,        // sending a list of measurements, each one contains type, timestamp, value and measurementIndex
 
-int main(int argc, char **argv) {
-    UNITY_BEGIN();
-    RUN_TEST(test_initialize);
-    UNITY_END();
-}
+};
