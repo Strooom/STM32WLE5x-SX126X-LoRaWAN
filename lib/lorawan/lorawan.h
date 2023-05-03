@@ -19,7 +19,7 @@
 #include "dutycycle.h"
 #include "mic.h"
 #include "datarate.h"
-#include "channel.h"
+#include "lorachannelcollection.h"
 #include "transmitpower.h"
 #include "linkdirection.h"
 #include "spreadingfactor.h"
@@ -39,11 +39,11 @@ class LoRaWAN {
 
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
+#ifndef unitTesting
   private:
+#endif
     txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine
-    void goTo(txRxCycleState newState);                            // move the state of the TxRxCycle state machine
-    void exitState(txRxCycleState currentState);                   // actions when leaving a state
-    void enterState(txRxCycleState newState);                      // actions when entering a state
+    void goTo(txRxCycleState newState);                            // move the state of the TxRxCycle state machine - handles exit old state actions and entry new state actions
 
     collisionAvoidanceStrategy theCollisionAvoidanceStrategy{collisionAvoidanceStrategy::none};
 
@@ -59,12 +59,12 @@ class LoRaWAN {
 
     dataRates theDataRates;
     uint32_t currentDataRateIndex{0};
-    loRaChannels theChannels;
+    loRaChannelCollection theChannels;
     uint32_t currentChannelIndex{0};
     transmitPower theTransmitPower{transmitPower::max};
 
-    uint8_t rawMessage[272]{};        // 256 bytes as this is the maximum we can send to the S126x radio. 16 extra bytes in front, needed to calculate the MIC (they are not part of the message sent to the radio)
-    uint32_t payloadLength{0};        // length of the application payload
+    uint8_t rawMessage[272]{};                                                                                         // 256 bytes as this is the maximum we can send to the S126x radio. 16 extra bytes in front, needed to calculate the MIC (they are not part of the message sent to the radio)
+    uint32_t payloadLength{0};                                                                                         // length of the application payload
 
     static constexpr uint32_t macHeaderLength{1};                                                                      // total length of MHDR in [bytes]
     static constexpr uint32_t deviceAddressLength{4};                                                                  // total length of DevAddr in [bytes]
@@ -77,12 +77,19 @@ class LoRaWAN {
     static constexpr uint32_t headerOffset{micBLockLength};                                                            // offset in the rawMessage where the header starts
     static constexpr uint32_t payloadOffset{micBLockLength + headerLength};                                            // offset in the rawMessage where the payload starts
 
-    void copyPayload(byteBuffer& applicationPayloadToSend);                                    // copy application payload to correct position in the rawMessage buffer
-    void encryptPayload(aesKey& theKey);                                                       // encrypt the payload in the rawMessage buffer
-    void prependHeader(framePort theFramePort);                                                // prepend the header to the rawMessage buffer
-    void prepareBlockB0(uint32_t applicationPayloadLength, linkDirection theDirection);        // prepare the so-called B0 block, prepended to payload to calculate MIC
-    void calculateAndAppendMic();                                                              // calculate the MIC
+    void copyPayload(byteBuffer& applicationPayloadToSend);                                                            // copy application payload to correct position in the rawMessage buffer
+    void encryptPayload(aesKey& theKey);                                                                               // encrypt the payload in the rawMessage buffer
+    void decryptPayload(aesKey& theKey);                                                                               // decrypt the payload in the rawMessage buffer
+    void prependHeader(framePort theFramePort);                                                                        // prepend the header to the rawMessage buffer
+    void prepareBlockB0(uint32_t applicationPayloadLength, linkDirection theDirection);                                // prepare the so-called B0 block, prepended to payload to calculate MIC
+    void prepareBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);
+    void calculateAndAppendMic();                                                                                      //
+    bool calculateAndVerifyMic();                                                                                      //
     void prepareBlockAi(uint8_t* aBlock, uint32_t blockIndex, linkDirection theDirection);
+    void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
+    bool isValidDevAddr(deviceAddress testAddress);
+    bool isValidDownlinkFrameCount(frameCount testFrameCount);
+    uint8_t getFramePort();
 
     static uint32_t getRandomNumber();
     static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1

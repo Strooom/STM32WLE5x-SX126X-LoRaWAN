@@ -1,20 +1,22 @@
 #include "deviceaddress.h"
 
-deviceAddress::deviceAddress() {
+deviceAddress::deviceAddress() {}
+
+deviceAddress::deviceAddress(uint32_t theDeviceAddress) : asUint32(theDeviceAddress) {}
+
+deviceAddress::deviceAddress(uint8_t theDeviceAddress[4]) {
+    asUint8[0] = theDeviceAddress[0];
+    asUint8[1] = theDeviceAddress[1];
+    asUint8[2] = theDeviceAddress[2];
+    asUint8[3] = theDeviceAddress[3];
 }
 
-deviceAddress::deviceAddress(uint32_t theDeviceAddress) {
+void deviceAddress::set(uint32_t theDeviceAddress) {
+    asUint32 = theDeviceAddress;
 }
-
-uint32_t deviceAddress::asUint32() const {
-    return theDeviceAddress;
-}
-uint8_t deviceAddress::asUint8(uint32_t index) const {
-    if (index > 3) {
-        return 0;
-    }
-    return static_cast<uint8_t>((theDeviceAddress >> (index * 8)) & 0xFF);
-}
-void deviceAddress::fromUint32(uint32_t theNewDeviceAddress) {
-    theDeviceAddress = theNewDeviceAddress;
+void deviceAddress::set(uint8_t theDeviceAddress[4]) {
+    asUint8[0] = theDeviceAddress[0];
+    asUint8[1] = theDeviceAddress[1];
+    asUint8[2] = theDeviceAddress[2];
+    asUint8[3] = theDeviceAddress[3];
 }

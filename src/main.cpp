@@ -161,6 +161,14 @@ int main(void) {
         nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), netKey.asBinary());
     }
 
+    if (1) {
+        loraNetwork.initialize();
+        loraNetwork.decodeMessage();
+    }
+
+    while (1) { // stop here
+    }
+
     theMainController.initialize();
 
     while (1) {

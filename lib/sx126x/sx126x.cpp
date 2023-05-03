@@ -14,7 +14,7 @@ void sx126x::initialize() {
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
-    //logging::snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
+    // logging::snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
     goStandby();
     setRfSwitch(rfSwitchState::tx);
     setRfFrequency(frequency);
@@ -30,11 +30,11 @@ void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t freq
     commandParameters[5] = 0x00;
     commandParameters[6] = 0x00;
     commandParameters[7] = 0x00;
-    executeCommand(sx126xCommand::setDioIrqParams, commandParameters, 8);
+    executeSetCommand(sx126xCommand::setDioIrqParams, commandParameters, 8);
 }
 
 void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency) {
-    //logging::snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
+    // logging::snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
     goStandby();
     setRfSwitch(rfSwitchState::rx);
     setRfFrequency(frequency);
@@ -49,20 +49,20 @@ void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequ
     commandParameters[5] = 0x00;
     commandParameters[6] = 0x00;
     commandParameters[7] = 0x00;
-    executeCommand(sx126xCommand::setDioIrqParams, commandParameters, 8);
+    executeSetCommand(sx126xCommand::setDioIrqParams, commandParameters, 8);
 }
 
 void sx126x::goSleep(sleepMode theSleepMode) {
     setRfSwitch(rfSwitchState::off);
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theSleepMode)};
-    executeCommand(sx126xCommand::setSleep, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setSleep, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::goStandby(standbyMode theStandbyMode) {
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theStandbyMode)};
-    executeCommand(sx126xCommand::setStandby, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setStandby, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::startTransmit(uint32_t timeOut) {
@@ -71,7 +71,7 @@ void sx126x::startTransmit(uint32_t timeOut) {
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
     commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
-    executeCommand(sx126xCommand::setTx, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setTx, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::startReceive(uint32_t timeOut) {
@@ -81,7 +81,7 @@ void sx126x::startReceive(uint32_t timeOut) {
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
     commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
-    executeCommand(sx126xCommand::setRx, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setRx, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::setRfFrequency(uint32_t frequencyInHz) {
@@ -92,7 +92,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
     commandParameters[1] = static_cast<uint8_t>((frequencyRegisterValue >> 16) & 0xFF);        //
     commandParameters[2] = static_cast<uint8_t>((frequencyRegisterValue >> 8) & 0xFF);         //
     commandParameters[3] = static_cast<uint8_t>((frequencyRegisterValue)&0xFF);                //
-    executeCommand(sx126xCommand::setRfFRequency, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setRfFRequency, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth) {
@@ -103,7 +103,7 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwid
     commandParameters[2] = 0x01;                                            // LoRaWAN is fixed to coding rate 4/5
     commandParameters[3] = 0x00;                                            // TODO ?? LowDatarateOptimize // why would you NOT want to do this ??
                                                                             // the remaining 4 bytes are empty 0x00 for LoRa modulation
-    executeCommand(sx126xCommand::setModulationParams, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setModulationParams, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
@@ -116,7 +116,7 @@ void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
     commandParameters[4] = 0x01;                 // CRC On ??
     commandParameters[5] = 0x00;                 // Standard IQ : for uplink. Downlink requires inverted IQ
                                                  // the remaining 3 bytes are empty 0x00 for LoRa
-    executeCommand(sx126xCommand::setPacketParameters, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setPacketParameters, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::setPacketParametersReceive() {
@@ -129,7 +129,7 @@ void sx126x::setPacketParametersReceive() {
     commandParameters[4] = 0x00;        // CRC Off ??
     commandParameters[5] = 0x01;        // Downlink requires inverted IQ
                                         // the remaining 3 bytes are empty 0x00 for LoRa
-    executeCommand(sx126xCommand::setPacketParameters, commandParameters, nmbrCommandParameters);
+    executeSetCommand(sx126xCommand::setPacketParameters, commandParameters, nmbrCommandParameters);
 }
 
 uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
@@ -150,16 +150,18 @@ uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
 //     }
 //     commandParameters[1] = static_cast<uint8_t>(theRamptime);        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
 //                                                                      // the remaining 4 bytes are empty 0x00 for LoRa
-//     executeCommand(sx126xCommand::setTxParams, commandParameters, nmbrCommandParameters);
+//     executeSetCommand(sx126xCommand::setTxParams, commandParameters, nmbrCommandParameters);
 // }
 
 void sx126x::initializeRadio() {
     setRfSwitch(rfSwitchState::off);
-
     uint8_t commandParameters[8]{0};        // contains parameters when sending a command to the SX126x
+    uint8_t response[8]{0};        // contains response for a get command
+
+    executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
 
     commandParameters[0] = 0x01;        // DCDC powermode
-    executeCommand(sx126xCommand::setRegulatorMode, commandParameters, 1);
+    executeSetCommand(sx126xCommand::setRegulatorMode, commandParameters, 1);
 
     // TODO : add SMPS maximum drive capability 60 mA (io 100mA default)
     //    commandParameters[0] = 0x02;
@@ -178,37 +180,40 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0x00;
     commandParameters[2] = 0x00;
     commandParameters[3] = 0x40;
-    executeCommand(sx126xCommand::setDIO3AsTcxoCtrl, commandParameters, 4);
+    executeSetCommand(sx126xCommand::setDIO3AsTcxoCtrl, commandParameters, 4);
 
     commandParameters[0] = 0x7F;
-    executeCommand(sx126xCommand::calibrate, commandParameters, 1);
+    executeSetCommand(sx126xCommand::calibrate, commandParameters, 1);
 
     commandParameters[0] = 0xD7;
     commandParameters[1] = 0xDB;
-    executeCommand(sx126xCommand::calibrateImage, commandParameters, 2);
+    executeSetCommand(sx126xCommand::calibrateImage, commandParameters, 2);
 
     commandParameters[0] = 0x01;        // packetType::LoRa;
-    executeCommand(sx126xCommand::setPacketType, commandParameters, 1);
+    executeSetCommand(sx126xCommand::setPacketType, commandParameters, 1);
 
     commandParameters[0] = 0x36;
     commandParameters[1] = 0x41;
     commandParameters[2] = 0x99;
     commandParameters[3] = 0x99;
-    executeCommand(sx126xCommand::setRfFRequency, commandParameters, 4);
+    executeSetCommand(sx126xCommand::setRfFRequency, commandParameters, 4);
 
     commandParameters[0] = 0x02;
     commandParameters[1] = 0x03;
     commandParameters[2] = 0x00;
     commandParameters[3] = 0x01;
-    executeCommand(sx126xCommand::setPaConfig, commandParameters, 4);
+    executeSetCommand(sx126xCommand::setPaConfig, commandParameters, 4);
 
     commandParameters[0] = 0x0D;        // PA optimal setting and operating modes: 14 dBm HighPower mode
     commandParameters[1] = 0x02;        // RampTime
-    executeCommand(sx126xCommand::setTxParams, commandParameters, 2);
+    executeSetCommand(sx126xCommand::setTxParams, commandParameters, 2);
 
     commandParameters[0] = 0x34;        // LoRa Syncword MSB
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
+
+    executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
+
 }
 
 #ifndef environment_desktop
@@ -285,13 +290,13 @@ void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
     HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
-#ifdef showSpiCommunication
+//#ifdef showSpiCommunication
     logging::snprintf("Read Buffer : length = [%u], data = ", payloadLength);
     for (uint32_t index = 0; index < payloadLength; index++) {
         logging::snprintf("%02X ", payload[index]);
     }
     logging::snprintf("\n");
-#endif
+//#endif
 }
 
 void sx126x::setRfSwitch(rfSwitchState newState) {
@@ -317,7 +322,7 @@ void sx126x::setRfSwitch(rfSwitchState newState) {
     }
 }
 
-void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
+void sx126x::executeSetCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
 #ifdef showSpiCommunication
     logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
     for (uint32_t index = 0; index < commandParametersLength; index++) {
@@ -326,6 +331,17 @@ void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, u
     logging::snprintf("\n");
 #endif
     HAL_SUBGHZ_ExecSetCmd(&hsubghz, static_cast<SUBGHZ_RadioSetCmd_t>(command), commandParameters, commandParametersLength);
+}
+
+void sx126x::executeGetCommand(sx126xCommand command, uint8_t* responseData, uint8_t responseDataLength) {
+    HAL_SUBGHZ_ExecGetCmd(&hsubghz, static_cast<SUBGHZ_RadioGetCmd_t>(command), responseData, responseDataLength);
+//#ifdef showSpiCommunication
+    logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
+    for (uint32_t index = 0; index < responseDataLength; index++) {
+        logging::snprintf(" %02X", responseData[index]);
+    }
+    logging::snprintf("\n");
+//#endif
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
@@ -353,10 +369,12 @@ void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
 void sx126x::setRfSwitch(rfSwitchState newState) {
 }
 
-void sx126x::executeCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
+void sx126x::executeSetCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
 }
+
+void sx126x::executeGetCommand(sx126xCommand command, uint8_t* responseData, uint8_t responseDataLength) {}
 
 #endif

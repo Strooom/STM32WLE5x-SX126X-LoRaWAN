@@ -45,8 +45,10 @@ class sx126x {
     static constexpr uint32_t rxTxBufferLength{256};              // length of the RAM buffer inside the SX126X // TODO : ST firmware mentions 255 io 256.. Why ???
     static constexpr uint32_t crystalFrequency{32000000U};        // frequency of the TCXO
 
+    void executeGetCommand(sx126xCommand command, uint8_t *responseData, uint8_t responseDataLength);
+
 #ifndef unitTesting
-  private:
+//  private:
 #endif
     void initializeInterface();        // configures the SPI between the MCU and the SX126x
     void initializeRadio();            //
@@ -63,7 +65,7 @@ class sx126x {
     static uint32_t calculateFrequencyRegisterValue(uint32_t rfFrequency);
     void setRfSwitch(rfSwitchState newState);
 
-    void executeCommand(sx126xCommand command, uint8_t *commandData, uint8_t commandDataLength);
+    void executeSetCommand(sx126xCommand command, uint8_t *commandData, uint8_t commandDataLength);
 
     void writeRegister(sx126xRegister theRegister, uint32_t newValue);
     void writeRegisters(sx126xRegister theRegister, uint8_t *data, uint8_t dataLength);
