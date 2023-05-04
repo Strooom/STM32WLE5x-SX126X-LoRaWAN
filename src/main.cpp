@@ -167,7 +167,13 @@ int main(void) {
         /* USER CODE END WHILE */
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
-        logging::detectDebugProbe();
+        logging::detectDebugProbe();                 // detect if a debugProbe eg ST-LINK is connected to our MCU
+        if (logging::isDebugProbePresent()) {        //
+            LL_DBGMCU_EnableDBGStopMode();           // debugProbe present : enable debug in stop mode - it will keep the MCU clock running (so debug subsystems still works) but stop the core. For SW it will look as if the core is stopped, the current consumption will be higher though.
+        } else {                                     //
+            LL_DBGMCU_DisableDBGStopMode();          // no debugProbe : put the core in real stop mode
+        }
+
         if (power::isUsbConnected()) {
             applicationEventBuffer.push(applicationEvent::usbConnected);
         }
@@ -177,13 +183,21 @@ int main(void) {
 
         loraNetwork.handleEvents();
         theMainController.handleEvents();
+
         if (power::hasUsbPower()) {
             theCli.handleRxEvent();
             theCli.handleEvents();
         } else {
-            // Here I need a racefree solution to put the MCU into sleep when there are no more events to process..
-            // It's not so much a problem that there would be an interrupt pending and the MCU refuses to go into sleep..
-            // The problem would be that there are messages waiting in the eventBuffers which would only be served after waking up..
+            logging::snprintf("going to sleep...\n");
+            UTILS_ENTER_CRITICAL_SECTION();                                                // mask interrupts
+            if (applicationEventBuffer.isEmpty() && loraWanEventBuffer.isEmpty()) {        // If no events are pending in any of the eventBuffers...
+                                                                                           // TODO : configure peripherals for low power - keep the SWD IOs working in case we have a debug probe connected
+                HAL_SuspendTick();                                                         // stop Systick
+                HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);                               // go into Sleep - STOP2
+                HAL_ResumeTick();                                                          // re-enable Systick
+            }                                                                              //
+            UTILS_EXIT_CRITICAL_SECTION();                                                 // re-enable interrupts
+            logging::snprintf("...woke up\n");
         }
         /* USER CODE END 3 */
     }

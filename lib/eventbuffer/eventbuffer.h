@@ -19,8 +19,7 @@ class eventBuffer {
   public:
     static constexpr uint32_t length = bufferLength;
 
-    eventBuffer(){
-    };
+    eventBuffer(){};
 
     void initialize() {
         head  = 0;
@@ -29,15 +28,18 @@ class eventBuffer {
     };
 
     void push(eventType event) {
+        UTILS_ENTER_CRITICAL_SECTION();
         theBuffer[(head + level) % bufferLength] = event;
         if (level < bufferLength) {
             level++;
         } else {
             head = (head + 1) % bufferLength;
         }
+        UTILS_EXIT_CRITICAL_SECTION();
     };
 
     eventType pop() {
+        UTILS_ENTER_CRITICAL_SECTION();
         if (level > 0) {
             eventType result = theBuffer[head];
             head             = (head + 1) % bufferLength;
@@ -46,6 +48,7 @@ class eventBuffer {
         } else {
             return static_cast<eventType>(0x00);
         }
+        UTILS_EXIT_CRITICAL_SECTION();
     };
 
     bool isEmpty() const {
@@ -59,7 +62,6 @@ class eventBuffer {
     uint32_t getLevel() const {
         return level;
     };
-
 
 #ifndef unitTesting
 //  private:
