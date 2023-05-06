@@ -8,6 +8,17 @@
 #pragma once
 #include <stdint.h>
 
+#ifndef environment_desktop
+#include "main.h"                  // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS
+#include "utilities_conf.h"        // required for UTILS_ENTER_CRITICAL_SECTION and UTILS_EXIT_CRITICAL_SECTION
+#else
+// dummies so the unit tests on the host compile and run
+#define UTILS_ENTER_CRITICAL_SECTION() \
+    {}
+#define UTILS_EXIT_CRITICAL_SECTION() \
+    {}
+#endif
+
 // template class for event buffers. Each layer needs it's own buffer, and the events are different types
 // This is a circular buffer, so it works FIFO
 // push() on an already full buffer, overwrites the oldes event.

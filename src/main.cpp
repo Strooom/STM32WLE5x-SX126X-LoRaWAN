@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "utilities_conf.h"
 // #include "app_subghz_phy.h" change here for recompile
 
 /* Private includes ----------------------------------------------------------*/
