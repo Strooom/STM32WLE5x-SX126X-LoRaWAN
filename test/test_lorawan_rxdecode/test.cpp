@@ -90,9 +90,15 @@ void test_verifyDeviceAddress() {
     deviceAddress receivedDeviceAddress(theNetwork.rawMessage + theNetwork.deviceAddressOffset);
     TEST_ASSERT_TRUE(theNetwork.isValidDevAddr(receivedDeviceAddress.asUint32));
 }
-    
 
-
+void test_decryptPayload() {
+    LoRaWAN theNetwork;
+    theNetwork.DevAddr.set(0x260B3B92);
+    theNetwork.networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
+    memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
+    theNetwork.setOffsetsAndLengthsRx(testVectorLength);
+    theNetwork.decryptPayload(theNetwork.networkKey); // this particular test vector has fPort == 0 so it is decrypted with Network Key
+}
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
@@ -100,5 +106,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_getReceivedFramecount);
     RUN_TEST(test_verifyMic);
     RUN_TEST(test_verifyDeviceAddress);
+    RUN_TEST(test_decryptPayload);
     UNITY_END();
 }

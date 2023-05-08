@@ -320,7 +320,6 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
     uint8_t theBlock[16];        // 16 bytes, which will be filled with certain values from LoRaWAN context, and then encrypted
 
     for (uint32_t blockIndex = 0x00; blockIndex < nmbrOfBlocks; blockIndex++) {
-        // prepareBlockAi(theBlock, blockIndex, linkDirection::downlink);
         prepareBlockAi(theBlock, linkDirection::downlink, DevAddr, downlinkFrameCount, (blockIndex + 1));
         AES_Encrypt(theBlock, theKey.asUnsignedChar());
 
@@ -464,17 +463,14 @@ messageType LoRaWAN::decodeMessage() {
 
     // 6. All clear, so decrypt the payload
     // TODO : there could be MAC requests/responses in the frameOptions, we need to process these as well..
-    messageType receivedMessageType;
+    
     if (rawMessage[framePortOffset] == 0) {
         decryptPayload(networkKey);
-        receivedMessageType = messageType::lorawanMac;
+        memcpy(macIn, rawMessage + framePayloadOffset, framePayloadLength);
+        return messageType::lorawanMac;
     } else {
         decryptPayload(applicationKey);
-        receivedMessageType = messageType::application;
-    }
-
-    // 7. If it's MAC requests/answers, let's process them
-    if (receivedMessageType == messageType::lorawanMac) {
+        return messageType::application;
     }
 }
 
