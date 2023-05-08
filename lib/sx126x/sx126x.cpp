@@ -156,7 +156,7 @@ uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
 void sx126x::initializeRadio() {
     setRfSwitch(rfSwitchState::off);
     uint8_t commandParameters[8]{0};        // contains parameters when sending a command to the SX126x
-    uint8_t response[8]{0};        // contains response for a get command
+    uint8_t response[8]{0};                 // contains response for a get command
 
     executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
 
@@ -213,7 +213,6 @@ void sx126x::initializeRadio() {
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
 
     executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
-
 }
 
 #ifndef environment_desktop
@@ -290,13 +289,13 @@ void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
     HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
-//#ifdef showSpiCommunication
+                                                                        // #ifdef showSpiCommunication
     logging::snprintf("Read Buffer : length = [%u], data = ", payloadLength);
     for (uint32_t index = 0; index < payloadLength; index++) {
         logging::snprintf("%02X ", payload[index]);
     }
     logging::snprintf("\n");
-//#endif
+    // #endif
 }
 
 void sx126x::setRfSwitch(rfSwitchState newState) {
@@ -335,13 +334,13 @@ void sx126x::executeSetCommand(sx126xCommand command, uint8_t* commandParameters
 
 void sx126x::executeGetCommand(sx126xCommand command, uint8_t* responseData, uint8_t responseDataLength) {
     HAL_SUBGHZ_ExecGetCmd(&hsubghz, static_cast<SUBGHZ_RadioGetCmd_t>(command), responseData, responseDataLength);
-//#ifdef showSpiCommunication
+    // #ifdef showSpiCommunication
     logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
     for (uint32_t index = 0; index < responseDataLength; index++) {
         logging::snprintf(" %02X", responseData[index]);
     }
     logging::snprintf("\n");
-//#endif
+    // #endif
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
@@ -356,14 +355,19 @@ void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t d
 }
 
 #else
+#include <cstring>
+
+uint8_t mockSx126xDataBuffer[256];        // emulates the SX126x data buffer so we can do some unit test on it
 
 void sx126x::initializeInterface() {
 }
 
 void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
+    memcpy(mockSx126xDataBuffer, payload, payloadLength);
 }
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
+    memcpy(payload, mockSx126xDataBuffer, payloadLength);
 }
 
 void sx126x::setRfSwitch(rfSwitchState newState) {

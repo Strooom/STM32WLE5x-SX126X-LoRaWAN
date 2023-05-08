@@ -10,18 +10,18 @@
 
 class deviceAddress {
   public:
-    deviceAddress();
-    deviceAddress(uint32_t theDeviceAddress);
-    deviceAddress(uint8_t theDeviceAddress[4]);
-    void set(uint32_t theDeviceAddress);          // decode the deviceAddress from a uint32_t
-    void set(uint8_t theDeviceAddress[4]);        // set the frameCount from an array of 4 bytes
+    static constexpr uint32_t length{4};                    // length of the deviceAddress in bytes
+    deviceAddress();                                        //
+    deviceAddress(uint32_t theDeviceAddress);               //
+    deviceAddress(uint8_t theDeviceAddress[length]);        //
+    void set(uint32_t theDeviceAddress);                    // decode the deviceAddress from a uint32_t
+    void set(uint8_t theDeviceAddress[length]);             // set the frameCount from an array of 4 bytes
 
     union {
         uint32_t asUint32{0};
-        uint8_t asUint8[4];
+        uint8_t asUint8[length];
     };
 
   private:
 };
-
 

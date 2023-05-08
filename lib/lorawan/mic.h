@@ -12,11 +12,12 @@
 
 class messageIntegrityCode {
   public:
+    static constexpr uint32_t length{4};                                       // [bytes]
     uint32_t calculate(aesKey aKey);                                           // calculates the MIC over the buffer, using the key
     bool validate(const uint8_t* buffer, uint32_t length, aesKey aKey);        // validates the MIC over the buffer, using the key
-    static constexpr uint32_t length{4};                                       // [bytes]
-    uint8_t asUint8(uint32_t index) const;
 
-  private:
-    uint32_t micValue{0};
+    union {
+        uint32_t asUint32{0};
+        uint8_t asUint8[length];
+    };
 };
