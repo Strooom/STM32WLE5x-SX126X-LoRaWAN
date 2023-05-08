@@ -85,28 +85,29 @@ class LoRaWAN {
     // static constexpr uint32_t headerLength{macHeaderLength + frameHeaderLength + framePortLength};                                                                               // total length of all the above
     // static constexpr uint32_t payloadOffset{b0BlockLength + headerLength};                                                                                                       // offset in the rawMessage where the payload starts
 
-    static constexpr uint32_t headerOffset{b0BlockLength};                                                                                                                                   // offset in the rawMessage where the header starts
-    static constexpr uint32_t deviceAddressOffset{b0BlockLength + macHeaderLength};                                                                                                          // offset in the rawMessage where the deviceAddress is found
-    static constexpr uint32_t frameControlOffset{b0BlockLength + macHeaderLength + deviceAddressLength};                                                                                     // offset in the rawMessage where the frameControl is found
-    static constexpr uint32_t frameCountOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength};                                                                  // offset in the rawMessage where the frameCountLSH is found
-    static constexpr uint32_t frameOptionsOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength};                                          // offset in the rawMessage where the frameOptions are found
-    uint32_t framePortOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength};                                         // this is not static, it can vary between 24 and 39
-    uint32_t framePayloadOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength};                    // this is not static, it can vary between 25 and 40
-    uint32_t micOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + framePayloadLength};        // this is not static, it can vary between 25 and 40
+    static constexpr uint32_t headerOffset{b0BlockLength};                                                                                                 // offset in the rawMessage where the header starts
+    static constexpr uint32_t deviceAddressOffset{b0BlockLength + macHeaderLength};                                                                        // offset in the rawMessage where the deviceAddress is found
+    static constexpr uint32_t frameControlOffset{b0BlockLength + macHeaderLength + deviceAddressLength};                                                   // offset in the rawMessage where the frameControl is found
+    static constexpr uint32_t frameCountOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength};                                // offset in the rawMessage where the frameCountLSH is found
+    static constexpr uint32_t frameOptionsOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength};        // offset in the rawMessage where the frameOptions are found
+    uint32_t framePortOffset{};                                                                                                                            // this is not static, it can vary between 24 and 39
+    uint32_t framePayloadOffset{};                                                                                                                         // this is not static, it can vary between 25 and 40
+    uint32_t micOffset{};                                                                                                                                  // this is not static, it can vary between 25 and 40
+    uint32_t macPayloadLength{};
 
-    uint8_t macIn[256];                                                                                                                                                                      // buffer holding the received MAC requests and/or answers
-    uint8_t macOut[256];                                                                                                                                                                     // buffer holding the MAC requests and/or answers to be sent
+    uint8_t macIn[256];                                              // buffer holding the received MAC requests and/or answers
+    uint8_t macOut[256];                                             // buffer holding the MAC requests and/or answers to be sent
 
-    void setOffsetsAndLengthsTx(uint32_t framePayloadLength);                                                                                                                                // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
-    void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);                                                                                                                                 // calculate all offsets and lengths in rawMessage by decoding the received LoRa payload
+    void setOffsetsAndLengthsTx(uint32_t framePayloadLength);        // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
+    void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);         // calculate all offsets and lengths in rawMessage by decoding the received LoRa payload
 
-    void copyPayload(byteBuffer& applicationPayloadToSend);                                                                                                                                  // copy application payload to correct position in the rawMessage buffer
-    void encryptPayload(aesKey& theKey);                                                                                                                                                     // encrypt the payload in the rawMessage buffer
-    void decryptPayload(aesKey& theKey);                                                                                                                                                     // decrypt the payload in the rawMessage buffer
-    void prependHeader(framePort theFramePort);                                                                                                                                              // prepend the header to the rawMessage buffer
+    void copyPayload(byteBuffer& applicationPayloadToSend);          // copy application payload to correct position in the rawMessage buffer
+    void encryptPayload(aesKey& theKey);                             // encrypt the payload in the rawMessage buffer
+    void decryptPayload(aesKey& theKey);                             // decrypt the payload in the rawMessage buffer
+    void prependHeader(framePort theFramePort);                      // prepend the header to the rawMessage buffer
     void prepareBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);
-    void calculateAndAppendMic();                                                                                                                                                            //
-    bool calculateAndVerifyMic();                                                                                                                                                            //
+    void calculateAndAppendMic();                                    //
+    bool calculateAndVerifyMic();                                    //
     void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
     bool isValidDevAddr(deviceAddress testAddress);
     bool isValidDownlinkFrameCount(frameCount testFrameCount);

@@ -375,14 +375,13 @@ void LoRaWAN::calculateAndAppendMic() {
 
     sBuffer sourceData;
     sourceData.Data    = rawMessage;
-    sourceData.Counter = payloadLength + b0BlockLength;
+    sourceData.Counter = b0BlockLength + macHeaderLength + macPayloadLength;
 
     Calculate_MIC2(&sourceData, networkKey.asUnsignedChar(), result);
-    rawMessage[headerOffset + payloadLength]     = result[0];        // LSByte
-    rawMessage[headerOffset + payloadLength + 1] = result[1];        //
-    rawMessage[headerOffset + payloadLength + 2] = result[2];        //
-    rawMessage[headerOffset + payloadLength + 3] = result[3];        // MSByte
-    payloadLength += 4;
+    rawMessage[micOffset]     = result[0];        // LSByte
+    rawMessage[micOffset + 1] = result[1];        //
+    rawMessage[micOffset + 2] = result[2];        //
+    rawMessage[micOffset + 3] = result[3];        // MSByte
 }
 
 bool LoRaWAN::calculateAndVerifyMic() {
@@ -409,6 +408,7 @@ bool LoRaWAN::calculateAndVerifyMic() {
 
 void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFramePort) {
     // 1. Convert the application payload, to a LoRa(WAN) payload
+    setOffsetsAndLengthsTx(applicationPayloadToSend.length);
     copyPayload(applicationPayloadToSend);
     encryptPayload(applicationKey);
     prependHeader(theFramePort);
@@ -517,21 +517,25 @@ uint8_t LoRaWAN::getFramePort() {
 
 void LoRaWAN::setOffsetsAndLengthsTx(uint32_t theFramePayloadLength) {
     // This function is used in the uplink direction, where we know the length of the application payload, and we construct a LoRa payload from it
+    framePayloadLength = theFramePayloadLength;
     frameOptionsLength = 0;
     framePortOffset    = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength;
     framePayloadOffset = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength;
     micOffset          = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + framePayloadLength;
     loRaPayloadLength  = macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + theFramePayloadLength + micLength;
     frameHeaderLength  = deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength;
+    macPayloadLength   = frameHeaderLength + framePortLength + framePayloadLength;
 }
 
 void LoRaWAN::setOffsetsAndLengthsRx(uint32_t theLoRaPayloadLength) {
     // This function is used in the downlink, where we received a certain LoRa payload, and we decode it to identify all the fields inside it
+    loRaPayloadLength  = theLoRaPayloadLength;
     frameOptionsLength = rawMessage[frameControlOffset] & 0x0F;
     framePortOffset    = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength;
     framePayloadOffset = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength;
     frameHeaderLength  = deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength;
     framePayloadLength = theLoRaPayloadLength - (macHeaderLength + frameHeaderLength + framePortLength + micLength);
+    macPayloadLength   = frameHeaderLength + framePortLength + framePayloadLength;
     micOffset          = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + framePayloadLength;
 }
 

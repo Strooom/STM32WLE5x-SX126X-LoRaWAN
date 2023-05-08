@@ -36,13 +36,15 @@ void test_offsetsRx() {
     LoRaWAN theNetwork;
 
     // This fakes the read of a LoRa msg from the radio into rawMessage buffer
-    theNetwork.loRaPayloadLength = testVectorLength;
     memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
 
-    theNetwork.setOffsetsAndLengthsRx(theNetwork.loRaPayloadLength);
+    theNetwork.setOffsetsAndLengthsRx(testVectorLength);
+    TEST_ASSERT_EQUAL_UINT32(testVectorLength, theNetwork.loRaPayloadLength);
     TEST_ASSERT_EQUAL_UINT32(0, theNetwork.frameOptionsLength);
     TEST_ASSERT_EQUAL_UINT32(7, theNetwork.frameHeaderLength);
     TEST_ASSERT_EQUAL_UINT32(30, theNetwork.framePayloadLength);
+    TEST_ASSERT_EQUAL_UINT32(38U, theNetwork.macPayloadLength);
+
 
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 8, theNetwork.framePortOffset);
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 9, theNetwork.framePayloadOffset);
