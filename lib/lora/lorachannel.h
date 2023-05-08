@@ -11,9 +11,11 @@
 class loRaChannel {
   public:
     loRaChannel(bool enabled, uint32_t frequency, uint32_t minimumDataRateIndex, uint32_t maximumDataRateIndex);
-#ifndef unitTesting
-  private:
-#endif
+
+//#ifndef unitTesting
+//  private:
+//#endif
+    
     bool enabled{false};
     uint32_t frequency{0};
     uint32_t minimumDataRateIndex{0};

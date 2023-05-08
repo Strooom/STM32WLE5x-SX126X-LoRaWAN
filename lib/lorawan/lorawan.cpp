@@ -10,6 +10,7 @@
 #include "txrxcycle.h"
 #include "nvs.h"
 #include "applicationevent.h"
+#include "maccommand.h"
 
 extern nonVolatileStorage nvs;
 extern sx126x theRadio;
@@ -42,7 +43,7 @@ void LoRaWAN::initialize() {
 void LoRaWAN::handleEvents() {
     while (loraWanEventBuffer.hasEvents()) {
         loRaWanEvent theEvent = loraWanEventBuffer.pop();
-        logging::snprintf("LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
+        // logging::snprintf("LoRaWAN event [%u / %s] in state [%u / %s] \n", static_cast<uint8_t>(theEvent), toString(theEvent), static_cast<uint8_t>(theTxRxCycleState), toString(theTxRxCycleState));
 
         switch (theTxRxCycleState) {
             case txRxCycleState::idle:
@@ -88,7 +89,7 @@ void LoRaWAN::handleEvents() {
             case txRxCycleState::waitForRx1Start:
                 switch (theEvent) {
                     case loRaWanEvent::timeOut: {
-                        logging::snprintf("RX1 start\n");
+                        // logging::snprintf("RX1 start\n");
                         stopTimer();
                         startTimer(2048U);        // 1 second ffrom now until Rx2Start
                         uint32_t rxFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
@@ -106,7 +107,7 @@ void LoRaWAN::handleEvents() {
             case txRxCycleState::waitForRx1CompleteOrTimeout:
                 switch (theEvent) {
                     case loRaWanEvent::sx126xRxComplete: {
-                        logging::snprintf("### Message Received in RX1 :-) ###\n");
+                        // logging::snprintf("### Message Received in RX1 :-) ###\n");
                         messageType receivedMessageType = decodeMessage();
                         switch (receivedMessageType) {
                             case messageType::application:
@@ -114,6 +115,13 @@ void LoRaWAN::handleEvents() {
                                 goTo(txRxCycleState::waitForRxMessageReadout);
                                 break;
                             case messageType::lorawanMac:
+                                processMacContents();
+                                logging::snprintf("### MAC message received : ");
+                                for (uint32_t i = 0; i < 30; i++) {
+                                    logging::snprintf("0x%02X ", macIn[i]);
+                                }
+                                logging::snprintf("\n");
+
                                 // handle it directly
                                 break;
                             default:
@@ -123,7 +131,7 @@ void LoRaWAN::handleEvents() {
                         }
                     } break;
                     case loRaWanEvent::sx126xTimeout:
-                        logging::snprintf("nothing received in RX1\n");
+                        // logging::snprintf("nothing received in RX1\n");
                         goTo(txRxCycleState::waitForRx2Start);
                         break;
                     default:
@@ -136,7 +144,7 @@ void LoRaWAN::handleEvents() {
                 switch (theEvent) {
                     case loRaWanEvent::timeOut: {
                         stopTimer();
-                        logging::snprintf("RX2 start\n");
+                        // logging::snprintf("RX2 start\n");
                         uint32_t rxFrequency = theChannels.rx2Channel.frequency;
                         uint32_t rxTimeout   = getReceiveTimeout(spreadingFactor::SF9);
                         theRadio.configForReceive(spreadingFactor::SF9, rxFrequency);
@@ -152,7 +160,7 @@ void LoRaWAN::handleEvents() {
             case txRxCycleState::waitForRx2CompleteOrTimeout:
                 switch (theEvent) {
                     case loRaWanEvent::sx126xRxComplete: {
-                        logging::snprintf("### Message Received in RX2 :-) ###\n");
+                        // logging::snprintf("### Message Received in RX2 :-) ###\n");
                         messageType receivedMessageType = decodeMessage();
                         switch (receivedMessageType) {
                             case messageType::application:
@@ -169,7 +177,7 @@ void LoRaWAN::handleEvents() {
                         }
                     } break;
                     case loRaWanEvent::sx126xTimeout:
-                        logging::snprintf("nothing received in RX2\n");
+                        // logging::snprintf("nothing received in RX2\n");
                         goTo(txRxCycleState::idle);
                         break;
                     default:
@@ -409,7 +417,7 @@ void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFram
     insertPayload(applicationPayloadToSend);
     encryptPayload(applicationKey);
     insertHeaders(theFramePort);
-    insertBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, applicationPayloadToSend.length);
+    insertBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, (macHeaderLength + macPayloadLength));
     insertMic();
 
     // 2. Configure the radio, and transmit the payload
@@ -434,6 +442,7 @@ messageType LoRaWAN::decodeMessage() {
     theRadio.executeGetCommand(sx126xCommand::getRxBufferStatus, response, 2);
     loRaPayloadLength = response[0];
     theRadio.readBuffer(rawMessage + b0BlockLength, loRaPayloadLength);        // This reads the full LoRaWAN payload into rawMessage buffer, at an offset so the B0 block still fits in front
+    setOffsetsAndLengthsRx(loRaPayloadLength);
 
     // 2. Extract & guess the downLinkFrameCount, as we need this to check the MIC
     uint16_t receivedDownlinkFramecount = getReceivedFramecount();
@@ -461,12 +470,17 @@ messageType LoRaWAN::decodeMessage() {
         return messageType::invalid;
     }
 
+    // 6 Seems a valid message, so update the downlinkFrameCount to what we've received (not just incrementing it, as there could be gaps in the sequence due to lost packets)
+    downlinkFrameCount.set(tmpDownLinkFrameCount.asUint32);
+    nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), downlinkFrameCount.asUint32);
+
     // 6. All clear, so decrypt the payload
     // TODO : there could be MAC requests/responses in the frameOptions, we need to process these as well..
-    
+
     if (rawMessage[framePortOffset] == 0) {
         decryptPayload(networkKey);
         memcpy(macIn, rawMessage + framePayloadOffset, framePayloadLength);
+        macInLevel = framePayloadLength;
         return messageType::lorawanMac;
     } else {
         decryptPayload(applicationKey);
@@ -527,6 +541,76 @@ void LoRaWAN::setOffsetsAndLengthsRx(uint32_t theLoRaPayloadLength) {
     framePayloadLength = theLoRaPayloadLength - (macHeaderLength + frameHeaderLength + framePortLength + micLength);
     macPayloadLength   = frameHeaderLength + framePortLength + framePayloadLength;
     micOffset          = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + framePayloadLength;
+}
+
+void LoRaWAN::processMacContents() {
+    while (macInLevel > 0) {
+        macCommand theMacCommand = static_cast<macCommand>(macIn[0]);
+
+        switch (theMacCommand) {
+            case macCommand::linkCheckAnswer:
+                // consume 3 bytes : id, margin, gwCount
+                break;
+
+            case macCommand::deviceStatusRequest:
+                // consume 1 byte
+                // append macCommand::deviceStatusAnswer
+                // append 2 bytes : batteryLevel, radioStatus std line 1106
+                break;
+
+            case macCommand::newChannelRequest:
+                // consume 5 bytes : id, channelIndex[1], frequency[3], DRrange[1]
+                // append macCommand::newChannelAnswer
+                // append 1 byte : status std line 1172
+                break;
+
+            case macCommand::linkAdaptiveDataRateRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::dutyCycleRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::receiveParameterSetupRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::receiveTimingSetupRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::transmitParameterSetupRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::downlinkChannelRequest:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            case macCommand::deviceTimeAnswer:
+                // consume x bytes :
+                // append macCommand::
+                // append y bytes :
+                break;
+
+            default:
+                // unknown command.. abort further processing as each command has a different length and so we can not skip this unknown command
+                break;
+        }
+    }
 }
 
 #ifndef environment_desktop

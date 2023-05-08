@@ -334,13 +334,13 @@ void sx126x::executeSetCommand(sx126xCommand command, uint8_t* commandParameters
 
 void sx126x::executeGetCommand(sx126xCommand command, uint8_t* responseData, uint8_t responseDataLength) {
     HAL_SUBGHZ_ExecGetCmd(&hsubghz, static_cast<SUBGHZ_RadioGetCmd_t>(command), responseData, responseDataLength);
-    // #ifdef showSpiCommunication
+    #ifdef showSpiCommunication
     logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
     for (uint32_t index = 0; index < responseDataLength; index++) {
         logging::snprintf(" %02X", responseData[index]);
     }
     logging::snprintf("\n");
-    // #endif
+    #endif
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {

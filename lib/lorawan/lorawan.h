@@ -7,6 +7,7 @@
 
 #pragma once
 #include <stdint.h>
+#include <cstring>
 
 #include "frameport.h"
 #include "messagetype.h"
@@ -34,8 +35,6 @@ class LoRaWAN {
     uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
 
     void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
-
-    messageType decodeMessage();        // is it for the application, for the MAC layer, or invalid msg
 
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
@@ -94,8 +93,11 @@ class LoRaWAN {
     uint32_t framePayloadOffset{};                                                                                                                         //
     uint32_t micOffset{};                                                                                                                                  //
 
-    uint8_t macIn[256];                                                                                                                                    // buffer holding the received MAC requests and/or answers
-    uint8_t macOut[256];                                                                                                                                   // buffer holding the MAC requests and/or answers to be sent
+    static constexpr uint32_t macInOutLength{256};
+    uint8_t macIn[macInOutLength];         // buffer holding the received MAC requests and/or answers
+    uint32_t macInLevel{0};                // number of bytes in macIn
+    uint8_t macOut[macInOutLength];        // buffer holding the MAC requests and/or answers to be sent
+    uint32_t macOutLevel{0};               // number of bytes in macOut
 
     // ################################################################
     // ### Helper functions for constructing an uplink message - Tx ###
@@ -115,9 +117,10 @@ class LoRaWAN {
 
     void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);                                                                                                                   // calculate all offsets and lengths in rawMessage by decoding the received LoRa payload
     uint16_t getReceivedFramecount() { return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8)); }        //
-    bool isValidMic();                                                                                                                                              //
-    bool isValidDevAddr(deviceAddress testAddress);
-    bool isValidDownlinkFrameCount(frameCount testFrameCount);
+    bool isValidMic();                                                                                                                                                         //
+    bool isValidDevAddr(deviceAddress testAddress);                                                                                                                            //
+    bool isValidDownlinkFrameCount(frameCount testFrameCount);                                                                                                                 //
+    messageType decodeMessage();                                                                                                                                               //
 
     static uint32_t getRandomNumber();
     static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
@@ -125,4 +128,6 @@ class LoRaWAN {
 
     void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
+
+    void processMacContents();        // process the contents of the macIn buffer, output goes to macOut buffer
 };

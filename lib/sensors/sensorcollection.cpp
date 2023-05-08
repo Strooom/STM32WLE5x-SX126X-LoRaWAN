@@ -46,21 +46,21 @@ void sensorCollection::discover() {
     // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 15);        // one measurement per day on battery, one per hour on USB power
     addSensor(measurementChannel::batteryLevel, 0, 3, 0, 3);        // test Version
 
-    if (bme680::isPresent()) {
-        bme680::initialize();        // this reads the calibration data from the sensor
+    // if (bme680::isPresent()) {
+    //     bme680::initialize();        // this reads the calibration data from the sensor
 
-        //        addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
-        //        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
-        //        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
-        addSensor(measurementChannel::BME680SensorTemperature, 3, 14, 3, 14);               // test
-        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 14, 3, 14);          // test
-        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 14, 3, 14);        // test
-    }
+    //     //        addSensor(measurementChannel::BME680SensorTemperature, 3, 9, 3, 9);                 // one measurement per 20 minutes
+    //     //        addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 29, 3, 29);          // one measurement per 60 minutes
+    //     //        addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 59, 3, 59);        // one measurement per 120 minutes
+    //     addSensor(measurementChannel::BME680SensorTemperature, 3, 14, 3, 14);               // test
+    //     addSensor(measurementChannel::BME680SensorRelativeHumidity, 3, 14, 3, 14);          // test
+    //     addSensor(measurementChannel::BME680SensorBarometricPressure, 3, 14, 3, 14);        // test
+    // }
 
-    if (tsl2591::isPresent()) {
-        //        addSensor(measurementChannel::TSL25911VisibleLight, 3, 9, 3, 9);        //
-        //        addSensor(measurementChannel::TSL25911Infrared, 3, 9, 3, 9);            //
-    }
+    // if (tsl2591::isPresent()) {
+    //     //        addSensor(measurementChannel::TSL25911VisibleLight, 3, 9, 3, 9);        //
+    //     //        addSensor(measurementChannel::TSL25911Infrared, 3, 9, 3, 9);            //
+    // }
 }
 
 void sensorCollection::addSensor(measurementChannel aType, uint32_t oversamplingLowPower, uint32_t prescalerLowPower, uint32_t oversamplingHighPower, uint32_t prescalerHighPower) {

@@ -23,6 +23,9 @@ const char* toString(sx126xCommand command) {
         case sx126xCommand::getDeviceErrors:
             return "GetDeviceErrors";
             break;
+        case sx126xCommand::getRxBufferStatus:
+            return "getRxBufferStatus";
+            break;
         case sx126xCommand::clearDeviceErrors:
             return "clearDeviceErrors";
             break;
