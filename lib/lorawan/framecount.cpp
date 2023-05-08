@@ -19,8 +19,6 @@ void frameCount::increment() {
 }
 
 uint32_t frameCount::guessFromUint16(uint32_t frameCount32, uint16_t frameCount16Lsb) {
-    static constexpr uint32_t maximumGap{256};
-
     for (uint32_t index = 0; index < maximumGap; index++) {
         if (((frameCount32 + index) & 0x0000FFFF) == frameCount16Lsb) {
             return (frameCount32 + index);

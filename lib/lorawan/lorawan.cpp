@@ -253,11 +253,10 @@ uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {
     return theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength;
 }
 
-void LoRaWAN::copyPayload(byteBuffer& applicationPayloadToSend) {
+void LoRaWAN::insertPayload(byteBuffer& applicationPayloadToSend) {
     for (uint32_t index = 0; index < applicationPayloadToSend.length; index++) {
         rawMessage[framePayloadOffset + index] = applicationPayloadToSend.buffer[index];
     }
-    payloadLength = applicationPayloadToSend.length;
 }
 
 void LoRaWAN::prepareBlockAi(uint8_t* theBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex) {
@@ -280,13 +279,13 @@ void LoRaWAN::prepareBlockAi(uint8_t* theBlock, linkDirection theDirection, devi
 }
 
 void LoRaWAN::encryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks{payloadLength / 16};                 // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
+    uint32_t nmbrOfBlocks{framePayloadLength / 16};                 // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
 
-    bool hasIncompleteBlock{(payloadLength % 16) != 0};        // Check if last block is incomplete
+    bool hasIncompleteBlock{(framePayloadLength % 16) != 0};        // Check if last block is incomplete
     uint32_t incompleteBlockSize{0};
     if (hasIncompleteBlock) {
-        nmbrOfBlocks++;                                  // even if the last block is less than 16 bytes, we include it
-        incompleteBlockSize = payloadLength % 16;        // how long is the last block
+        nmbrOfBlocks++;                                       // even if the last block is less than 16 bytes, we include it
+        incompleteBlockSize = framePayloadLength % 16;        // how long is the last block
     }
 
     uint8_t theBlock[16];        // 16 bytes, which will be filled with certain values from LoRaWAN context, and then encrypted
@@ -309,13 +308,13 @@ void LoRaWAN::encryptPayload(aesKey& theKey) {
 }
 
 void LoRaWAN::decryptPayload(aesKey& theKey) {
-    uint32_t nmbrOfBlocks{payloadLength / 16};                 // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
+    uint32_t nmbrOfBlocks{framePayloadLength / 16};                 // Split payload in blocks of 16 bytes, last part could be less than 16 bytes - integer division
 
-    bool hasIncompleteBlock{(payloadLength % 16) != 0};        // Check if last block is incomplete
+    bool hasIncompleteBlock{(framePayloadLength % 16) != 0};        // Check if last block is incomplete
     uint32_t incompleteBlockSize{0};
     if (hasIncompleteBlock) {
-        nmbrOfBlocks++;                                  // even if the last block is less than 16 bytes, we include it
-        incompleteBlockSize = payloadLength % 16;        // how long is the last block
+        nmbrOfBlocks++;                                       // even if the last block is less than 16 bytes, we include it
+        incompleteBlockSize = framePayloadLength % 16;        // how long is the last block
     }
 
     uint8_t theBlock[16];        // 16 bytes, which will be filled with certain values from LoRaWAN context, and then encrypted
@@ -337,21 +336,21 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
     }
 }
 
-void LoRaWAN::prependHeader(framePort theFramePort) {
+void LoRaWAN::insertHeaders(framePort theFramePort) {
     // 3. put the header (MHDR - FHDR - FPORT) in front of the payload..
     // As we never send MAC commands in FOptions, we know this is always 8 bytes : MHDR(1) - DEVADDR(4) - FCTRL(1) - FCNT(2)
-    rawMessage[headerOffset]     = macHeader(frameType::unconfirmedDataUp).asUint8();        //
-    rawMessage[headerOffset + 1] = DevAddr.asUint8[0];                                       //
-    rawMessage[headerOffset + 2] = DevAddr.asUint8[1];                                       //
-    rawMessage[headerOffset + 3] = DevAddr.asUint8[2];                                       //
-    rawMessage[headerOffset + 4] = DevAddr.asUint8[3];                                       //
-    rawMessage[headerOffset + 5] = 0;                                                        // FCTRL : all zero bits for the time being.. TODO : later we will need to add ACK etc..
-    rawMessage[headerOffset + 6] = uplinkFrameCount.asUint8[0];                              // only the 2 LSBytes from framecounter are sent in the header
-    rawMessage[headerOffset + 7] = uplinkFrameCount.asUint8[1];                              //
-    rawMessage[headerOffset + 8] = theFramePort;                                             //
+    rawMessage[macHeaderOffset]     = macHeader(frameType::unconfirmedDataUp).asUint8();        //
+    rawMessage[macHeaderOffset + 1] = DevAddr.asUint8[0];                                       //
+    rawMessage[macHeaderOffset + 2] = DevAddr.asUint8[1];                                       //
+    rawMessage[macHeaderOffset + 3] = DevAddr.asUint8[2];                                       //
+    rawMessage[macHeaderOffset + 4] = DevAddr.asUint8[3];                                       //
+    rawMessage[macHeaderOffset + 5] = 0;                                                        // FCTRL : all zero bits for the time being.. TODO : later we will need to add ACK etc..
+    rawMessage[macHeaderOffset + 6] = uplinkFrameCount.asUint8[0];                              // only the 2 LSBytes from framecounter are sent in the header
+    rawMessage[macHeaderOffset + 7] = uplinkFrameCount.asUint8[1];                              //
+    rawMessage[macHeaderOffset + 8] = theFramePort;                                             //
 }
 
-void LoRaWAN::prepareBlockB0(linkDirection theDirection, deviceAddress& aDeviceAddress, frameCount& aFrameCounter, uint32_t micPayloadLength) {
+void LoRaWAN::insertBlockB0(linkDirection theDirection, deviceAddress& aDeviceAddress, frameCount& aFrameCounter, uint32_t micPayloadLength) {
     rawMessage[0]  = 0x49;                                      // see LoRaWAN® L2 1.0.4 Specification - line 808
     rawMessage[1]  = 0;                                         //
     rawMessage[2]  = 0;                                         //
@@ -370,9 +369,8 @@ void LoRaWAN::prepareBlockB0(linkDirection theDirection, deviceAddress& aDeviceA
     rawMessage[15] = micPayloadLength;                          // number of bytes over which the MIC is applied, is frameHeader + application payload
 }
 
-void LoRaWAN::calculateAndAppendMic() {
+void LoRaWAN::insertMic() {
     uint8_t result[16]{0};
-
     sBuffer sourceData;
     sourceData.Data    = rawMessage;
     sourceData.Counter = b0BlockLength + macHeaderLength + macPayloadLength;
@@ -384,11 +382,11 @@ void LoRaWAN::calculateAndAppendMic() {
     rawMessage[micOffset + 3] = result[3];        // MSByte
 }
 
-bool LoRaWAN::calculateAndVerifyMic() {
+bool LoRaWAN::isValidMic() {
     uint8_t result[16]{0};
     sBuffer sourceData;
     sourceData.Data    = rawMessage;
-    sourceData.Counter = loRaPayloadLength - micLength;
+    sourceData.Counter = b0BlockLength + macHeaderLength + macPayloadLength;
 
     Calculate_MIC2(&sourceData, networkKey.asUnsignedChar(), result);
     if (rawMessage[micOffset] != result[0]) {
@@ -409,17 +407,17 @@ bool LoRaWAN::calculateAndVerifyMic() {
 void LoRaWAN::sendUplink(byteBuffer& applicationPayloadToSend, framePort theFramePort) {
     // 1. Convert the application payload, to a LoRa(WAN) payload
     setOffsetsAndLengthsTx(applicationPayloadToSend.length);
-    copyPayload(applicationPayloadToSend);
+    insertPayload(applicationPayloadToSend);
     encryptPayload(applicationKey);
-    prependHeader(theFramePort);
-    prepareBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, applicationPayloadToSend.length);
-    calculateAndAppendMic();
+    insertHeaders(theFramePort);
+    insertBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, applicationPayloadToSend.length);
+    insertMic();
 
     // 2. Configure the radio, and transmit the payload
     currentChannelIndex  = theChannels.getRandomChannelIndex();
     uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
-    theRadio.configForTransmit(csf, txFrequency, rawMessage + headerOffset, payloadLength);
+    theRadio.configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
     uplinkFrameCount.increment();
     nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);
     theRadio.startTransmit(0);
@@ -445,8 +443,8 @@ messageType LoRaWAN::decodeMessage() {
     frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
 
     // 3. Check the MIC
-    prepareBlockB0(linkDirection::downlink, DevAddr, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
-    if (!calculateAndVerifyMic()) {
+    insertBlockB0(linkDirection::downlink, DevAddr, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
+    if (!isValidMic()) {
         logging::snprintf("rxError : invalid MIC\n");
         return messageType::invalid;
     }
@@ -467,7 +465,7 @@ messageType LoRaWAN::decodeMessage() {
     // 6. All clear, so decrypt the payload
     // TODO : there could be MAC requests/responses in the frameOptions, we need to process these as well..
     messageType receivedMessageType;
-    if (getFramePort() == 0) {
+    if (rawMessage[framePortOffset] == 0) {
         decryptPayload(networkKey);
         receivedMessageType = messageType::lorawanMac;
     } else {
@@ -509,10 +507,6 @@ bool LoRaWAN::isValidDevAddr(deviceAddress testAddress) {
 
 bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
     return (testFrameCount.asUint32 > downlinkFrameCount.asUint32);
-}
-
-uint8_t LoRaWAN::getFramePort() {
-    return rawMessage[headerOffset + 8];
 }
 
 void LoRaWAN::setOffsetsAndLengthsTx(uint32_t theFramePayloadLength) {

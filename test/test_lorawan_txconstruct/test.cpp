@@ -23,7 +23,7 @@ sx126x theRadio;
 
 // Test vector is a message actually accepted on the network server
 constexpr uint32_t testVectorLength  = 23;
-uint8_t testVector[testVectorLength] = {
+const uint8_t testVector[testVectorLength] = {
     // 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x92, 0x3B, 0x0B, 0x26, 0x39, 0x07, 0x00, 0x00, 0x00, 0x13,        // B0 block
     0x40,                                                              // macHeader : uplink unconfirmed
     0x92, 0x3B, 0x0B, 0x26,                                            // deviceAddress = 0x260B3B92
@@ -51,7 +51,7 @@ void test_offsetsTx() {
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 19, theNetwork.micOffset);        // 9 for all headers, 10 for payload
 
     // Now let's double check and test some of the contents at the offsets
-    TEST_ASSERT_EQUAL_UINT32(0x40, theNetwork.rawMessage[theNetwork.headerOffset]);               // macHeader
+    TEST_ASSERT_EQUAL_UINT32(0x40, theNetwork.rawMessage[theNetwork.macHeaderOffset]);               // macHeader
     TEST_ASSERT_EQUAL_UINT32(0x92, theNetwork.rawMessage[theNetwork.deviceAddressOffset]);        // first byte (LSB) of DevAddr
     TEST_ASSERT_EQUAL_UINT32(0, theNetwork.rawMessage[theNetwork.frameControlOffset]);            // frameControl
     TEST_ASSERT_EQUAL_UINT32(0x39, theNetwork.rawMessage[theNetwork.frameCountOffset]);           // first byte (LSB) of frameCount
@@ -62,11 +62,11 @@ void test_offsetsTx() {
 
 void test_insertFramePayload() {
     LoRaWAN theNetwork;
-    uint8_t testPayloadBytes[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
+    const uint8_t testPayloadBytes[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
     byteBuffer testPayload;
     testPayload.set(testPayloadBytes, 10U);
     theNetwork.setOffsetsAndLengthsTx(10U);
-    theNetwork.copyPayload(testPayload);
+    theNetwork.insertPayload(testPayload);
 
     for (uint32_t index = 0; index < 10; index++) {
         TEST_ASSERT_EQUAL_UINT32(testPayloadBytes[index], theNetwork.rawMessage[theNetwork.framePayloadOffset + index]);
@@ -78,12 +78,12 @@ void test_encryptFramePayload() {
     theNetwork.DevAddr.set(0x260B3B92);
     theNetwork.uplinkFrameCount.set(1850);
     theNetwork.applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
-    uint8_t testPayloadBytesBeforeEncryption[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
-    uint8_t testPayloadBytesAfterEncryption[10U]  = {0x61, 0x4A, 0xE1, 0x01, 0x75, 0xCC, 0x1B, 0x5A, 0x77, 0xFF};
+    const uint8_t testPayloadBytesBeforeEncryption[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
+    const uint8_t testPayloadBytesAfterEncryption[10U]  = {0x61, 0x4A, 0xE1, 0x01, 0x75, 0xCC, 0x1B, 0x5A, 0x77, 0xFF};
     byteBuffer testPayload;
     testPayload.set(testPayloadBytesBeforeEncryption, 10U);
     theNetwork.setOffsetsAndLengthsTx(10U);
-    theNetwork.copyPayload(testPayload);
+    theNetwork.insertPayload(testPayload);
     theNetwork.encryptPayload(theNetwork.applicationKey);
 
     for (uint32_t index = 0; index < 10; index++) {
@@ -93,11 +93,11 @@ void test_encryptFramePayload() {
 
 void test_insertHeaders() {
     constexpr uint32_t testPort = 16;
-    uint8_t testHeader[]        = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x00, 0x3A, 0x07, 0x10};
+    const uint8_t testHeader[]        = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x00, 0x3A, 0x07, 0x10};
     LoRaWAN theNetwork;
     theNetwork.DevAddr.set(0x260B3B92);
     theNetwork.uplinkFrameCount.set(1850);
-    theNetwork.prependHeader(testPort);
+    theNetwork.insertHeaders(testPort);
 
     for (uint32_t index = 0; index < 9; index++) {
         TEST_ASSERT_EQUAL_UINT32(testHeader[index], theNetwork.rawMessage[theNetwork.b0BlockLength + index]);
@@ -105,14 +105,14 @@ void test_insertHeaders() {
 }
 
 void test_insertBlockB0() {
-    uint8_t testBlockB0[16] = {0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x92, 0x3B, 0x0B, 0x26, 0x3A, 0x07, 0x00, 0x00, 0x00, 0x13};
+    const uint8_t testBlockB0[16] = {0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x92, 0x3B, 0x0B, 0x26, 0x3A, 0x07, 0x00, 0x00, 0x00, 0x13};
     LoRaWAN theNetwork;
     theNetwork.setOffsetsAndLengthsTx(10U);
     deviceAddress testAddress;
     testAddress.set(0x260B3B92);
     frameCount testFrameCount;
     testFrameCount.set(1850);
-    theNetwork.prepareBlockB0(linkDirection::uplink, testAddress, testFrameCount, (theNetwork.macHeaderLength + theNetwork.macPayloadLength));
+    theNetwork.insertBlockB0(linkDirection::uplink, testAddress, testFrameCount, (theNetwork.macHeaderLength + theNetwork.macPayloadLength));
 
     for (uint32_t index = 0; index < 16; index++) {
         TEST_ASSERT_EQUAL_UINT32(testBlockB0[index], theNetwork.rawMessage[index]);
@@ -125,17 +125,17 @@ void test_insertMic() {
     theNetwork.uplinkFrameCount.set(1850);
     theNetwork.applicationKey.setFromASCII("398F459FE521152FD5B014EA44428AC2");
     theNetwork.networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
-    uint8_t testPayloadBytesBeforeEncryption[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
+    const uint8_t testPayloadBytesBeforeEncryption[10U] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
     byteBuffer testPayload;
-    uint8_t testMic[4] = {0xB5, 0x51, 0xEF, 0xDF};
+    const uint8_t testMic[4] = {0xB5, 0x51, 0xEF, 0xDF};
 
     testPayload.set(testPayloadBytesBeforeEncryption, 10U);
     theNetwork.setOffsetsAndLengthsTx(10U);
-    theNetwork.copyPayload(testPayload);
+    theNetwork.insertPayload(testPayload);
     theNetwork.encryptPayload(theNetwork.applicationKey);
-    theNetwork.prependHeader(16U);
-    theNetwork.prepareBlockB0(linkDirection::uplink, theNetwork.DevAddr, theNetwork.uplinkFrameCount, (theNetwork.macHeaderLength + theNetwork.macPayloadLength));
-    theNetwork.calculateAndAppendMic();
+    theNetwork.insertHeaders(16U);
+    theNetwork.insertBlockB0(linkDirection::uplink, theNetwork.DevAddr, theNetwork.uplinkFrameCount, (theNetwork.macHeaderLength + theNetwork.macPayloadLength));
+    theNetwork.insertMic();
 
     for (uint32_t index = 0; index < 4; index++) {
         TEST_ASSERT_EQUAL_UINT32(testMic[index], theNetwork.rawMessage[theNetwork.micOffset + index]);
@@ -152,8 +152,6 @@ int main(int argc, char **argv) {
     RUN_TEST(test_insertMic);
     UNITY_END();
 }
-
-// calculateAndAppendMic();
 
 // rawMessage BE =
 // 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00

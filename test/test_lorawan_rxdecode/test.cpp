@@ -22,8 +22,8 @@ sx126x theRadio;
 // extern uint8_t mockSx126xDataBuffer[256];
 
 // Test vector is a message I actually received and intercepted
-constexpr uint32_t testVectorLength  = 43;
-uint8_t testVector[testVectorLength] = {
+constexpr uint32_t testVectorLength        = 43;
+const uint8_t testVector[testVectorLength] = {
     0x60,                                                                                                                                                                                      // macHeader : downlink unconfirmed
     0x92, 0x3B, 0x0B, 0x26,                                                                                                                                                                    // deviceAddress = 0x260B3B92
     0x00,                                                                                                                                                                                      // frameControl
@@ -45,13 +45,12 @@ void test_offsetsRx() {
     TEST_ASSERT_EQUAL_UINT32(30, theNetwork.framePayloadLength);
     TEST_ASSERT_EQUAL_UINT32(38U, theNetwork.macPayloadLength);
 
-
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 8, theNetwork.framePortOffset);
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 9, theNetwork.framePayloadOffset);
     TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 39, theNetwork.micOffset);
 
     // Now let's double check and test some of the contents at the offsets
-    TEST_ASSERT_EQUAL_UINT32(0x60, theNetwork.rawMessage[theNetwork.headerOffset]);               // macHeader
+    TEST_ASSERT_EQUAL_UINT32(0x60, theNetwork.rawMessage[theNetwork.macHeaderOffset]);            // macHeader
     TEST_ASSERT_EQUAL_UINT32(0x92, theNetwork.rawMessage[theNetwork.deviceAddressOffset]);        // first byte (LSB) of DevAddr
     TEST_ASSERT_EQUAL_UINT32(0, theNetwork.rawMessage[theNetwork.frameControlOffset]);            // frameControl
     TEST_ASSERT_EQUAL_UINT32(0x3B, theNetwork.rawMessage[theNetwork.frameCountOffset]);           // first byte (LSB) of frameCount
@@ -60,9 +59,46 @@ void test_offsetsRx() {
     // TODO : I need an additional test with frameOptions NOT empty
 }
 
+void test_getReceivedFramecount() {
+    LoRaWAN theNetwork;
+    memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
+    theNetwork.setOffsetsAndLengthsRx(testVectorLength);
+    TEST_ASSERT_EQUAL_UINT32(0x3B, theNetwork.getReceivedFramecount());
+}
+
+void test_verifyMic() {
+    LoRaWAN theNetwork;
+    theNetwork.DevAddr.set(0x260B3B92);
+    theNetwork.networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
+    memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
+    theNetwork.setOffsetsAndLengthsRx(testVectorLength);
+
+    uint16_t receivedDownlinkFramecount = theNetwork.getReceivedFramecount();
+    uint32_t lastDownlinkFramecount     = theNetwork.downlinkFrameCount.asUint32;
+    uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
+    frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
+
+    theNetwork.insertBlockB0(linkDirection::downlink, theNetwork.DevAddr, tmpDownLinkFrameCount, (theNetwork.loRaPayloadLength - theNetwork.micLength));
+    TEST_ASSERT_TRUE(theNetwork.isValidMic());
+}
+
+void test_verifyDeviceAddress() {
+    LoRaWAN theNetwork;
+    theNetwork.DevAddr.set(0x260B3B92);
+    memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
+    theNetwork.setOffsetsAndLengthsRx(testVectorLength);
+    deviceAddress receivedDeviceAddress(theNetwork.rawMessage + theNetwork.deviceAddressOffset);
+    TEST_ASSERT_TRUE(theNetwork.isValidDevAddr(receivedDeviceAddress.asUint32));
+}
+    
+
+
 
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_offsetsRx);
+    RUN_TEST(test_getReceivedFramecount);
+    RUN_TEST(test_verifyMic);
+    RUN_TEST(test_verifyDeviceAddress);
     UNITY_END();
 }
