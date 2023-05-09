@@ -41,6 +41,10 @@ class byteBuffer2 {
         }
     }
 
+    void consume(uint32_t numberOfBytes) {
+        void shiftLeft(numberOfBytes);
+    }
+
     void append(const uint8_t* newData, uint32_t newDataLength) {
         if (level + newDataLength <= bufferLength) {
             (void)memcpy(theBuffer + level, newData, newDataLength);
@@ -74,6 +78,13 @@ class byteBuffer2 {
 
     const uint8_t* get(uint32_t offset = 0) const { return (theBuffer + offset); }
 
+    const uint8_t operator[](size_t index) {
+        if (index < level) {
+            return theBuffer[index];
+        } else {
+            return {0};
+        }
+    }
 #ifndef unitTesting
 //  private:
 #endif

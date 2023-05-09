@@ -25,6 +25,7 @@
 #include "linkdirection.h"
 #include "spreadingfactor.h"
 #include "bytebuffer.h"
+#include "bytebuffer2.h"
 #include "payloadencoder.h"
 
 class LoRaWAN {
@@ -72,12 +73,12 @@ class LoRaWAN {
     static constexpr uint32_t deviceAddressLength{deviceAddress::length};                                                                                  // length of DevAddr in [bytes]
     static constexpr uint32_t frameControlLength{1};                                                                                                       // length of FCtrl in [bytes]
     static constexpr uint32_t frameCountLSHLength{2};                                                                                                      // frameCount Least Significant Halve - truncated to 2 LSbytes only
-    static constexpr uint32_t framePortLength{1};                                                                                                          // total length of FPort in [bytes]
     static constexpr uint32_t micLength{messageIntegrityCode::length};                                                                                     // length of MIC in [bytes]
 
     uint8_t rawMessage[maxLoRaPayloadLength + b0BlockLength]{};                                                                                            // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
 
     uint32_t macPayloadLength{};                                                                                                                           //
+    uint32_t framePortLength{1};                                                                                                                           // total length of FPort in [bytes] 1 if present, 0 if not present
     uint32_t frameOptionsLength{0};                                                                                                                        // this is not static, it can vary between 0 and 15
     uint32_t frameHeaderLength{0};                                                                                                                         // this is not static, it can vary between 7 and 22
     uint32_t framePayloadLength{0};                                                                                                                        // length of the application (or MAC layer) payload. excludes header, port and mic
@@ -94,10 +95,8 @@ class LoRaWAN {
     uint32_t micOffset{};                                                                                                                                  //
 
     static constexpr uint32_t macInOutLength{256};
-    uint8_t macIn[macInOutLength];         // buffer holding the received MAC requests and/or answers
-    uint32_t macInLevel{0};                // number of bytes in macIn
-    uint8_t macOut[macInOutLength];        // buffer holding the MAC requests and/or answers to be sent
-    uint32_t macOutLevel{0};               // number of bytes in macOut
+    byteBuffer2<64> macIn;         // buffer holding the received MAC requests and/or answers
+    byteBuffer2<64> macOut;        // buffer holding the MAC requests and/or answers to be sent
 
     // ################################################################
     // ### Helper functions for constructing an uplink message - Tx ###
