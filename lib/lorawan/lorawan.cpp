@@ -485,6 +485,8 @@ messageType LoRaWAN::decodeMessage() {
             decryptPayload(applicationKey);
             return messageType::application;
         }
+    } else {
+        return messageType::lorawanMac;
     }
 }
 

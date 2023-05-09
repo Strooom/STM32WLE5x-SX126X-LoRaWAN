@@ -57,6 +57,7 @@ void test_offsetsRx() {
     TEST_ASSERT_EQUAL_UINT32(0x22, theNetwork.rawMessage[theNetwork.micOffset]);                  // first byte of MIC
 
     // TODO : I need an additional test with frameOptions NOT empty
+    // TODO : I need an additional test with framePayload empty and so no framePort
 }
 
 void test_getReceivedFramecount() {

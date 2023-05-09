@@ -42,7 +42,7 @@ class byteBuffer2 {
     }
 
     void consume(uint32_t numberOfBytes) {
-        void shiftLeft(numberOfBytes);
+        shiftLeft(numberOfBytes);
     }
 
     void append(const uint8_t* newData, uint32_t newDataLength) {
@@ -66,7 +66,7 @@ class byteBuffer2 {
     void append(byteBuffer2& otherBuffer, uint32_t offset = 0) {
         if (offset + level + otherBuffer.level <= bufferLength) {
             (void)memcpy(theBuffer + level, otherBuffer.get(), otherBuffer.level);
-            level += otherBuffer.level;        // TODO : get correct level after this manipulation
+            level += otherBuffer.level;
         }
     }
 
