@@ -150,6 +150,13 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
+    while (0) {
+        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET);          // Set pin high to monitor timing
+        HAL_Delay(100);
+        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);        // Set pin high to monitor timing
+        HAL_Delay(200);
+    }
+
     theMainController.initialize();
 
     if (0) {
@@ -629,37 +636,37 @@ static void MX_USART2_UART_Init(void) {
 static void MX_GPIO_Init(void) {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    /* GPIO Ports Clock Enable */
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /*Configure GPIO pin Output Level */
     HAL_GPIO_WritePin(GPIOB, displayDataCommand_Pin | displayChipSelect_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin, GPIO_PIN_RESET);
 
-    /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin | loraTiming_Pin, GPIO_PIN_RESET);
+    GPIO_InitStruct.Pin   = displayReset_Pin | rfControl1_Pin | rfControl2_Pin;
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : usbPowerPresent_Pin displayBusy_Pin */
     GPIO_InitStruct.Pin  = usbPowerPresent_Pin | displayBusy_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : writeProtect_Pin displayDataCommand_Pin displayChipSelect_Pin */
     GPIO_InitStruct.Pin   = writeProtect_Pin | displayDataCommand_Pin | displayChipSelect_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /*Configure GPIO pins : displayReset_Pin rfControl1_Pin rfControl2_Pin */
-    GPIO_InitStruct.Pin   = displayReset_Pin | rfControl1_Pin | rfControl2_Pin | loraTiming_Pin;
-    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull  = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    // Configure GPIO pins : testpin
+    // GPIO_InitStruct.Pin   = loraTiming_Pin;
+    // GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    // GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    // GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+    // HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
@@ -684,13 +691,16 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim) {
 }
 
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     loraWanEventBuffer.push(loRaWanEvent::sx126xTxComplete);
 }
 
 void HAL_SUBGHZ_RxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     loraWanEventBuffer.push(loRaWanEvent::sx126xRxComplete);
 }
 
 void HAL_SUBGHZ_RxTxTimeoutCallback(SUBGHZ_HandleTypeDef *hsubghz) {
+    HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);
     loraWanEventBuffer.push(loRaWanEvent::sx126xTimeout);
 }

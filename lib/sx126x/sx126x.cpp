@@ -7,6 +7,7 @@
 
 #include "sx126x.h"
 #include "logging.h"
+// #include "main.h" // added only for timing tests
 
 void sx126x::initialize() {
     initializeInterface();
@@ -72,16 +73,19 @@ void sx126x::startTransmit(uint32_t timeOut) {
     commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
     executeSetCommand(sx126xCommand::setTx, commandParameters, nmbrCommandParameters);
+    // HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET); // Set pin high to monitor timing
 }
 
 void sx126x::startReceive(uint32_t timeOut) {
-    timeOut = 64000;
+    timeOut = 32000;
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
     commandParameters[1] = static_cast<uint8_t>((timeOut >> 8) & 0xFF);
     commandParameters[2] = static_cast<uint8_t>(timeOut & 0xFF);
     executeSetCommand(sx126xCommand::setRx, commandParameters, nmbrCommandParameters);
+    // HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET); // Set pin high to monitor timing
+
 }
 
 void sx126x::setRfFrequency(uint32_t frequencyInHz) {

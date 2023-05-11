@@ -43,8 +43,9 @@ sensorCollection::runResult sensorCollection::run() {
 }
 
 void sensorCollection::discover() {
-    addSensor(measurementChannel::batteryLevel, 7, 359, 7, 14);        // one measurement per day on battery, one per hour on USB power
+    // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 14);        // one measurement per day on battery, one per hour on USB power
     // addSensor(measurementChannel::batteryLevel, 0, 3, 0, 3);        // test Version
+    addSensor(measurementChannel::batteryLevel, 0, 0, 0, 0);        // test Version
 
     if (bme680::isPresent()) {
         bme680::initialize();                                                               // this reads the calibration data from the sensor

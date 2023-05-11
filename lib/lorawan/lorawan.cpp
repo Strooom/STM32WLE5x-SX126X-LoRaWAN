@@ -75,7 +75,10 @@ void LoRaWAN::handleEvents() {
             case txRxCycleState::waitForTxComplete:
                 switch (theEvent) {
                     case loRaWanEvent::sx126xTxComplete:
-                        startTimer(1024);        // 0.5 second TODO : this needs finetuning
+                        startTimer(2020);
+                        // 2048 would be 1.0s @ 2KHz timer, but I measured 1.012s (some overhead is involved)
+                        // 2016 resulting in 996 ms delay measured on the scope
+                        // 2020 resulting in 998 ms delay measured on the scope
                         goTo(txRxCycleState::waitForRx1Start);
                         break;
                     case loRaWanEvent::sx126xTimeout:
@@ -425,7 +428,7 @@ void LoRaWAN::sendUplink(const uint8_t data[], const uint32_t length, framePort 
 
     // 2. Configure the radio, and transmit the payload
     currentChannelIndex  = theChannels.getRandomChannelIndex();
-    uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
+    uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;        //    uint32_t txFrequency = 867'500'000U; // override to unused frequency for testing
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     theRadio.configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
     uplinkFrameCount.increment();
