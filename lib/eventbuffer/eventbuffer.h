@@ -12,11 +12,6 @@
 #include "main.h"                  // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS
 #include "utilities_conf.h"        // required for UTILS_ENTER_CRITICAL_SECTION and UTILS_EXIT_CRITICAL_SECTION
 #else
-// dummies so the unit tests on the host compile and run
-#define UTILS_ENTER_CRITICAL_SECTION() \
-    {}
-#define UTILS_EXIT_CRITICAL_SECTION() \
-    {}
 #endif
 
 // template class for event buffers. Each layer needs it's own buffer, and the events are different types
@@ -39,27 +34,42 @@ class eventBuffer {
     };
 
     void push(eventType event) {
-        UTILS_ENTER_CRITICAL_SECTION();
+#ifndef environment_desktop
+        bool interrupts_enabled = (__get_PRIMASK() == 0);
+        __disable_irq();
+#endif
         theBuffer[(head + level) % bufferLength] = event;
         if (level < bufferLength) {
             level++;
         } else {
             head = (head + 1) % bufferLength;
         }
-        UTILS_EXIT_CRITICAL_SECTION();
+#ifndef environment_desktop
+        if (interrupts_enabled) {
+            __enable_irq();
+        }
+#endif
     };
 
     eventType pop() {
-        UTILS_ENTER_CRITICAL_SECTION();
+#ifndef environment_desktop
+        bool interrupts_enabled = (__get_PRIMASK() == 0);
+        __disable_irq();
+#endif
+        eventType result;
         if (level > 0) {
-            eventType result = theBuffer[head];
-            head             = (head + 1) % bufferLength;
+            result = theBuffer[head];
+            head   = (head + 1) % bufferLength;
             level--;
-            return result;
         } else {
-            return static_cast<eventType>(0x00);
+            result = static_cast<eventType>(0x00);
         }
-        UTILS_EXIT_CRITICAL_SECTION();
+#ifndef environment_desktop
+        if (interrupts_enabled) {
+            __enable_irq();
+        }
+#endif
+        return result;
     };
 
     bool isEmpty() const {

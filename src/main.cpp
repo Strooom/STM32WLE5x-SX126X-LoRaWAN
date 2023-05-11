@@ -132,7 +132,6 @@ int main(void) {
 
     /* Initialize all configured peripherals */
     MX_GPIO_Init();
-    logging::detectDebugProbe();
     MX_ADC_Init();
     MX_AES_Init();
     MX_I2C2_Init();
@@ -151,29 +150,35 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    while (0) {
-        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET);          // Set pin high to monitor timing
-        HAL_Delay(100);
-        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);        // Set pin high to monitor timing
-        HAL_Delay(200);
-    }
+    HAL_Delay(10000);        // 10 second delay so the debugger can connect
 
     theMainController.initialize();
 
-    if (0) {
-        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B7FDC);
-        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1U);
-        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 1U);
-        uint8_t tmpKey1[] = {0x4D, 0x32, 0x70, 0x43, 0x26, 0xE3, 0xEA, 0x51, 0xD3, 0xF7, 0x17, 0x93, 0xD9, 0x2D, 0x6A, 0xA7};
-        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
-        uint8_t tmpKey2[] = {0x0B, 0xA1, 0x3E, 0x86, 0x3A, 0x76, 0xF6, 0x58, 0xA7, 0x92, 0x66, 0x7C, 0xC1, 0x79, 0x3E, 0x4A};
-        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
-    }
+    uint8_t sleepWalkingCounter{0};
+    
+    //    while (0) {
+    //        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET);          // Set pin high to monitor timing
+    //        HAL_Delay(100);
+    //        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);        // Set pin high to monitor timing
+    //        HAL_Delay(200);
+    //    }
+    //
+    //
+    //    if (0) {
+    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B7FDC);
+    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1U);
+    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 1U);
+    //        uint8_t tmpKey1[] = {0x4D, 0x32, 0x70, 0x43, 0x26, 0xE3, 0xEA, 0x51, 0xD3, 0xF7, 0x17, 0x93, 0xD9, 0x2D, 0x6A, 0xA7};
+    //        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
+    //        uint8_t tmpKey2[] = {0x0B, 0xA1, 0x3E, 0x86, 0x3A, 0x76, 0xF6, 0x58, 0xA7, 0x92, 0x66, 0x7C, 0xC1, 0x79, 0x3E, 0x4A};
+    //        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
+    //    }
 
     while (1) {
         /* USER CODE END WHILE */
         // MX_SubGHz_Phy_Process();
         /* USER CODE BEGIN 3 */
+
         logging::detectDebugProbe();                 // detect if a debugProbe eg ST-LINK is connected to our MCU
         if (logging::isDebugProbePresent()) {        //
             LL_DBGMCU_EnableDBGStopMode();           // debugProbe present : enable debug in stop mode - it will keep the MCU clock running (so debug subsystems still works) but stop the core. For SW it will look as if the core is stopped, the current consumption will be higher though.
@@ -195,16 +200,15 @@ int main(void) {
             theCli.handleRxEvent();
             theCli.handleEvents();
         } else {
-            logging::snprintf("going to sleep...\n");
+            logging::snprintf("goSleep %u\n", sleepWalkingCounter);
             UTILS_ENTER_CRITICAL_SECTION();                                                // mask interrupts
             if (applicationEventBuffer.isEmpty() && loraWanEventBuffer.isEmpty()) {        // If no events are pending in any of the eventBuffers...
-                                                                                           // TODO : configure peripherals for low power - keep the SWD IOs working in case we have a debug probe connected
                 HAL_SuspendTick();                                                         // stop Systick
                 HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);                               // go into Sleep - STOP2
                 HAL_ResumeTick();                                                          // re-enable Systick
             }                                                                              //
             UTILS_EXIT_CRITICAL_SECTION();                                                 // re-enable interrupts
-            logging::snprintf("...woke up\n");
+            sleepWalkingCounter++;
         }
         /* USER CODE END 3 */
     }

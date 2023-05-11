@@ -90,7 +90,7 @@ void mainController::handleEvents() {
                         tempDataIndex += 9;
                     }
 
-                    loraNetwork.sendUplink(tempData, tempDataIndex, 0x10, true);
+                    // loraNetwork.sendUplink(tempData, tempDataIndex, 0x10, true);
                 }
 
                 // 2. check if we have enough unsent data to send uplink
