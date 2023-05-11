@@ -90,9 +90,7 @@ void mainController::handleEvents() {
                         tempDataIndex += 9;
                     }
 
-                    byteBuffer thePayload;
-                    thePayload.set(tempData, tempDataIndex);
-                    loraNetwork.sendUplink(thePayload, 0x10);
+                    loraNetwork.sendUplink(tempData, tempDataIndex, 0x10, true);
                 }
 
                 // 2. check if we have enough unsent data to send uplink

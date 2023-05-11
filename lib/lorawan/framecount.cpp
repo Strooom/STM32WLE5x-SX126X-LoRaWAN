@@ -2,23 +2,27 @@
 
 frameCount::frameCount(){};
 
-frameCount::frameCount(uint32_t theInitialFrameCount) : theFrameCount(theInitialFrameCount){};
+frameCount::frameCount(uint32_t initialValue) : asUint32(initialValue){};
 
-uint8_t frameCount::asUint8(uint32_t index) const {
-    if (index > 3) {
-        return 0;
-    }
-    return static_cast<uint8_t>((theFrameCount >> (index * 8)) & 0xFF);
+void frameCount::set(uint32_t theFrameCount) {
+    asUint32 = theFrameCount;
 }
-
-void frameCount::fromUint32(uint32_t theNewFrameCount) {
-    theFrameCount = theNewFrameCount;
-}
-
-uint32_t frameCount::asUint32() const {
-    return theFrameCount;
+void frameCount::set(uint8_t theFrameCount[4]) {
+    asUint8[0] = theFrameCount[0];
+    asUint8[1] = theFrameCount[1];
+    asUint8[2] = theFrameCount[2];
+    asUint8[3] = theFrameCount[3];
 }
 
 void frameCount::increment() {
-    theFrameCount++;
+    asUint32++;
+}
+
+uint32_t frameCount::guessFromUint16(uint32_t frameCount32, uint16_t frameCount16Lsb) {
+    for (uint32_t index = 0; index < maximumGap; index++) {
+        if (((frameCount32 + index) & 0x0000FFFF) == frameCount16Lsb) {
+            return (frameCount32 + index);
+        }
+    }
+    return frameCount32;        // no match found, return the current value
 }

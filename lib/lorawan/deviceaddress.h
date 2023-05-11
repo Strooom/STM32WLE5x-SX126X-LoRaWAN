@@ -10,14 +10,18 @@
 
 class deviceAddress {
   public:
-    deviceAddress();
-    deviceAddress(uint32_t theDeviceAddress);
-    uint32_t asUint32() const;                         // return the deviceAddress as a uint32_t
-    uint8_t asUint8(uint32_t index) const;             // return the deviceAddress as 4 bytes, [3] = MSbyte, [0] = LSbyte (little endian)
-    void fromUint32(uint32_t theDeviceAddress);        // decode the deviceAddress from a uint32_t
-    static constexpr uint32_t length{4};               // [bytes]
+    static constexpr uint32_t length{4};                    // length of the deviceAddress in bytes
+    deviceAddress();                                        //
+    deviceAddress(uint32_t theDeviceAddress);               //
+    deviceAddress(uint8_t theDeviceAddress[length]);        //
+    void set(uint32_t theDeviceAddress);                    // decode the deviceAddress from a uint32_t
+    void set(uint8_t theDeviceAddress[length]);             // set the frameCount from an array of 4 bytes
+
+    union {
+        uint32_t asUint32{0};
+        uint8_t asUint8[length];
+    };
+
   private:
-    uint32_t theDeviceAddress{0};
 };
 
-// Note : eventually we are going to read this from the UID64 of the STM32WLE5JC

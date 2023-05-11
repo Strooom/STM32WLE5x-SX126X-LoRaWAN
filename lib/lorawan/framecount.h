@@ -10,14 +10,19 @@
 
 class frameCount {
   public:
-    frameCount();
-    frameCount(uint32_t theFrameCount);
-    uint32_t asUint32() const;                      // return the frameCount as a uint32_t
-    uint8_t asUint8(uint32_t index) const;          // return the deviceAddress as 4 bytes
-    void fromUint32(uint32_t theFrameCount);        // set the frameCount
-    void increment();
-    static constexpr uint32_t length{4};            // [bytes]
+    static constexpr uint32_t length{4};                                                     // length of the frameCount in bytes
+    frameCount();                                                                            //
+    frameCount(uint32_t theFrameCount);                                                      //
+    void set(uint32_t theFrameCount);                                                        // set the frameCount from a uint32_t
+    void set(uint8_t theFrameCount[length]);                                                 // set the frameCount from an array of 4 bytes
+    void increment();                                                                        //
+    static constexpr uint32_t maximumGap{256};                                               // maximum gap between last (valid) received framecount and next received framecount.
+    static uint32_t guessFromUint16(uint32_t frameCount32, uint16_t frameCount16Lsb);        // guess the 32 bit framecount from a 16-bit lsb value
+
+    union {
+        uint32_t asUint32{0};
+        uint8_t asUint8[length];
+    };
+
   private:
-    uint32_t theFrameCount;
-    //const uint32_t nvsBlockIndex;
 };

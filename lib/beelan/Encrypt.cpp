@@ -296,11 +296,11 @@ void Calculate_MIC(sBuffer *Buffer, unsigned char *Key, sLoRa_Message *Message) 
         AES_Encrypt(New_Data, Key);
     }
 
-    std::cout << "Resulting MIC16 : ";
-    for (uint32_t index = 0; index < 16; index++) {
-        std::cout << std::hex << (int)New_Data[index] << " ";
-    }
-    std::cout << std::endl;
+//    std::cout << "Resulting MIC16 : ";
+//    for (uint32_t index = 0; index < 16; index++) {
+//        std::cout << std::hex << (int)New_Data[index] << " ";
+//    }
+//    std::cout << std::endl;
 
     Message->MIC[0] = New_Data[0];
     Message->MIC[1] = New_Data[1];
@@ -388,23 +388,23 @@ void Calculate_MIC2(sBuffer *Buffer, unsigned char *Key, unsigned char *New_Data
 
     Generate_Keys(Key, Key_K1, Key_K2);
 
-std::cout << "MIC-Key : ";
-    for (uint32_t index = 0; index < 16; index++) {
-        std::cout << std::hex << (int)Key[index] << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "MIC-Key_K1 : ";
-    for (uint32_t index = 0; index < 16; index++) {
-        std::cout << std::hex << (int)Key_K1[index] << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "MIC-Key_K2 : ";
-    for (uint32_t index = 0; index < 16; index++) {
-        std::cout << std::hex << (int)Key_K2[index] << " ";
-    }
-    std::cout << std::endl;
+//std::cout << "MIC-Key : ";
+//    for (uint32_t index = 0; index < 16; index++) {
+//        std::cout << std::hex << (int)Key[index] << " ";
+//    }
+//    std::cout << std::endl;
+//
+//    std::cout << "MIC-Key_K1 : ";
+//    for (uint32_t index = 0; index < 16; index++) {
+//        std::cout << std::hex << (int)Key_K1[index] << " ";
+//    }
+//    std::cout << std::endl;
+//
+//    std::cout << "MIC-Key_K2 : ";
+//    for (uint32_t index = 0; index < 16; index++) {
+//        std::cout << std::hex << (int)Key_K2[index] << " ";
+//    }
+//    std::cout << std::endl;
 
     // Perform full calculating until n-1 message blocks
     for (j = 0x0; j < (Number_of_Blocks - 1); j++) {
@@ -465,9 +465,9 @@ std::cout << "MIC-Key : ";
         AES_Encrypt(New_Data, Key);
     }
 
-    std::cout << "Resulting MIC16 : ";
-    for (uint32_t index = 0; index < 16; index++) {
-        std::cout << std::hex << (int)New_Data[index] << " ";
-    }
-    std::cout << std::endl;
+//    std::cout << "Resulting MIC16 : ";
+//    for (uint32_t index = 0; index < 16; index++) {
+//        std::cout << std::hex << (int)New_Data[index] << " ";
+//    }
+//    std::cout << std::endl;
 }
