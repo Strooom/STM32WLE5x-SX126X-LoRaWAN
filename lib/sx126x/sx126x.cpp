@@ -77,7 +77,7 @@ void sx126x::startTransmit(uint32_t timeOut) {
 }
 
 void sx126x::startReceive(uint32_t timeOut) {
-    timeOut = 32000;
+    timeOut = 3840; // TODO : make this a funtion of the DataRate.. currently it is fixed to 60 ms, which should be ok for DR5
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
