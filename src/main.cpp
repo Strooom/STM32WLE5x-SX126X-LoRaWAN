@@ -150,11 +150,17 @@ int main(void) {
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
 
-    if (1) {
-        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 0U);
-    }
-
     theMainController.initialize();
+
+    if (0) {
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B7FDC);
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1U);
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 1U);
+        uint8_t tmpKey1[] = {0x4D, 0x32, 0x70, 0x43, 0x26, 0xE3, 0xEA, 0x51, 0xD3, 0xF7, 0x17, 0x93, 0xD9, 0x2D, 0x6A, 0xA7};
+        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
+        uint8_t tmpKey2[] = {0x0B, 0xA1, 0x3E, 0x86, 0x3A, 0x76, 0xF6, 0x58, 0xA7, 0x92, 0x66, 0x7C, 0xC1, 0x79, 0x3E, 0x4A};
+        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
+    }
 
     while (1) {
         /* USER CODE END WHILE */
@@ -633,8 +639,7 @@ static void MX_GPIO_Init(void) {
     HAL_GPIO_WritePin(GPIOB, writeProtect_Pin, GPIO_PIN_SET);
 
     /*Configure GPIO pin Output Level */
-    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin,
-                      GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA, displayReset_Pin | rfControl1_Pin | rfControl2_Pin | loraTiming_Pin, GPIO_PIN_RESET);
 
     /*Configure GPIO pins : usbPowerPresent_Pin displayBusy_Pin */
     GPIO_InitStruct.Pin  = usbPowerPresent_Pin | displayBusy_Pin;

@@ -37,7 +37,7 @@ class sx126x {
     void configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t *payload, uint32_t payloadLength);
     void configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency);
 
-    void startTransmit(uint32_t timeOut);
+    void startTransmit(uint32_t timeOut = 0);
     void startReceive(uint32_t timeOut);
 
     void getReceivedMessage();

@@ -289,13 +289,13 @@ void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
     HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
-                                                                        // #ifdef showSpiCommunication
+                                                                        #ifdef showSpiCommunication
     logging::snprintf("Read Buffer : length = [%u], data = ", payloadLength);
     for (uint32_t index = 0; index < payloadLength; index++) {
         logging::snprintf("%02X ", payload[index]);
     }
     logging::snprintf("\n");
-    // #endif
+    #endif
 }
 
 void sx126x::setRfSwitch(rfSwitchState newState) {

@@ -30,12 +30,13 @@
 
 class LoRaWAN {
   public:
-    void initialize();                                      // initialize the LoRaWAN layer
-    void handleEvents();                                    // handle timeouts and tx/rxComplete
-    bool isReadyToTransmit() const;                         // is the LoRaWAN layer in a state, ready to transmit a message?
-    uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
+    void initialize();                                                                                                   // initialize the LoRaWAN layer
+    void handleEvents();                                                                                                 // handle timeouts and tx/rxComplete
+    bool isReadyToTransmit() const;                                                                                      // is the LoRaWAN layer in a state, ready to transmit a message?
+    uint32_t getMaxApplicationPayloadLength() const;                                                                     // [bytes]
 
-    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort);
+//    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort, bool immediately = false);               // send an uplink message
+    void sendUplink(const uint8_t data[], const uint32_t length, framePort aFramePort, bool sendImmediately = false);        // send an uplink message
 
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
 
@@ -104,6 +105,7 @@ class LoRaWAN {
 
     void setOffsetsAndLengthsTx(uint32_t framePayloadLength);                                                                              // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
     void insertPayload(byteBuffer& applicationPayloadToSend);                                                                              // copy application payload to correct position in the rawMessage buffer
+    void insertPayload(const uint8_t data[], const uint32_t length);                                                                       // copy application payload to correct position in the rawMessage buffer
     void encryptPayload(aesKey& theKey);                                                                                                   // encrypt the payload in the rawMessage buffer
     void decryptPayload(aesKey& theKey);                                                                                                   // decrypt the payload in the rawMessage buffer
     void insertHeaders(framePort theFramePort);                                                                                            // prepend the header to the rawMessage buffer
