@@ -47,8 +47,7 @@ void mainController::initialize() {
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf("Application Event [%u] : %s\n",
-                          static_cast<uint8_t>(theEvent), toString(theEvent));
+        logging::snprintf("Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();
@@ -71,10 +70,10 @@ void mainController::handleEvents() {
                     uint8_t tempData[256]{};
                     uint32_t tempDataIndex{0};
 
-                    tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0); // first byte of payload identifies how the rest should be interpreted
-                    tempDataIndex ++;
+                    tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0);        // first byte of payload identifies how the rest should be interpreted
+                    tempDataIndex++;
 
-                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) { // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
+                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {        // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
                         tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
 
                         tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[0];
