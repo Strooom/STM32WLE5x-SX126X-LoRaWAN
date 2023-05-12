@@ -33,7 +33,7 @@ class byteBuffer2 {
     }
 
     void shiftRight(uint32_t shiftAmount) {
-        if (level + shiftAmount <= bufferLength) {
+        if ((level + shiftAmount) <= bufferLength) {
             (void)memcpy(theBuffer + shiftAmount, theBuffer, level);
             level += shiftAmount;
         } else {
@@ -45,8 +45,15 @@ class byteBuffer2 {
         shiftLeft(numberOfBytes);
     }
 
+    void append(const uint8_t newData) {
+        if ((level + 1) <= bufferLength) {
+            theBuffer[level] = newData;
+            level++;
+        }
+    }
+
     void append(const uint8_t* newData, uint32_t newDataLength) {
-        if (level + newDataLength <= bufferLength) {
+        if ((level + newDataLength) <= bufferLength) {
             (void)memcpy(theBuffer + level, newData, newDataLength);
             level += newDataLength;
         } else {
@@ -56,11 +63,20 @@ class byteBuffer2 {
     }
 
     void prefix(const uint8_t* newData, uint32_t newDataLength) {
-        if (level + newDataLength <= bufferLength) {
+        if ((level + newDataLength) <= bufferLength) {
             (void)memcpy(theBuffer + newDataLength, theBuffer, level);
             (void)memcpy(theBuffer, newData, newDataLength);
             level += newDataLength;
         }
+    }
+
+    void prefix(const uint8_t newData) {
+        // TO TEST
+        // if ((level + 1) <= bufferLength) {
+        //     (void)memcpy(theBuffer + newDataLength, theBuffer, level);
+        //     (void)memcpy(theBuffer, newData, newDataLength);
+        //     level ++;
+        // }
     }
 
     void append(byteBuffer2& otherBuffer, uint32_t offset = 0) {
