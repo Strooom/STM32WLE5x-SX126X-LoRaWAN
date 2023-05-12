@@ -13,6 +13,7 @@
 #include "sensorcollection.h"
 #include "measurementcollection.h"
 #include "nvs.h"
+
 // #include "main.h"
 
 // extern LPTIM_HandleTypeDef hlptim1;
@@ -29,10 +30,8 @@ extern measurementCollection theMeasurements;
 extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
-    // logging::snprintf("Initializing mainController\n");
-
     if (nvs.isReady()) {
-        // logging::snprintf("128K EEPROM found\n");
+        logging::snprintf(loggingChannel::nvs, "128K EEPROM found\n");
     }
     if (!nvs.isInitialized()) {
         nvs.initializeOnce();
@@ -41,13 +40,12 @@ void mainController::initialize() {
     theSensors.discover();
     loraNetwork.initialize();        // LoRaWAN layer + the LoRa radio
 
-    // logging::snprintf("mainController initialized\n");
 }
 
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf("Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
+        logging::snprintf(loggingChannel::applicationEvents, "Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();

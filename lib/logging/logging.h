@@ -8,14 +8,27 @@
 #include <stdint.h>
 #include <stdarg.h>        // required so we can define functions with variable number of arguments
 
+enum class loggingChannel : uint32_t {
+    applicationEvents,
+    lorawanEvents,
+    lorawanMac,
+    sx126xControl,
+    sx126xBufferData,
+    sensorData,
+    nvs
+
+};
+
 class logging {
   public:
-    static void detectDebugProbe();                      // check if a debug probe is connected by reading the DBGMCU_CR register
-    static bool isDebugProbePresent();                   // return true if a debug probe is connected
-    static constexpr uint32_t bufferLength{1024};        //
-    static void snprintf(const char *format, ...);
+    static void detectDebugProbe();                                                // check if a debug probe is connected by reading the DBGMCU_CR register
+    static bool isDebugProbePresent();                                             // return true if a debug probe is connected
+    static constexpr uint32_t bufferLength{1024};                                  //
+    static void snprintf(const char *format, ...);                                 // logs always
+    static void snprintf(loggingChannel aChannel, const char *format, ...);        // logs only if the channel is active
 
   private:
     static char buffer[bufferLength];        // Transmit buffer
     static bool debugProbePresent;           // remembers if we detected a debug probe present or not.
+    static uint32_t activeLoggingChannels;
 };

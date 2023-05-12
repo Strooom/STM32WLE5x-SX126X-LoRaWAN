@@ -94,9 +94,9 @@ void sensorCollection::addSensor(measurementChannel aType, uint32_t oversampling
 
 void sensorCollection::addMeasurement(measurementChannel aType, float aValue) {
     if (actualNumberOfMeasurements < maxNumberOfSensors) {
-        latestMeasurements[actualNumberOfMeasurements].timestampAsUInt32 = measurement::getTimeStamp();
+        latestMeasurements[actualNumberOfMeasurements].timestamp.asUInt32 = measurement::getTimeStamp();
         latestMeasurements[actualNumberOfMeasurements].type              = aType;
-        latestMeasurements[actualNumberOfMeasurements].valueAsFloat      = aValue;
+        latestMeasurements[actualNumberOfMeasurements].value.asFloat      = aValue;
         latestMeasurements[actualNumberOfMeasurements].flags             = 0;
         actualNumberOfMeasurements++;
     }

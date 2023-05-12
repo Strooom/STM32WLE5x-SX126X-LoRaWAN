@@ -131,4 +131,4 @@ class LoRaWAN {
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
     void processMacContents();        // process the contents of the macIn buffer, output goes to macOut buffer
-};
+    };

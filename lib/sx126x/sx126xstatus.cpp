@@ -1,10 +1,5 @@
 #include "sx126xstatus.h"
 
-// void sx126xStatus::fromUint8(uint8_t rawStatusByte) {
-//     theChipMode      = static_cast<chipMode>((rawStatusByte & 0x70) >> 4);
-//     theCommandStatus = static_cast<commandStatus>((rawStatusByte & 0x0E) >> 1);
-// }
-
 const char* toString(chipMode aChipMode) {
     switch (aChipMode) {
         case chipMode::standbyRc:
@@ -27,7 +22,6 @@ const char* toString(chipMode aChipMode) {
             break;
     }
 }
-
 
 const char* toString(commandStatus aCommandStatus){
     switch (aCommandStatus)

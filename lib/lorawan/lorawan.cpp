@@ -110,7 +110,7 @@ void LoRaWAN::handleEvents() {
                 switch (theEvent) {
                     case loRaWanEvent::sx126xRxComplete: {
                         messageType receivedMessageType = decodeMessage();
-                        logging::snprintf("received message type = %u\n", static_cast<uint8_t>(receivedMessageType));
+                        //logging::snprintf("received message type = %u\n", static_cast<uint8_t>(receivedMessageType));
                         switch (receivedMessageType) {
                             case messageType::application:
                                 applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
@@ -118,9 +118,9 @@ void LoRaWAN::handleEvents() {
                                 break;
                             case messageType::lorawanMac:
                                 processMacContents();
-                                logging::snprintf("mac processed\n");
+                                //logging::snprintf("mac processed\n");
                                 if (!macOut.isEmpty()) {
-                                    logging::snprintf("sending mac response\n");
+                                    //logging::snprintf("sending mac response\n");
                                     sendUplink(macOut.get(), macOut.getLevel(), 0, false);
                                     macOut.initialize();
                                 }
@@ -189,7 +189,7 @@ void LoRaWAN::handleEvents() {
 }
 
 void LoRaWAN::goTo(txRxCycleState newState) {
-    logging::snprintf("LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
+    // logging::snprintf("LoRaWAN stateChange from [%d / %s] to [%d / %s]\n", theTxRxCycleState, toString(theTxRxCycleState), newState, toString(newState));
     switch (theTxRxCycleState) {
         case txRxCycleState::idle:
             break;
@@ -464,20 +464,20 @@ messageType LoRaWAN::decodeMessage() {
     // 3. Check the MIC
     insertBlockB0(linkDirection::downlink, DevAddr, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
     if (!isValidMic()) {
-        logging::snprintf("rxError : invalid MIC\n");
+        //logging::snprintf("rxError : invalid MIC\n");
         return messageType::invalid;
     }
 
     // 4. Extract the deviceAddress, to check if packet is addressed to this node
     deviceAddress receivedDeviceAddress(rawMessage + deviceAddressOffset);
     if (!isValidDevAddr(receivedDeviceAddress.asUint32)) {
-        logging::snprintf("rx : msg not for this device\n");        // TODO : also log received deviceAddress
+        //logging::snprintf("rx : msg not for this device\n");        // TODO : also log received deviceAddress
         return messageType::invalid;
     }
 
     // 5. check if the frameCount is valid
     if (!isValidDownlinkFrameCount(tmpDownLinkFrameCount)) {
-        logging::snprintf("rxError : invalid downlinkFrameCount\n");        // TODO : also log current and received frameCount
+        //logging::snprintf("rxError : invalid downlinkFrameCount\n");        // TODO : also log current and received frameCount
         return messageType::invalid;
     }
 
