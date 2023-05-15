@@ -74,15 +74,15 @@ void mainController::handleEvents() {
                     for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {        // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
                         tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
 
-                        tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[0];
-                        tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[1];
-                        tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[2];
-                        tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[3];
+                        tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[0];
+                        tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[1];
+                        tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[2];
+                        tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[3];
 
-                        tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[0];
-                        tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[1];
-                        tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[2];
-                        tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[3];
+                        tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].value.asBytes[0];
+                        tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].value.asBytes[1];
+                        tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].value.asBytes[2];
+                        tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].value.asBytes[3];
 
                         tempDataIndex += 9;
                     }

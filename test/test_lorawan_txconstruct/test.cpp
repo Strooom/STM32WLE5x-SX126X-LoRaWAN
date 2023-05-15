@@ -21,10 +21,10 @@ eventBuffer<applicationEvent, 16U> applicationEventBuffer;
 sx126x theRadio;
 // extern uint8_t mockSx126xDataBuffer[256];
 
-// Test vector is a message actually accepted on the network server
+// Test vector was a message actually accepted on the network server
 constexpr uint32_t testVectorLength        = 23;
 const uint8_t testVector[testVectorLength] = {
-    // 0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x92, 0x3B, 0x0B, 0x26, 0x39, 0x07, 0x00, 0x00, 0x00, 0x13,        // B0 block
+
     0x40,                                                              // macHeader : uplink unconfirmed
     0x92, 0x3B, 0x0B, 0x26,                                            // deviceAddress = 0x260B3B92
     0x00,                                                              // frameControl
@@ -34,7 +34,20 @@ const uint8_t testVector[testVectorLength] = {
     0xB8, 0x59, 0x92, 0x49                                             // mic
 };
 
+constexpr uint32_t testVector2Length         = 27;
+const uint8_t testVector2[testVector2Length] = {
+    0x40,                                                              // macHeader : uplink unconfirmed
+    0x92, 0x3B, 0x0B, 0x26,                                            // deviceAddress = 0x260B3B92
+    0x04,                                                              // frameControl with frameOptionsLength = 4
+    0x39, 0x07,                                                        // FrameCount = 0x0739 = 1849
+    0x01, 0x02, 0x03, 0x04,                                            // frameOptions data
+    0x10,                                                              // framePort = 16
+    0x49, 0xE8, 0xFA, 0x19, 0xED, 0x8F, 0xE2, 0x5C, 0x48, 0xB1,        // framePayload, 10 bytes, encrypted
+    0xB8, 0x59, 0x92, 0x49                                             // mic
+};
+
 void test_offsetsTx() {
+    // This tests the case with no frameOptions
     LoRaWAN theNetwork;
 
     memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector, testVectorLength);
@@ -56,8 +69,31 @@ void test_offsetsTx() {
     TEST_ASSERT_EQUAL_UINT32(0, theNetwork.rawMessage[theNetwork.frameControlOffset]);            // frameControl
     TEST_ASSERT_EQUAL_UINT32(0x39, theNetwork.rawMessage[theNetwork.frameCountOffset]);           // first byte (LSB) of frameCount
     TEST_ASSERT_EQUAL_UINT32(0xB8, theNetwork.rawMessage[theNetwork.micOffset]);                  // first byte of MIC
+}
 
-    // TODO : I need an additional test with frameOptions NOT empty
+void test_offsetsTx2() {
+    // This tests the case with frameOptions
+    LoRaWAN theNetwork;
+
+    memcpy(theNetwork.rawMessage + theNetwork.b0BlockLength, testVector2, testVector2Length);
+
+    theNetwork.setOffsetsAndLengthsTx(10U, 4U);
+    TEST_ASSERT_EQUAL_UINT32(10U, theNetwork.framePayloadLength);
+    TEST_ASSERT_EQUAL_UINT32(27U, theNetwork.loRaPayloadLength);
+    TEST_ASSERT_EQUAL_UINT32(4U, theNetwork.frameOptionsLength);
+    TEST_ASSERT_EQUAL_UINT32(11U, theNetwork.frameHeaderLength);
+    TEST_ASSERT_EQUAL_UINT32(22U, theNetwork.macPayloadLength);
+
+    TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 12, theNetwork.framePortOffset);
+    TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 13, theNetwork.framePayloadOffset);
+    TEST_ASSERT_EQUAL_UINT32(theNetwork.b0BlockLength + 23, theNetwork.micOffset);        // 13 for all headers, 10 for payload
+
+    // Now let's double check and test some of the contents at the offsets
+    TEST_ASSERT_EQUAL_UINT32(0x40, theNetwork.rawMessage[theNetwork.macHeaderOffset]);            // macHeader
+    TEST_ASSERT_EQUAL_UINT32(0x92, theNetwork.rawMessage[theNetwork.deviceAddressOffset]);        // first byte (LSB) of DevAddr
+    TEST_ASSERT_EQUAL_UINT32(0x04, theNetwork.rawMessage[theNetwork.frameControlOffset]);         // frameControl
+    TEST_ASSERT_EQUAL_UINT32(0x39, theNetwork.rawMessage[theNetwork.frameCountOffset]);           // first byte (LSB) of frameCount
+    TEST_ASSERT_EQUAL_UINT32(0xB8, theNetwork.rawMessage[theNetwork.micOffset]);                  // first byte of MIC
 }
 
 void test_insertFramePayload() {
@@ -126,7 +162,7 @@ void test_insertMic() {
     theNetwork.networkKey.setFromASCII("680AB79064FD273E52FBBF4FC6349B13");
     constexpr uint32_t testPayloadBytesLength{10U};
     const uint8_t testPayloadBytesBeforeEncryption[testPayloadBytesLength] = {0x02, 0x01, 0xA8, 0xF4, 0x48, 0x64, 0xA4, 0x70, 0x55, 0x40};
-    const uint8_t testMic[4] = {0xB5, 0x51, 0xEF, 0xDF};
+    const uint8_t testMic[4]                                               = {0xB5, 0x51, 0xEF, 0xDF};
 
     theNetwork.setOffsetsAndLengthsTx(testPayloadBytesLength);
     theNetwork.insertPayload(testPayloadBytesBeforeEncryption, testPayloadBytesLength);
@@ -143,6 +179,7 @@ void test_insertMic() {
 int main(int argc, char **argv) {
     UNITY_BEGIN();
     RUN_TEST(test_offsetsTx);
+    RUN_TEST(test_offsetsTx2);
     RUN_TEST(test_insertFramePayload);
     RUN_TEST(test_encryptFramePayload);
     RUN_TEST(test_insertHeaders);

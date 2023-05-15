@@ -30,15 +30,15 @@
 
 class LoRaWAN {
   public:
-    void initialize();                                                                                                   // initialize the LoRaWAN layer
-    void handleEvents();                                                                                                 // handle timeouts and tx/rxComplete
-    bool isReadyToTransmit() const;                                                                                      // is the LoRaWAN layer in a state, ready to transmit a message?
-    uint32_t getMaxApplicationPayloadLength() const;                                                                     // [bytes]
+    void initialize();                                      // initialize the LoRaWAN layer
+    void handleEvents();                                    // handle timeouts and tx/rxComplete
+    bool isReadyToTransmit() const;                         // is the LoRaWAN layer in a state, ready to transmit a message?
+    uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
 
-//    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort, bool immediately = false);               // send an uplink message
+                                                            //    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort, bool immediately = false);               // send an uplink message
     void sendUplink(const uint8_t data[], const uint32_t length, framePort aFramePort, bool sendImmediately = false);        // send an uplink message
-
     void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
+    void checkNetwork(bool immediately = false);                                                                             // TODO : adds a linkCheckRequest to the macOut or macOut2 buffer. immediately = true means that the request is added to macOut, which will be sent immediately, otherwise it is added to MacOut2 and sent in frameOptions with the next uplink
 
 #ifndef unitTesting
   private:
@@ -62,6 +62,8 @@ class LoRaWAN {
     uint32_t currentDataRateIndex{0};
     loRaChannelCollection theChannels;
     uint32_t currentChannelIndex{0};
+    uint32_t rx1Delay{1};                                                                                                                                // in [seconds]
+
     // transmitPower theTransmitPower{transmitPower::max};
 
     // #################################################
@@ -95,15 +97,16 @@ class LoRaWAN {
     uint32_t framePayloadOffset{};                                                                                                                         //
     uint32_t micOffset{};                                                                                                                                  //
 
-    static constexpr uint32_t macInOutLength{256};
-    byteBuffer2<64> macIn;         // buffer holding the received MAC requests and/or answers
-    byteBuffer2<64> macOut;        // buffer holding the MAC requests and/or answers to be sent
+    // static constexpr uint32_t macInOutLength{256};
+    byteBuffer2<64> macIn;          // buffer holding the received MAC requests and/or answers
+    byteBuffer2<64> macOut;         // buffer holding the MAC requests and/or answers to be sent
+    byteBuffer2<64> macOut2;        // buffer holding the MAC answers for receiveParameterSetupRequest, receiveTimingSetupRequest and downlinkChannelRequest, which need to be sent every time until a downlink is received
 
     // ################################################################
     // ### Helper functions for constructing an uplink message - Tx ###
     // ################################################################
 
-    void setOffsetsAndLengthsTx(uint32_t framePayloadLength);                                                                              // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
+    void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                              // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
     void insertPayload(byteBuffer& applicationPayloadToSend);                                                                              // copy application payload to correct position in the rawMessage buffer
     void insertPayload(const uint8_t data[], const uint32_t length);                                                                       // copy application payload to correct position in the rawMessage buffer
     void encryptPayload(aesKey& theKey);                                                                                                   // encrypt the payload in the rawMessage buffer
@@ -112,9 +115,9 @@ class LoRaWAN {
     void insertBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);        //
     void insertMic();                                                                                                                      //
 
-    // ################################################################
+    // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###
-    // ################################################################
+    // #############################################################
 
     void setOffsetsAndLengthsRx(uint32_t loRaPayloadLength);                                                                                                                   // calculate all offsets and lengths in rawMessage by decoding the received LoRa payload
     uint16_t getReceivedFramecount() { return (static_cast<uint16_t>(rawMessage[frameCountOffset]) + (static_cast<uint16_t>(rawMessage[frameCountOffset + 1]) << 8)); }        //
@@ -131,4 +134,4 @@ class LoRaWAN {
     static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
 
     void processMacContents();        // process the contents of the macIn buffer, output goes to macOut buffer
-    };
+};

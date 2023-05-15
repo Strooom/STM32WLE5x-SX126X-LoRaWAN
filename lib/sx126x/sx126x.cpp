@@ -7,7 +7,6 @@
 
 #include "sx126x.h"
 #include "logging.h"
-// #include "main.h" // added only for timing tests
 
 void sx126x::initialize() {
     initializeInterface();
@@ -220,7 +219,9 @@ void sx126x::initializeRadio() {
 
 #ifndef environment_desktop
 
-#include "main.h"
+#include "main.h"        // added only for timing tests
+extern RTC_HandleTypeDef hrtc;
+
 // #define showSpiCommunicationControl
 #define showSpiCommunicationData
 
@@ -281,31 +282,35 @@ void sx126x::initializeInterface() {
 //}
 
 void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {
-    RTC_TimeTypeDef currTime = {0};
-    RTC_DateTypeDef currDate = {0};
+    if (logging::loggingIsActive(loggingChannel::sx126xBufferData)) {
+        RTC_TimeTypeDef currTime = {0};
+        RTC_DateTypeDef currDate = {0};
 
-    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
-    logging::snprintf(loggingChannel::sx126xBufferData, "%02u:%02u:%02u Tx[%u] ", currTime.Hours, currTime.Minutes, currTime.Seconds, payloadLength);
-    for (uint32_t index = 0; index < payloadLength; index++) {
-        logging::snprintf(loggingChannel::sx126xBufferData, "%02X ", payload[index]);
+        HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+        logging::snprintf("%02u:%02u:%02u Tx[%u] ", currTime.Hours, currTime.Minutes, currTime.Seconds, payloadLength);
+        for (uint32_t index = 0; index < payloadLength; index++) {
+            logging::snprintf("%02X ", payload[index]);
+        }
+        logging::snprintf("\n");
     }
-    logging::snprintf(loggingChannel::sx126xBufferData, "\n");
     HAL_SUBGHZ_WriteBuffer(&hsubghz, 0U, payload, payloadLength);        // copy the raw LoRa message into the transmitBuffer of the SX126
 }
 
 void sx126x::readBuffer(uint8_t* payload, uint32_t payloadLength) {
     HAL_SUBGHZ_ReadBuffer(&hsubghz, 0U, payload, payloadLength);        // read the raw LoRa message which has been received from the SX126 into the receiveBuffer of the LoRaWAN stack
-    RTC_TimeTypeDef currTime = {0};
-    RTC_DateTypeDef currDate = {0};
+    if (logging::loggingIsActive(loggingChannel::sx126xBufferData)) {
+        RTC_TimeTypeDef currTime = {0};
+        RTC_DateTypeDef currDate = {0};
 
-    HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
-    HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
-    logging::snprintf(loggingChannel::sx126xBufferData, "%02u:%02u:%02u Rx[%u] ", currTime.Hours, currTime.Minutes, currTime.Seconds, payloadLength);
-    for (uint32_t index = 0; index < payloadLength; index++) {
-        logging::snprintf(loggingChannel::sx126xBufferData, "%02X ", payload[index]);
+        HAL_RTC_GetTime(&hrtc, &currTime, RTC_FORMAT_BIN);
+        HAL_RTC_GetDate(&hrtc, &currDate, RTC_FORMAT_BIN);
+        logging::snprintf("%02u:%02u:%02u Rx[%u] ", currTime.Hours, currTime.Minutes, currTime.Seconds, payloadLength);
+        for (uint32_t index = 0; index < payloadLength; index++) {
+            logging::snprintf("%02X ", payload[index]);
+        }
+        logging::snprintf("\n");
     }
-    logging::snprintf(loggingChannel::sx126xBufferData, "\n");
 }
 
 void sx126x::setRfSwitch(rfSwitchState newState) {
@@ -330,29 +335,35 @@ void sx126x::setRfSwitch(rfSwitchState newState) {
 }
 
 void sx126x::executeSetCommand(sx126xCommand command, uint8_t* commandParameters, uint8_t commandParametersLength) {
-    logging::snprintf(loggingChannel::sx126xControl, "Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
-    for (uint32_t index = 0; index < commandParametersLength; index++) {
-        logging::snprintf(" %02X", commandParameters[index]);
+    if (logging::loggingIsActive(loggingChannel::sx126xControl)) {
+        logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
+        for (uint32_t index = 0; index < commandParametersLength; index++) {
+            logging::snprintf(" %02X", commandParameters[index]);
+        }
+        logging::snprintf("\n");
     }
-    logging::snprintf("\n");
     HAL_SUBGHZ_ExecSetCmd(&hsubghz, static_cast<SUBGHZ_RadioSetCmd_t>(command), commandParameters, commandParametersLength);
 }
 
 void sx126x::executeGetCommand(sx126xCommand command, uint8_t* responseData, uint8_t responseDataLength) {
     HAL_SUBGHZ_ExecGetCmd(&hsubghz, static_cast<SUBGHZ_RadioGetCmd_t>(command), responseData, responseDataLength);
-    logging::snprintf(loggingChannel::sx126xControl, "Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
-    for (uint32_t index = 0; index < responseDataLength; index++) {
-        logging::snprintf(" %02X", responseData[index]);
+    if (logging::loggingIsActive(loggingChannel::sx126xControl)) {
+        logging::snprintf("Command [%02X] %s : ", static_cast<uint8_t>(command), toString(command));
+        for (uint32_t index = 0; index < responseDataLength; index++) {
+            logging::snprintf(" %02X", responseData[index]);
+        }
+        logging::snprintf("\n");
     }
-    logging::snprintf("\n");
 }
 
 void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t dataLength) {
-    logging::snprintf("loggingChannel::sx126xControl, Write Registers [%04X] %s : ", static_cast<uint16_t>(theRegister), toString(theRegister));
-    for (uint32_t index = 0; index < dataLength; index++) {
-        logging::snprintf(" %02X", data[index]);
+    if (logging::loggingIsActive(loggingChannel::sx126xControl)) {
+        logging::snprintf("Write Registers [%04X] %s : ", static_cast<uint16_t>(theRegister), toString(theRegister));
+        for (uint32_t index = 0; index < dataLength; index++) {
+            logging::snprintf(" %02X", data[index]);
+        }
+        logging::snprintf("\n");
     }
-    logging::snprintf("\n");
     HAL_SUBGHZ_WriteRegisters(&hsubghz, static_cast<uint16_t>(theRegister), data, dataLength);
 }
 

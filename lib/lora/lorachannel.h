@@ -19,7 +19,7 @@ class loRaChannel {
     bool enabled{false};
     uint32_t frequency{0};
     uint32_t minimumDataRateIndex{0};
-    uint32_t maximumDataRateIndex{dataRates::nmbrUsedDataRates - 1};
+    uint32_t maximumDataRateIndex{0};
 
     friend class loRaChannelCollection;
 };

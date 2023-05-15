@@ -157,15 +157,19 @@ int main(void) {
         HAL_Delay(200);
     }
 
+    logging::enableLoggingChannel(loggingChannel::lorawanEvents);
+    logging::enableLoggingChannel(loggingChannel::lorawanMac);
+    logging::enableLoggingChannel(loggingChannel::sensorEvents);
+
     theMainController.initialize();
 
     if (0) {
-        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260BF180);
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260BAE51);
         nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1U);
         nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 1U);
-        uint8_t tmpKey1[] = {0x7E, 0x22, 0xAA, 0x54, 0xA7, 0xF4, 0xC0, 0x84, 0x28, 0x61, 0xA1, 0x3F, 0x1D, 0x16, 0x1D, 0xE2};
+        uint8_t tmpKey1[] = {0x08, 0xD8, 0x7B, 0x4F, 0x0E, 0xC1, 0x58, 0x5F, 0x79, 0x46, 0x54, 0x45, 0x70, 0xF3, 0xBF, 0xB4};
         nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
-        uint8_t tmpKey2[] = {0x0D, 0xBC, 0x6E, 0xF9, 0x38, 0xB8, 0x3E, 0xB4, 0xF8, 0x3C, 0x28, 0xE3, 0xCA, 0x7B, 0x41, 0x32};
+        uint8_t tmpKey2[] = {0x8A, 0x93, 0x0D, 0x54, 0x68, 0x37, 0xFF, 0x2F, 0x4E, 0x12, 0xF2, 0xD2, 0xC4, 0x4E, 0x65, 0xDE};
         nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
     }
 

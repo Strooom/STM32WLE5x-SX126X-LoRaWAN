@@ -20,6 +20,18 @@ bool logging::isDebugProbePresent() {
     return debugProbePresent;
 }
 
+void logging::enableLoggingChannel(loggingChannel aChannel) {
+    activeLoggingChannels = activeLoggingChannels | (0x01 << static_cast<uint32_t>(aChannel));
+}
+void logging::disableLoggingChannel(loggingChannel aChannel) {
+    activeLoggingChannels = activeLoggingChannels & ~(0x01 << static_cast<uint32_t>(aChannel));
+}
+
+bool logging::loggingIsActive(loggingChannel aChannel) {
+    uint32_t channelMask = 0x01 << static_cast<uint32_t>(aChannel);
+    return ((activeLoggingChannels & channelMask) != 0);
+}
+
 #ifndef environment_desktop
 
 #include "main.h"                            // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS

@@ -14,6 +14,7 @@ enum class loggingChannel : uint32_t {
     lorawanMac,
     sx126xControl,
     sx126xBufferData,
+    sensorEvents,
     sensorData,
     nvs
 
@@ -26,6 +27,9 @@ class logging {
     static constexpr uint32_t bufferLength{1024};                                  //
     static void snprintf(const char *format, ...);                                 // logs always
     static void snprintf(loggingChannel aChannel, const char *format, ...);        // logs only if the channel is active
+    static void enableLoggingChannel(loggingChannel aChannel);
+    static void disableLoggingChannel(loggingChannel aChannel);
+    static bool loggingIsActive(loggingChannel aChannel);
 
   private:
     static char buffer[bufferLength];        // Transmit buffer

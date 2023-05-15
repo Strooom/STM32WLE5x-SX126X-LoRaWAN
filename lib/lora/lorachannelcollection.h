@@ -11,15 +11,23 @@
 class loRaChannelCollection {
   public:
     uint32_t getRandomChannelIndex();
-    static constexpr uint32_t maxNmbrChannels{8};        // For EU868 this is 8, when extending to other regions this may be different
-    uint32_t nmbrAvailableChannels{3};                   // at startup, only 3 channels are activated by default.
+    static constexpr uint32_t maxNmbrChannels{16};        // Regional Parameters 1.0.3 line 320
+    uint32_t nmbrAvailableChannels{3};                    // 3 channels are always activate
     void addChannel(uint32_t frequency);
-    void removeChannel(uint32_t frequency);              // modifying a channel can be done by removing and then adding it again with the new parameters
+    void removeChannel(uint32_t frequency);               // modifying a channel can be done by removing and then adding it again with the new parameters
 
     loRaChannel txRxChannels[maxNmbrChannels] = {
         loRaChannel(true, 868'100'000U, 0, 5),
         loRaChannel(true, 868'300'000U, 0, 5),
         loRaChannel(true, 868'500'000U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
+        loRaChannel(false, 0U, 0, 5),
         loRaChannel(false, 0U, 0, 5),
         loRaChannel(false, 0U, 0, 5),
         loRaChannel(false, 0U, 0, 5),
