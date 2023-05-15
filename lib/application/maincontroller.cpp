@@ -56,8 +56,8 @@ void mainController::handleEvents() {
                 break;
 
             case applicationEvent::downlinkApplicationPayloadReceived: {
-                byteBuffer receivedData;
-                loraNetwork.getDownlinkMessage(receivedData);
+                //byteBuffer receivedData;
+                //loraNetwork.getDownlinkMessage(receivedData);
             } break;
 
             case applicationEvent::realTimeClockTick: {
@@ -87,7 +87,7 @@ void mainController::handleEvents() {
                         tempDataIndex += 9;
                     }
 
-                    loraNetwork.sendUplink(tempData, tempDataIndex, 0x10, true);
+                    loraNetwork.sendUplink(0x10, tempData, tempDataIndex);
                 }
 
                 // 2. check if we have enough unsent data to send uplink

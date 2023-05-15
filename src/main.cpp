@@ -185,6 +185,7 @@ int main(void) {
             applicationEventBuffer.push(applicationEvent::usbRemoved);
         }
 
+        loraNetwork.run();
         loraNetwork.handleEvents();
         theMainController.handleEvents();
         if (power::hasUsbPower()) {

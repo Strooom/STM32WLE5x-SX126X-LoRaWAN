@@ -24,21 +24,20 @@
 #include "transmitpower.h"
 #include "linkdirection.h"
 #include "spreadingfactor.h"
-#include "bytebuffer.h"
 #include "bytebuffer2.h"
 #include "payloadencoder.h"
 
 class LoRaWAN {
   public:
-    void initialize();                                      // initialize the LoRaWAN layer
-    void handleEvents();                                    // handle timeouts and tx/rxComplete
-    bool isReadyToTransmit() const;                         // is the LoRaWAN layer in a state, ready to transmit a message?
-    uint32_t getMaxApplicationPayloadLength() const;        // [bytes]
-
-                                                            //    void sendUplink(byteBuffer& applicationPayloadToSend, framePort aFramePort, bool immediately = false);               // send an uplink message
-    void sendUplink(const uint8_t data[], const uint32_t length, framePort aFramePort, bool sendImmediately = false);        // send an uplink message
-    void getDownlinkMessage(byteBuffer& applicationPayloadReceived);
-    void checkNetwork(bool immediately = false);                                                                             // TODO : adds a linkCheckRequest to the macOut or macOut2 buffer. immediately = true means that the request is added to macOut, which will be sent immediately, otherwise it is added to MacOut2 and sent in frameOptions with the next uplink
+    void initialize();                                                                                     // initialize the LoRaWAN layer
+    void run();                                                                                            // run the LoRaWAN MAC layer
+    void handleEvents();                                                                                   // handles events (timeouts and tx/rxComplete events)
+    bool isReadyToTransmit() const;                                                                        // is the LoRaWAN layer in a state, ready to transmit a message?
+    uint32_t getMaxApplicationPayloadLength() const;                                                       // how many [bytes] can the application send in one message? Depends on active dataRate and amount of MAC stuff waiting to be transmitted
+    void sendUplink(framePort aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message
+    void getDownlinkMessage();                                       //
+    void checkNetwork();
+    void removeNonStickyMacStuff();                                                                        // removes all non-sticky MAC stuff from macOut after transmitting them. sticky MAC stuff is kept until a downlink is received
 
 #ifndef unitTesting
   private:
@@ -62,7 +61,7 @@ class LoRaWAN {
     uint32_t currentDataRateIndex{0};
     loRaChannelCollection theChannels;
     uint32_t currentChannelIndex{0};
-    uint32_t rx1Delay{1};                                                                                                                                // in [seconds]
+    uint32_t rx1Delay{1};        // in [seconds]
 
     // transmitPower theTransmitPower{transmitPower::max};
 
@@ -80,12 +79,11 @@ class LoRaWAN {
 
     uint8_t rawMessage[maxLoRaPayloadLength + b0BlockLength]{};                                                                                            // in this buffer, the message is contructed (Tx - Uplink) or decoded (Rx - Downlink)
 
-    uint32_t macPayloadLength{};                                                                                                                           //
+    uint32_t macPayloadLength{0};                                                                                                                          //
     uint32_t framePortLength{1};                                                                                                                           // total length of FPort in [bytes] 1 if present, 0 if not present
     uint32_t frameOptionsLength{0};                                                                                                                        // this is not static, it can vary between 0 and 15
     uint32_t frameHeaderLength{0};                                                                                                                         // this is not static, it can vary between 7 and 22
     uint32_t framePayloadLength{0};                                                                                                                        // length of the application (or MAC layer) payload. excludes header, port and mic
-
     uint32_t loRaPayloadLength{0};                                                                                                                         // length of the data in the radio Tx/Rx buffer
 
     static constexpr uint32_t macHeaderOffset{b0BlockLength};                                                                                              // offset in the rawMessage where the header(s) starts
@@ -93,27 +91,26 @@ class LoRaWAN {
     static constexpr uint32_t frameControlOffset{b0BlockLength + macHeaderLength + deviceAddressLength};                                                   // offset in the rawMessage where the frameControl is found
     static constexpr uint32_t frameCountOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength};                                // offset in the rawMessage where the frameCountLSH is found
     static constexpr uint32_t frameOptionsOffset{b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength};        // offset in the rawMessage where the frameOptions are found
+
     uint32_t framePortOffset{};                                                                                                                            //
     uint32_t framePayloadOffset{};                                                                                                                         //
     uint32_t micOffset{};                                                                                                                                  //
 
     // static constexpr uint32_t macInOutLength{256};
-    byteBuffer2<64> macIn;          // buffer holding the received MAC requests and/or answers
-    byteBuffer2<64> macOut;         // buffer holding the MAC requests and/or answers to be sent
-    byteBuffer2<64> macOut2;        // buffer holding the MAC answers for receiveParameterSetupRequest, receiveTimingSetupRequest and downlinkChannelRequest, which need to be sent every time until a downlink is received
+    byteBuffer2<64> macIn;         // buffer holding the received MAC requests and/or answers
+    byteBuffer2<64> macOut;        // buffer holding the MAC requests and/or answers to be sent
 
     // ################################################################
     // ### Helper functions for constructing an uplink message - Tx ###
     // ################################################################
 
-    void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                              // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
-    void insertPayload(byteBuffer& applicationPayloadToSend);                                                                              // copy application payload to correct position in the rawMessage buffer
-    void insertPayload(const uint8_t data[], const uint32_t length);                                                                       // copy application payload to correct position in the rawMessage buffer
-    void encryptPayload(aesKey& theKey);                                                                                                   // encrypt the payload in the rawMessage buffer
-    void decryptPayload(aesKey& theKey);                                                                                                   // decrypt the payload in the rawMessage buffer
-    void insertHeaders(framePort theFramePort);                                                                                            // prepend the header to the rawMessage buffer
-    void insertBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);        //
-    void insertMic();                                                                                                                      //
+    void setOffsetsAndLengthsTx(uint32_t framePayloadLength, uint32_t frameOptionsLength = 0);                                                                      // calculate all offsets and lengths in rawMessage starting from the to be transmitted application payload length
+    void insertPayload(const uint8_t data[], const uint32_t length);                                                                                                // copy application payload to correct position in the rawMessage buffer
+    void encryptPayload(aesKey& theKey);                                                                                                                            // encrypt the payload in the rawMessage buffer
+    void decryptPayload(aesKey& theKey);                                                                                                                            // decrypt the payload in the rawMessage buffer
+    void insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, framePort theFramePort);        // prepend the header to the rawMessage buffer
+    void insertBlockB0(linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t micPayloadLength);                                 //
+    void insertMic();                                                                                                                                               //
 
     // #############################################################
     // ### Helper functions for decoding a downlink message - Rx ###

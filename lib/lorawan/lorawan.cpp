@@ -40,6 +40,13 @@ void LoRaWAN::initialize() {
     logging::snprintf(loggingChannel::lorawanMac, "downlinkFrameCount = %u\n", downlinkFrameCount.asUint32);
 }
 
+void LoRaWAN::run() {
+    if ((macOut.getLevel() > 15) && isReadyToTransmit()) {
+        sendUplink();                     // start an uplink cycle with the MAC stuff on port 0
+        removeNonStickyMacStuff();        // TODO : remove non-sticky MAC stuff from macOut
+    }
+}
+
 void LoRaWAN::handleEvents() {
     while (loraWanEventBuffer.hasEvents()) {
         loRaWanEvent theEvent = loraWanEventBuffer.pop();
@@ -115,17 +122,12 @@ void LoRaWAN::handleEvents() {
                         // logging::snprintf("received message type = %u\n", static_cast<uint8_t>(receivedMessageType));
                         switch (receivedMessageType) {
                             case messageType::application:
+                                processMacContents();
                                 applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                                 goTo(txRxCycleState::waitForRxMessageReadout);
                                 break;
                             case messageType::lorawanMac:
                                 processMacContents();
-                                // logging::snprintf("mac processed\n");
-                                if (!macOut.isEmpty()) {
-                                    // logging::snprintf("sending mac response\n");
-                                    sendUplink(macOut.asUint8Ptr(), macOut.getLevel(), 0, false);
-                                    macOut.initialize();
-                                }
                                 break;
                             default:
                             case messageType::invalid:
@@ -164,11 +166,12 @@ void LoRaWAN::handleEvents() {
                         messageType receivedMessageType = decodeMessage();
                         switch (receivedMessageType) {
                             case messageType::application:
+                                processMacContents();
                                 applicationEventBuffer.push(applicationEvent::downlinkApplicationPayloadReceived);
                                 goTo(txRxCycleState::waitForRxMessageReadout);
                                 break;
                             case messageType::lorawanMac:
-                                // handle it directly
+                                processMacContents();
                                 break;
                             default:
                             case messageType::invalid:
@@ -257,14 +260,7 @@ bool LoRaWAN::isReadyToTransmit() const {
 }
 
 uint32_t LoRaWAN::getMaxApplicationPayloadLength() const {
-    return theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength;
-    // TODO : take into account the possible need of frameOptions
-}
-
-void LoRaWAN::insertPayload(byteBuffer& applicationPayloadToSend) {
-    for (uint32_t index = 0; index < applicationPayloadToSend.length; index++) {
-        rawMessage[framePayloadOffset + index] = applicationPayloadToSend.buffer[index];
-    }
+    return (theDataRates.theDataRates[currentDataRateIndex].maximumPayloadLength - macOut.getLevel());
 }
 
 void LoRaWAN::insertPayload(const uint8_t data[], const uint32_t length) {
@@ -347,18 +343,35 @@ void LoRaWAN::decryptPayload(aesKey& theKey) {
     }
 }
 
-void LoRaWAN::insertHeaders(framePort theFramePort) {
-    // 3. put the header (MHDR - FHDR - FPORT) in front of the payload..
-    // As we never send MAC commands in FOptions, we know this is always 8 bytes : MHDR(1) - DEVADDR(4) - FCTRL(1) - FCNT(2)
-    rawMessage[macHeaderOffset]     = macHeader(frameType::unconfirmedDataUp).asUint8();        //
-    rawMessage[macHeaderOffset + 1] = DevAddr.asUint8[0];                                       //
-    rawMessage[macHeaderOffset + 2] = DevAddr.asUint8[1];                                       //
-    rawMessage[macHeaderOffset + 3] = DevAddr.asUint8[2];                                       //
-    rawMessage[macHeaderOffset + 4] = DevAddr.asUint8[3];                                       //
-    rawMessage[macHeaderOffset + 5] = 0;                                                        // FCTRL : all zero bits for the time being.. TODO : later we will need to add ACK etc..
-    rawMessage[macHeaderOffset + 6] = uplinkFrameCount.asUint8[0];                              // only the 2 LSBytes from framecounter are sent in the header
-    rawMessage[macHeaderOffset + 7] = uplinkFrameCount.asUint8[1];                              //
-    rawMessage[macHeaderOffset + 8] = theFramePort;                                             //
+void LoRaWAN::insertHeaders(const uint8_t theFrameOptions[], const uint32_t theFrameOptionslength, const uint32_t theFramePayloadLength, framePort theFramePort) {
+    rawMessage[macHeaderOffset]         = macHeader(frameType::unconfirmedDataUp).asUint8();        //
+    rawMessage[deviceAddressOffset]     = DevAddr.asUint8[0];                                       //
+    rawMessage[deviceAddressOffset + 1] = DevAddr.asUint8[1];                                       //
+    rawMessage[deviceAddressOffset + 2] = DevAddr.asUint8[2];                                       //
+    rawMessage[deviceAddressOffset + 3] = DevAddr.asUint8[3];                                       //
+
+    if (theFrameOptionslength > 15) {
+        logging::snprintf(loggingChannel::error, "Error : frameOptionsLength > 15\n");
+        frameOptionsLength = 15;
+    }
+    rawMessage[frameControlOffset] = frameOptionsLength & 0x0F;        // FCTRL : TODO : later we will need to add ACK etc..
+
+    if (frameOptionsLength > 0) {
+        for (uint32_t index = 0; index < frameOptionsLength; index++) {
+            rawMessage[frameOptionsOffset + index] = theFrameOptions[index];
+        }
+    }
+
+    rawMessage[frameCountOffset]     = uplinkFrameCount.asUint8[0];        // only the 2 LSBytes from framecounter are sent in the header
+    rawMessage[frameCountOffset + 1] = uplinkFrameCount.asUint8[1];        //
+
+    if ((frameOptionsLength > 0) && (framePayloadLength > 0) && theFramePort == 0) {
+        logging::snprintf(loggingChannel::error, "Error : illegal combination of frameOptions and framePort == 0\n");
+    }
+
+    if (theFramePayloadLength > 0) {
+        rawMessage[framePortOffset] = theFramePort;        //
+    }
 }
 
 void LoRaWAN::insertBlockB0(linkDirection theDirection, deviceAddress& aDeviceAddress, frameCount& aFrameCounter, uint32_t micPayloadLength) {
@@ -415,39 +428,36 @@ bool LoRaWAN::isValidMic() {
     return true;
 }
 
-void LoRaWAN::sendUplink(const uint8_t data[], const uint32_t length, framePort theFramePort, bool sendImmediately) {
-    // 1. Convert the application payload, to a LoRa(WAN) payload
-
-    // If we have macOut2 stuff, waiting to be confirmed by a downlink, we add them in the frameOptions
-
-    setOffsetsAndLengthsTx(length);
-    insertPayload(data, length);
+void LoRaWAN::sendUplink(framePort theFramePort, const uint8_t applicationData[], uint32_t applicationDataLength) {
     if (theFramePort == 0) {
+        // uplink message with framePort 0, containing no frameOptions and framePayload is all MAC stuff, encrypted with networkKey
+        setOffsetsAndLengthsTx(macOut.getLevel());
+        insertHeaders(nullptr, 0, macOut.getLevel(), theFramePort);
+        insertPayload(macOut.asUint8Ptr(), macOut.getLevel());
+        removeNonStickyMacStuff();
         encryptPayload(networkKey);
     } else {
+        // uplink with application payload, encrypted with applicationKey. Optionally up to 15 bytes of (unencrypted) frameOptions in the header
+        setOffsetsAndLengthsTx(applicationDataLength, macOut.getLevel());
+        insertHeaders(macOut.asUint8Ptr(), macOut.getLevel(), applicationDataLength, theFramePort);
+        removeNonStickyMacStuff();
+        insertPayload(applicationData, applicationDataLength);
         encryptPayload(applicationKey);
     }
-    insertHeaders(theFramePort);
     insertBlockB0(linkDirection::uplink, DevAddr, uplinkFrameCount, (macHeaderLength + macPayloadLength));
     insertMic();
 
-    // 2. Configure the radio, and transmit the payload
+    // 2. Configure the radio, and start stateMachine for transmitting the payload
     currentChannelIndex  = theChannels.getRandomChannelIndex();
-    uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;        //    uint32_t txFrequency = 867'500'000U; // override to unused frequency for testing
+    uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     theRadio.configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
     uplinkFrameCount.increment();
     nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), uplinkFrameCount.asUint32);
-
-    if (sendImmediately) {
-        theRadio.startTransmit();
-        goTo(txRxCycleState::waitForTxComplete);
-    } else {
-        goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
-    }
+    goTo(txRxCycleState::waitForRandomTimeBeforeTransmit);
 }
 
-void LoRaWAN::getDownlinkMessage(byteBuffer& applicationPayloadReceived) {
+void LoRaWAN::getDownlinkMessage() {
     // theRadio.getReceivedMessage();
     //  downlinkMessage.processDownlinkMessage(applicationPayloadReceived);
 }
@@ -490,8 +500,8 @@ messageType LoRaWAN::decodeMessage() {
     downlinkFrameCount.set(tmpDownLinkFrameCount.asUint32);
     nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), downlinkFrameCount.asUint32);
 
-    // 6.5 If we had macOut2 stuff, we can clear that now, as we did receive a valid downlink
-    macOut2.initialize();
+    // 6.5 If we had sticky macOut stuff, we can clear that now, as we did receive a valid downlink
+    macOut.initialize();
 
     // 7. If we have MAC stuff in the frameOptions, extract them
     if (frameOptionsLength > 0) {
@@ -547,9 +557,14 @@ bool LoRaWAN::isValidDownlinkFrameCount(frameCount testFrameCount) {
 
 void LoRaWAN::setOffsetsAndLengthsTx(uint32_t theFramePayloadLength, uint32_t theFrameOptionsLength) {
     // This function is used in the uplink direction, where we know the length of the application payload, and we construct a LoRa payload from it
+    // NOTE : maximum lengths for payload and frameOptions are not tested here...
     framePayloadLength = theFramePayloadLength;
     frameOptionsLength = theFrameOptionsLength;
-    framePortLength    = 1;        // TODO : test if there is any payload, and only if so, set this to 1, otherwise we send a frame with just frameOptions
+    if (framePayloadLength == 0) {
+        framePortLength = 0;        // no framePayload, so no framePort - only a frameHeader with frameOptions
+    } else {
+        framePortLength = 1;        // framePayload not empty -> framePort needed
+    }
     framePortOffset    = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength;
     framePayloadOffset = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength;
     micOffset          = b0BlockLength + macHeaderLength + deviceAddressLength + frameControlLength + frameCountLSHLength + frameOptionsLength + framePortLength + framePayloadLength;
@@ -741,14 +756,68 @@ void LoRaWAN::processMacContents() {
     }
 }
 
-void LoRaWAN::checkNetwork(bool immediately) {
-    uint8_t msg[1];
-    msg[0] = static_cast<uint8_t>(macCommand::linkCheckRequest);
-    if (immediately) {
-        macOut.append(msg, 1);
-    } else {
-        macOut2.append(msg, 1);
+void LoRaWAN::checkNetwork() {
+    macOut.append(static_cast<uint8_t>(macCommand::linkCheckRequest));
+}
+
+void LoRaWAN::removeNonStickyMacStuff() {
+    byteBuffer2<64> tmpMacOut;
+
+    while (macOut.getLevel() > 0) {
+        macCommand theMacCommand = static_cast<macCommand>(macOut[0]);
+        switch (theMacCommand) {
+            case macCommand::linkCheckRequest:
+                macOut.consume(1);
+                break;
+
+            case macCommand::linkAdaptiveDataRateAnswer:
+                macOut.consume(2);
+                break;
+
+            case macCommand::dutyCycleAnswer:
+                macOut.consume(1);
+                break;
+
+            case macCommand::receiveParameterSetupAnswer:
+                tmpMacOut.append(macOut[0]);
+                tmpMacOut.append(macOut[1]);
+                macOut.consume(2);
+                break;
+
+            case macCommand::deviceStatusAnswer:
+                macOut.consume(3);
+                break;
+
+            case macCommand::newChannelAnswer:
+                macOut.consume(2);
+                break;
+
+            case macCommand::receiveTimingSetupAnswer:
+                tmpMacOut.append(macOut[0]);
+                macOut.consume(1);
+                break;
+
+            case macCommand::transmitParameterSetupAnswer:
+                macOut.consume(1);        // this should not happen as this command is not implemented in EU-868
+                break;
+
+            case macCommand::downlinkChannelAnswer:
+                tmpMacOut.append(macOut[0]);
+                tmpMacOut.append(macOut[1]);
+                macOut.consume(2);
+                break;
+
+            case macCommand::deviceTimeRequest:
+                macOut.consume(1);        // this should not happen as this command is not implemented in The Things Network
+                break;
+
+            default:
+                break;
+        }
     }
+
+    macOut.initialize();
+    macOut.append(tmpMacOut.asUint8Ptr(), tmpMacOut.getLevel());
 }
 
 #ifndef environment_desktop

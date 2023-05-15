@@ -16,7 +16,9 @@ enum class loggingChannel : uint32_t {
     sx126xBufferData,
     sensorEvents,
     sensorData,
-    nvs
+    nvs,
+    error,
+    criticalError
 
 };
 

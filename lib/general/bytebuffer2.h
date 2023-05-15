@@ -23,12 +23,13 @@ class byteBuffer2 {
     // ### Get the metadata of the buffer ###
     bool isEmpty() const { return level == 0; };
     uint32_t getLevel() const { return level; };
+    uint32_t getFree() const { return (length - level); };
 
     // #################################
     // ### READ data from the buffer ###
     // #################################
 
-    const uint8_t* asUint8Ptr(uint32_t offset = 0) const { return (theBuffer + offset); }
+    const uint8_t* asUint8Ptr(uint32_t offset = 0) const { return (theBuffer + offset); }        // WARNING : this accepts offsets pointing beyond the meaningful data, even beyond the whole buffer..
 
     const uint8_t operator[](size_t index) {
         if (index < level) {
@@ -40,6 +41,14 @@ class byteBuffer2 {
 
     void consume(uint32_t numberOfBytes) {
         shiftLeft(numberOfBytes);
+    }
+
+    void truncate(uint32_t numberOfBytes) {
+        if (numberOfBytes < level) {
+            level -= numberOfBytes;
+        } else {
+            level = 0;
+        }
     }
 
     // ################################
