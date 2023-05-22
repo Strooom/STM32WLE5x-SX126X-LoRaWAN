@@ -10,17 +10,15 @@
 
 class loRaChannel {
   public:
-    loRaChannel(bool enabled, uint32_t frequency, uint32_t minimumDataRateIndex, uint32_t maximumDataRateIndex);
+    loRaChannel(uint32_t frequency, uint32_t minimumDataRateIndex, uint32_t maximumDataRateIndex);
 
-//#ifndef unitTesting
-//  private:
-//#endif
-    
-    bool enabled{false};
+    // #ifndef unitTesting
+    //   private:
+    // #endif
+
     uint32_t frequency{0};
     uint32_t minimumDataRateIndex{0};
-    uint32_t maximumDataRateIndex{dataRates::nmbrUsedDataRates - 1};
+    uint32_t maximumDataRateIndex{0};
 
     friend class loRaChannelCollection;
 };
-

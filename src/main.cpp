@@ -152,27 +152,25 @@ int main(void) {
 
     HAL_Delay(10000);        // 10 second delay so the debugger can connect
 
+    logging::enableLoggingChannel(loggingChannel::criticalError);
+    logging::enableLoggingChannel(loggingChannel::error);
+    //logging::enableLoggingChannel(loggingChannel::lorawanEvents);
+    logging::enableLoggingChannel(loggingChannel::lorawanMac);
+    //logging::enableLoggingChannel(loggingChannel::sensorEvents);
+
     theMainController.initialize();
 
-    uint8_t sleepWalkingCounter{0};
-    
-    //    while (0) {
-    //        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_SET);          // Set pin high to monitor timing
-    //        HAL_Delay(100);
-    //        HAL_GPIO_WritePin(GPIOA, loraTiming_Pin, GPIO_PIN_RESET);        // Set pin high to monitor timing
-    //        HAL_Delay(200);
-    //    }
-    //
-    //
-    //    if (0) {
-    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260B7FDC);
-    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 1U);
-    //        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 1U);
-    //        uint8_t tmpKey1[] = {0x4D, 0x32, 0x70, 0x43, 0x26, 0xE3, 0xEA, 0x51, 0xD3, 0xF7, 0x17, 0x93, 0xD9, 0x2D, 0x6A, 0xA7};
-    //        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
-    //        uint8_t tmpKey2[] = {0x0B, 0xA1, 0x3E, 0x86, 0x3A, 0x76, 0xF6, 0x58, 0xA7, 0x92, 0x66, 0x7C, 0xC1, 0x79, 0x3E, 0x4A};
-    //        nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
-    //    }
+    if (0) {
+        //nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260BAE51);
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 0U);
+        nvs.writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 0U);
+        //uint8_t tmpKey1[] = {0x08, 0xD8, 0x7B, 0x4F, 0x0E, 0xC1, 0x58, 0x5F, 0x79, 0x46, 0x54, 0x45, 0x70, 0xF3, 0xBF, 0xB4};
+        //nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
+        //uint8_t tmpKey2[] = {0x8A, 0x93, 0x0D, 0x54, 0x68, 0x37, 0xFF, 0x2F, 0x4E, 0x12, 0xF2, 0xD2, 0xC4, 0x4E, 0x65, 0xDE};
+        //nvs.writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
+        while(1) {}
+    }
+
 
     while (1) {
         /* USER CODE END WHILE */
@@ -193,6 +191,7 @@ int main(void) {
             applicationEventBuffer.push(applicationEvent::usbRemoved);
         }
 
+        loraNetwork.run();
         loraNetwork.handleEvents();
         theMainController.handleEvents();
 

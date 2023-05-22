@@ -16,7 +16,7 @@
 
 // template class for event buffers. Each layer needs it's own buffer, and the events are different types
 // This is a circular buffer, so it works FIFO
-// push() on an already full buffer, overwrites the oldes event.
+// push() on an already full buffer, overwrites the oldest event.
 // pop() on an empty buffer, returns 0x00
 // TODO : this needs to be made thread safe with critical sections. Ideally in this class, but if not possible, then in code that calls it
 

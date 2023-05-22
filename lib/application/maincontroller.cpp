@@ -13,6 +13,7 @@
 #include "sensorcollection.h"
 #include "measurementcollection.h"
 #include "nvs.h"
+
 // #include "main.h"
 
 // extern LPTIM_HandleTypeDef hlptim1;
@@ -29,10 +30,8 @@ extern measurementCollection theMeasurements;
 extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
-    // logging::snprintf("Initializing mainController\n");
-
     if (nvs.isReady()) {
-        // logging::snprintf("128K EEPROM found\n");
+        logging::snprintf(loggingChannel::nvs, "128K EEPROM found\n");
     }
     if (!nvs.isInitialized()) {
         nvs.initializeOnce();
@@ -40,15 +39,12 @@ void mainController::initialize() {
 
     theSensors.discover();
     loraNetwork.initialize();        // LoRaWAN layer + the LoRa radio
-
-    // logging::snprintf("mainController initialized\n");
 }
 
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf("Application Event [%u] : %s\n",
-                          static_cast<uint8_t>(theEvent), toString(theEvent));
+        logging::snprintf(loggingChannel::applicationEvents, "Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();
@@ -59,8 +55,8 @@ void mainController::handleEvents() {
                 break;
 
             case applicationEvent::downlinkApplicationPayloadReceived: {
-                byteBuffer receivedData;
-                loraNetwork.getDownlinkMessage(receivedData);
+                // byteBuffer receivedData;
+                // loraNetwork.getDownlinkMessage(receivedData);
             } break;
 
             case applicationEvent::realTimeClockTick: {
@@ -71,26 +67,26 @@ void mainController::handleEvents() {
                     uint8_t tempData[256]{};
                     uint32_t tempDataIndex{0};
 
-                    tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0); // first byte of payload identifies how the rest should be interpreted
-                    tempDataIndex ++;
+                    tempData[tempDataIndex] = static_cast<uint8_t>(payloadEncodingVersion::mumo_v2_0);        // first byte of payload identifies how the rest should be interpreted
+                    tempDataIndex++;
 
-                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) { // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
+                    for (uint32_t measurementIndex = 0; measurementIndex < theSensors.actualNumberOfMeasurements; measurementIndex++) {        // for each measurement, store the 9 bytes (type, timestamp, value) in the payload
                         tempData[tempDataIndex] = static_cast<uint8_t>(theSensors.latestMeasurements[measurementIndex].type);
 
-                        tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[0];
-                        tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[1];
-                        tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[2];
-                        tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestampAsBytes[3];
+                        tempData[tempDataIndex + 1] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[0];
+                        tempData[tempDataIndex + 2] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[1];
+                        tempData[tempDataIndex + 3] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[2];
+                        tempData[tempDataIndex + 4] = theSensors.latestMeasurements[measurementIndex].timestamp.asBytes[3];
 
-                        tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[0];
-                        tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[1];
-                        tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[2];
-                        tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].valueAsBytes[3];
+                        tempData[tempDataIndex + 5] = theSensors.latestMeasurements[measurementIndex].value.asBytes[0];
+                        tempData[tempDataIndex + 6] = theSensors.latestMeasurements[measurementIndex].value.asBytes[1];
+                        tempData[tempDataIndex + 7] = theSensors.latestMeasurements[measurementIndex].value.asBytes[2];
+                        tempData[tempDataIndex + 8] = theSensors.latestMeasurements[measurementIndex].value.asBytes[3];
 
                         tempDataIndex += 9;
                     }
-
-                    // loraNetwork.sendUplink(tempData, tempDataIndex, 0x10, true);
+                    //loraNetwork.checkNetwork();
+                    loraNetwork.sendUplink(0x10, tempData, tempDataIndex);
                 }
 
                 // 2. check if we have enough unsent data to send uplink

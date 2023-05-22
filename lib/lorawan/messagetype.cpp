@@ -5,19 +5,20 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 
-#pragma once
-#include <stdint.h>
-#include "bytebuffer3.h"
+#include "messagetype.h"
 
-class cli {
-  public:
-    void handleRxEvent();
-    void handleEvents();
+const char* toString(messageType type) {
+    switch (type) {
+        case messageType::application:
+            return "application";
+            break;
 
-  private:
-    static constexpr uint32_t commandBufferLength{256};
-    static constexpr uint32_t responseBufferLength{256};
+        case messageType::lorawanMac:
+            return "lorawanMac";
+            break;
 
-    byteBuffer3<commandBufferLength> commandBuffer;
-    byteBuffer3<responseBufferLength> responseBuffer;
-};
+        default:
+            return "invalid / unknown";
+            break;
+    }
+}

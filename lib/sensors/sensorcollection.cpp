@@ -18,13 +18,13 @@ sensorCollection::runResult sensorCollection::run() {
             case sensor::runResult::inactive:
                 break;
             case sensor::runResult::prescaled:
-                logging::snprintf("Sensor %s : prescale tick\n", toString(theSensorCollection[sensorIndex].type));
+                logging::snprintf(loggingChannel::sensorEvents, "Sensor %s : prescale tick\n", toString(theSensorCollection[sensorIndex].type));
                 break;
             case sensor::runResult::sampled:
-                logging::snprintf("Sensor %s : sampled %.2f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastSample);
+                logging::snprintf(loggingChannel::sensorEvents, "Sensor %s : sampled %.2f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastSample);
                 break;
             case sensor::runResult::measured:
-                logging::snprintf("Sensor %s : measurement %.4f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastMeasurement);
+                logging::snprintf(loggingChannel::sensorEvents, "Sensor %s : measurement %.4f\n", toString(theSensorCollection[sensorIndex].type), theSensorCollection[sensorIndex].lastMeasurement);
                 addMeasurement(theSensorCollection[sensorIndex].type, theSensorCollection[sensorIndex].lastMeasurement);
                 break;
         }
@@ -44,8 +44,8 @@ sensorCollection::runResult sensorCollection::run() {
 
 void sensorCollection::discover() {
     // addSensor(measurementChannel::batteryLevel, 7, 359, 7, 14);        // one measurement per day on battery, one per hour on USB power
-    // addSensor(measurementChannel::batteryLevel, 0, 3, 0, 3);        // test Version
-    addSensor(measurementChannel::batteryLevel, 0, 0, 0, 0);        // test Version
+    //addSensor(measurementChannel::batteryLevel, 0, 3, 0, 3);        // test Version
+    addSensor(measurementChannel::batteryLevel, 0, 1, 0, 1);        // test Version
 
     if (bme680::isPresent()) {
         bme680::initialize();                                                               // this reads the calibration data from the sensor
@@ -94,9 +94,9 @@ void sensorCollection::addSensor(measurementChannel aType, uint32_t oversampling
 
 void sensorCollection::addMeasurement(measurementChannel aType, float aValue) {
     if (actualNumberOfMeasurements < maxNumberOfSensors) {
-        latestMeasurements[actualNumberOfMeasurements].timestampAsUInt32 = measurement::getTimeStamp();
+        latestMeasurements[actualNumberOfMeasurements].timestamp.asUInt32 = measurement::getTimeStamp();
         latestMeasurements[actualNumberOfMeasurements].type              = aType;
-        latestMeasurements[actualNumberOfMeasurements].valueAsFloat      = aValue;
+        latestMeasurements[actualNumberOfMeasurements].value.asFloat      = aValue;
         latestMeasurements[actualNumberOfMeasurements].flags             = 0;
         actualNumberOfMeasurements++;
     }

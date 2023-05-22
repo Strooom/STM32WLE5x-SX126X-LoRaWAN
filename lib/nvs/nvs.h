@@ -17,9 +17,8 @@ class nvsBlock {
     const uint32_t length;
 };
 
+// an nvsMap is a collection of nvsBlocks
 class nvsMap {
-    // friend class nonVolatileStorage;
-
   public:
     enum class blockIndex : uint32_t {
         nvsMapVersion = 0,
