@@ -13,3 +13,5 @@ enum class messageType : uint32_t {
     application,
     lorawanMac,
 };
+
+const char* toString(messageType type);

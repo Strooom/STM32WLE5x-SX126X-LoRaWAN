@@ -14,7 +14,7 @@ void sx126x::initialize() {
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
-    // logging::snprintf("Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
+    logging::snprintf(loggingChannel::sx126xControl, "Configuring for Transmit : [%s], [%u] Hz [%u] bytes\n", toString(theSpreadingFactor), frequency, payloadLength);
     goStandby();
     setRfSwitch(rfSwitchState::tx);
     setRfFrequency(frequency);
@@ -34,7 +34,7 @@ void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t freq
 }
 
 void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequency) {
-    // logging::snprintf("Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
+    logging::snprintf(loggingChannel::sx126xControl, "Configuring for Receive : [%s], [%u] Hz\n", toString(theSpreadingFactor), frequency);
     goStandby();
     setRfSwitch(rfSwitchState::rx);
     setRfFrequency(frequency);
@@ -53,6 +53,7 @@ void sx126x::configForReceive(spreadingFactor theSpreadingFactor, uint32_t frequ
 }
 
 void sx126x::goSleep(sleepMode theSleepMode) {
+    logging::snprintf(loggingChannel::sx126xControl, "goSleep [%u]\n", static_cast<uint8_t>(theSleepMode));
     setRfSwitch(rfSwitchState::off);
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theSleepMode)};
@@ -60,12 +61,14 @@ void sx126x::goSleep(sleepMode theSleepMode) {
 }
 
 void sx126x::goStandby(standbyMode theStandbyMode) {
+    logging::snprintf(loggingChannel::sx126xControl, "goStandby [%u]\n", static_cast<uint8_t>(theStandbyMode));
     constexpr uint8_t nmbrCommandParameters{1};
     uint8_t commandParameters[nmbrCommandParameters]{static_cast<uint8_t>(theStandbyMode)};
     executeSetCommand(sx126xCommand::setStandby, commandParameters, nmbrCommandParameters);
 }
 
 void sx126x::startTransmit(uint32_t timeOut) {
+    logging::snprintf(loggingChannel::sx126xControl, "startTx [%u]\n", timeOut);
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
@@ -77,6 +80,7 @@ void sx126x::startTransmit(uint32_t timeOut) {
 
 void sx126x::startReceive(uint32_t timeOut) {
     timeOut = 3840;        // TODO : make this a funtion of the DataRate.. currently it is fixed to 60 ms, which should be ok for DR5
+    logging::snprintf(loggingChannel::sx126xControl, "startRx [%u]\n", timeOut);
     constexpr uint8_t nmbrCommandParameters{3};
     uint8_t commandParameters[nmbrCommandParameters];
     commandParameters[0] = static_cast<uint8_t>((timeOut >> 16) & 0xFF);
@@ -87,6 +91,7 @@ void sx126x::startReceive(uint32_t timeOut) {
 }
 
 void sx126x::setRfFrequency(uint32_t frequencyInHz) {
+    logging::snprintf(loggingChannel::sx126xControl, "setRfFrequency [%u]\n", frequencyInHz);
     constexpr uint8_t nmbrCommandParameters{4};
     uint32_t frequencyRegisterValue = calculateFrequencyRegisterValue(frequencyInHz);
     uint8_t commandParameters[nmbrCommandParameters];
@@ -98,6 +103,7 @@ void sx126x::setRfFrequency(uint32_t frequencyInHz) {
 }
 
 void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwidth theBandwidth) {
+    logging::snprintf(loggingChannel::sx126xControl, "setModulationParameters [%s], [%s]\n", toString(theSpreadingFactor), toString(theBandwidth));
     constexpr uint8_t nmbrCommandParameters{8};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = static_cast<uint8_t>(theSpreadingFactor);        //
@@ -109,6 +115,7 @@ void sx126x::setModulationParameters(spreadingFactor theSpreadingFactor, bandwid
 }
 
 void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
+    logging::snprintf(loggingChannel::sx126xControl, "setPacketParametersTransmit [%u]\n", payloadLength);
     constexpr uint8_t nmbrCommandParameters{9};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = 0x00;                 // MSB for PreambleLength
@@ -122,6 +129,7 @@ void sx126x::setPacketParametersTransmit(uint8_t payloadLength) {
 }
 
 void sx126x::setPacketParametersReceive() {
+    logging::snprintf(loggingChannel::sx126xControl, "setPacketParametersReceive\n");
     constexpr uint8_t nmbrCommandParameters{9};
     uint8_t commandParameters[nmbrCommandParameters]{0};
     commandParameters[0] = 0x00;        // MSB for PreambleLength
@@ -141,19 +149,29 @@ uint32_t sx126x::calculateFrequencyRegisterValue(uint32_t rfFrequency) {
     return static_cast<uint32_t>(tmpResult);
 }
 
-// void sx126x::setTxParameters(int8_t transmitPowerdBm, rampTime theRamptime) {        // caution - signed int8, negative dBm values are in two's complement
-//     constexpr uint8_t nmbrCommandParameters{2};
-//     uint8_t commandParameters[nmbrCommandParameters];
+void sx126x::setTxParameters(int8_t transmitPowerdBm, rampTime theRamptime) {        // caution - signed int8, negative dBm values are in two's complement
+    logging::snprintf(loggingChannel::sx126xControl, "setTxParameters [%d], [%s]\n", transmitPowerdBm, toString(theRamptime));
+    constexpr uint8_t nmbrCommandParameters{2};
+    uint8_t commandParameters[nmbrCommandParameters];
 
-//     if (transmitPowerdBm < 0) {
-//         commandParameters[0] = 255 - static_cast<uint8_t>(-(transmitPowerdBm + 1));        // magic to turn negative signed value into a raw byte in two's complement
-//     } else {
-//         commandParameters[0] = static_cast<uint8_t>(transmitPowerdBm);        // if value is not negative, casting it is safe
-//     }
-//     commandParameters[1] = static_cast<uint8_t>(theRamptime);        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
-//                                                                      // the remaining 4 bytes are empty 0x00 for LoRa
-//     executeSetCommand(sx126xCommand::setTxParams, commandParameters, nmbrCommandParameters);
-// }
+    union {
+        int8_t asInt8;
+        uint8_t asUint8;
+    } txPower;
+
+    txPower.asInt8 = transmitPowerdBm;
+
+    // if (transmitPowerdBm < 0) {
+    //     commandParameters[0] = 255 - static_cast<uint8_t>(-(transmitPowerdBm + 1));        // magic to turn negative signed value into a raw byte in two's complement
+    // } else {
+    //     commandParameters[0] = static_cast<uint8_t>(transmitPowerdBm);                     // if value is not negative, casting it is safe
+    // }
+
+    commandParameters[0] = txPower.asUint8;
+    commandParameters[1] = static_cast<uint8_t>(theRamptime);        // rampTime 200 uS - no info why this value, but this was in the demo application from ST / Semtech
+                                                                     // the remaining 4 bytes are empty 0x00 for LoRa
+    executeSetCommand(sx126xCommand::setTxParams, commandParameters, nmbrCommandParameters);
+}
 
 void sx126x::initializeRadio() {
     setRfSwitch(rfSwitchState::off);
@@ -370,9 +388,9 @@ void sx126x::writeRegisters(sx126xRegister theRegister, uint8_t* data, uint8_t d
 #else
 #include <cstring>
 
-uint8_t mockSx126xDataBuffer[256];        // emulates the SX126x data buffer so we can do some unit test on it
+uint8_t mockSx126xDataBuffer[256];          // emulates the SX126x data buffer so we can do some unit test on it
 
-void sx126x::initializeInterface() {
+void sx126x::initializeInterface() {        // TODO : this is currently not doing anything ???
 }
 
 void sx126x::writeBuffer(uint8_t* payload, uint32_t payloadLength) {

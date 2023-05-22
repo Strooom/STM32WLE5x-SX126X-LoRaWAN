@@ -2,10 +2,6 @@
 
 const char* toString(spreadingFactor aSpreadingFactor) {
     switch (aSpreadingFactor) {
-        case spreadingFactor::SF5:
-            return "SF5";
-        case spreadingFactor::SF6:
-            return "SF6";
         case spreadingFactor::SF7:
             return "SF7";
         case spreadingFactor::SF8:

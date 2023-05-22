@@ -15,7 +15,7 @@ class deviceAddress {
     deviceAddress(uint32_t theDeviceAddress);               //
     deviceAddress(uint8_t theDeviceAddress[length]);        //
     void set(uint32_t theDeviceAddress);                    // decode the deviceAddress from a uint32_t
-    void set(uint8_t theDeviceAddress[length]);             // set the frameCount from an array of 4 bytes
+    void set(uint8_t theDeviceAddress[length]);             // set the deviceAddress from an array of 4 bytes
 
     union {
         uint32_t asUint32{0};

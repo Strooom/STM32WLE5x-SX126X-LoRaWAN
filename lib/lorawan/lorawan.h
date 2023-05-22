@@ -12,7 +12,6 @@
 #include "frameport.h"
 #include "messagetype.h"
 #include "txrxcycle.h"
-#include "collisionavoidancestrategy.h"
 #include "macheader.h"
 #include "deviceaddress.h"
 #include "aeskey.h"
@@ -34,18 +33,18 @@ class LoRaWAN {
     void handleEvents();                                                                                   // handles events (timeouts and tx/rxComplete events)
     bool isReadyToTransmit() const;                                                                        // is the LoRaWAN layer in a state, ready to transmit a message?
     uint32_t getMaxApplicationPayloadLength() const;                                                       // how many [bytes] can the application send in one message? Depends on active dataRate and amount of MAC stuff waiting to be transmitted
-    void sendUplink(framePort aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message
-    void getDownlinkMessage();                                       //
+    void sendUplink(framePort aFramePort = 0, const uint8_t data[] = nullptr, uint32_t length = 0);        // send an uplink message,
+    void getDownlinkMessage();                                                                             //
     void checkNetwork();
-    void removeNonStickyMacStuff();                                                                        // removes all non-sticky MAC stuff from macOut after transmitting them. sticky MAC stuff is kept until a downlink is received
+
+    void logSettings();        // log the current settings of the LoRaWAN layer
+    void logState();           // log the current state of the LoRaWAN layer
 
 #ifndef unitTesting
   private:
 #endif
     txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine
     void goTo(txRxCycleState newState);                            // move the state of the TxRxCycle state machine - handles exit old state actions and entry new state actions
-
-    collisionAvoidanceStrategy theCollisionAvoidanceStrategy{collisionAvoidanceStrategy::none};
 
     // macHeader MHDR;
     deviceAddress DevAddr;
@@ -123,12 +122,17 @@ class LoRaWAN {
     bool isValidDownlinkFrameCount(frameCount testFrameCount);                                                                                                                 //
     messageType decodeMessage();                                                                                                                                               //
 
-    static uint32_t getRandomNumber();
-    static void startTimer(uint32_t timeOut);        // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
-    static void stopTimer();
+    static uint32_t getRandomNumber();                                                                                                                                         //
+    static void startTimer(uint32_t timeOut);                                                                                                                                  // timeOut in [ticks] from the 2048 Hz clock driving LPTIM1
+    static void stopTimer();                                                                                                                                                   //
 
-    void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);
-    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);
+    void prepareBlockAi(uint8_t* aBlock, linkDirection theDirection, deviceAddress& anAddress, frameCount& aFrameCounter, uint32_t blockIndex);                                //
+    static uint32_t getReceiveTimeout(spreadingFactor aSpreadingfactor);                                                                                                       //
 
-    void processMacContents();        // process the contents of the macIn buffer, output goes to macOut buffer
+    void processMacContents();                                                                                                                                                 // process the contents of the macIn buffer, output goes to macOut buffer
+    void processNewChannelRequest(uint32_t channelIndex, uint32_t frequency, uint32_t minimumDataRate, uint32_t maximumDataRate);                                              //
+    void processReceiveTimingSetupRequest(uint32_t rx1Delay);
+
+    void removeNonStickyMacStuff();                                                                         // removes all non-sticky MAC stuff from macOut after transmitting them. sticky MAC stuff is kept until a downlink is received
+    uint32_t calculateMaxTransmitTimeout(uint32_t currentDataRateIndex, uint32_t loRaPayloadLength);        // TODO : provide an upper limit for the timeout
 };

@@ -1,20 +1,27 @@
 #include "lorachannelcollection.h"
 
-void loRaChannelCollection::addChannel(uint32_t frequency) {
-    if (nmbrAvailableChannels < maxNmbrChannels) {
-        txRxChannels[nmbrAvailableChannels].frequency = frequency;
-        nmbrAvailableChannels++;
-    }
-}
+// void loRaChannelCollection::addChannel(uint32_t frequency) {
+//     if (nmbrAvailableChannels < maxNmbrChannels) {
+//         txRxChannels[nmbrAvailableChannels].frequency = frequency;
+//         nmbrAvailableChannels++;
+//     }
+// }
 
-void loRaChannelCollection::removeChannel(uint32_t frequency) {
-    // TODO : remove channel from collection
-    // nmbrAvailableChannels--;
-    // Make sure there are no gaps in the array, swap items if needed..
-}
+// void loRaChannelCollection::removeChannel(uint32_t frequency) {
+//     // TODO : remove channel from collection
+//     // nmbrAvailableChannels--;
+//     // Make sure there are no gaps in the array, swap items if needed..
+// }
 
 uint32_t loRaChannelCollection::getRandomChannelIndex() {
-    return (getRandomNumber() % nmbrAvailableChannels);
+    uint32_t result{0};
+    uint32_t randomCount = getRandomNumber() % maxNmbrChannels;
+    for (uint32_t count = 0; count < randomCount; count++) {
+        while (txRxChannels[result].frequency == 0) {
+            result = (result + 1) % maxNmbrChannels;
+        }
+    }
+    return result;
 }
 
 #ifndef environment_desktop

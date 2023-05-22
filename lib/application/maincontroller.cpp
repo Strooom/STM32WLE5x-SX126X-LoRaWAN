@@ -39,7 +39,6 @@ void mainController::initialize() {
 
     theSensors.discover();
     loraNetwork.initialize();        // LoRaWAN layer + the LoRa radio
-
 }
 
 void mainController::handleEvents() {
@@ -56,8 +55,8 @@ void mainController::handleEvents() {
                 break;
 
             case applicationEvent::downlinkApplicationPayloadReceived: {
-                //byteBuffer receivedData;
-                //loraNetwork.getDownlinkMessage(receivedData);
+                // byteBuffer receivedData;
+                // loraNetwork.getDownlinkMessage(receivedData);
             } break;
 
             case applicationEvent::realTimeClockTick: {
@@ -86,7 +85,7 @@ void mainController::handleEvents() {
 
                         tempDataIndex += 9;
                     }
-
+                    //loraNetwork.checkNetwork();
                     loraNetwork.sendUplink(0x10, tempData, tempDataIndex);
                 }
 

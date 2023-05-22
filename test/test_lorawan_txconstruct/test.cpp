@@ -82,6 +82,7 @@ const uint8_t testMsg2[testMsg2Length] = {
 //     0xB8, 0x59, 0x92, 0x49                                             // mic
 // };
 
+
 void test_offsetsTx0() {        // 1. case with no frameOptions
 
     LoRaWAN theNetwork;
@@ -204,11 +205,10 @@ void test_insertHeaders0() {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testHeader, theNetwork.rawMessage + theNetwork.macHeaderOffset, theNetwork.frameHeaderLength + theNetwork.macHeaderLength);
 }
 
-
 void test_insertHeaders1() {
-    constexpr uint32_t testPort = 16;
-    const uint8_t testHeader[]  = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x01, 0x3A, 0x07, 0x20, 0x10};
-    const uint8_t testFrameOptions[]  = {0x20};
+    constexpr uint32_t testPort      = 16;
+    const uint8_t testHeader[]       = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x01, 0x3A, 0x07, 0x20, 0x10};
+    const uint8_t testFrameOptions[] = {0x20};
     LoRaWAN theNetwork;
     theNetwork.DevAddr.set(0x260B3B92);
     theNetwork.uplinkFrameCount.set(1850);
@@ -217,8 +217,8 @@ void test_insertHeaders1() {
 }
 
 void test_insertHeaders2() {
-    const uint8_t testHeader[]  = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x01, 0x3A, 0x07, 0x20};
-    const uint8_t testFrameOptions[]  = {0x20};
+    const uint8_t testHeader[]       = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x01, 0x3A, 0x07, 0x20};
+    const uint8_t testFrameOptions[] = {0x20};
     LoRaWAN theNetwork;
     theNetwork.DevAddr.set(0x260B3B92);
     theNetwork.uplinkFrameCount.set(1850);
@@ -227,14 +227,13 @@ void test_insertHeaders2() {
 }
 
 void test_insertHeaders3() {
-    const uint8_t testHeader[]  = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x00, 0x3A, 0x07};
+    const uint8_t testHeader[] = {0x40, 0x92, 0x3B, 0x0B, 0x26, 0x00, 0x3A, 0x07};
     LoRaWAN theNetwork;
     theNetwork.DevAddr.set(0x260B3B92);
     theNetwork.uplinkFrameCount.set(1850);
-    theNetwork.insertHeaders(nullptr, 0, 0, 0); // no frameOptions, no framePayload (so no framePort) - minimal packet with ACK etc..
+    theNetwork.insertHeaders(nullptr, 0, 0, 0);        // no frameOptions, no framePayload (so no framePort) - minimal packet with ACK etc..
     TEST_ASSERT_EQUAL_UINT8_ARRAY(testHeader, theNetwork.rawMessage + theNetwork.macHeaderOffset, theNetwork.frameHeaderLength + theNetwork.macHeaderLength);
 }
-
 
 void test_insertBlockB0() {
     const uint8_t testBlockB0[16] = {0x49, 0x00, 0x00, 0x00, 0x00, 0x00, 0x92, 0x3B, 0x0B, 0x26, 0x3A, 0x07, 0x00, 0x00, 0x00, 0x13};
