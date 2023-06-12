@@ -27,18 +27,11 @@ void LoRaWAN::initialize() {
     networkKey.setFromBinary(tmpKeyArray);
     uplinkFrameCount.set(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter)));
     downlinkFrameCount.set(nvs.readBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter)));
+    rx1Delay = static_cast<uint32_t>(nvs.readBlock8(static_cast<uint32_t>(nvsMap::blockIndex::rx1Delay)));
 
-    if (logging::loggingIsActive(loggingChannel::lorawanMac)) {
-        logging::snprintf("LoRaWAN network initialisation :\n", DevAddr.asUint32);
-        logging::snprintf("- devAddr = %04X\n", DevAddr.asUint32);
-        logging::snprintf("- applicationKey = %s\n", applicationKey.asASCII());
-        logging::snprintf("- networkKey = %s\n", networkKey.asASCII());
-        logging::snprintf("- uplinkFrameCount = %u\n", uplinkFrameCount.asUint32);
-        logging::snprintf("- downlinkFrameCount = %u\n", downlinkFrameCount.asUint32);
-        logging::snprintf("- dataRateIndex = %u\n", currentDataRateIndex);
-    }
+    logSettings();
+    logState();
 
-    // Initialize the SX126x radio
     theRadio.initialize();
 }
 
@@ -86,7 +79,7 @@ void LoRaWAN::handleEvents() {
             case txRxCycleState::waitForTxComplete:
                 switch (theEvent) {
                     case loRaWanEvent::sx126xTxComplete: {
-                        uint32_t timerLoadValue = (rx1Delay * 2048) - 32;        // 2048 is a full second. 32 is some time lost in starting and stopping the timer TODO : make this delta a constexpr member of the class
+                        uint32_t timerLoadValue = (rx1Delay * 2048) - 64;        // 2048 is a full second. 32 is some time lost in starting and stopping the timer TODO : make this delta a constexpr member of the class
                         startTimer(timerLoadValue);
                         // 2048 would be 1.0s @ 2KHz timer, but I measured 1.012s (some overhead is involved)
                         // 2016 resulting in 996 ms delay measured on the scope
@@ -109,7 +102,7 @@ void LoRaWAN::handleEvents() {
                     case loRaWanEvent::timeOut: {
                         stopTimer();
                         startTimer(2048U);        // 1 second from now until Rx2Start
-                        uint32_t rxFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
+                        uint32_t rxFrequency = theChannels.txRxChannels[theChannels.getCurrentChannelIndex()].frequency;
                         uint32_t rxTimeout   = getReceiveTimeout(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor);
                         theRadio.configForReceive(theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor, rxFrequency);
                         theRadio.startReceive(rxTimeout);
@@ -238,12 +231,14 @@ void LoRaWAN::goTo(txRxCycleState newState) {
     theTxRxCycleState = newState;
     switch (newState) {
         case txRxCycleState::idle:
-            // theRadio.goSleep();
+            theRadio.goSleep(sleepMode::warmStart);
             break;
 
         case txRxCycleState::waitForRandomTimeBeforeTransmit: {
-            uint32_t randomDelay = getRandomNumber() % 16384U;        // this results in a random delay of 0.. 8 seconds
-            startTimer(randomDelay);
+            uint32_t randomDelayAsTicks = getRandomNumber() % maxRandomDelayBeforeTx;                                                                                         // this results in a random delay of 0.. 8 seconds
+            float randomDelayAsFloat    = static_cast<float>(randomDelayAsTicks) / 2048.0f;                                                                                   // convert to seconds
+            logging::snprintf(loggingChannel::lorawanTiming, "LoRaWAN random delay before transmit : %u ticks, %f seconds\n", randomDelayAsTicks, randomDelayAsFloat);        //
+            startTimer(randomDelayAsTicks);                                                                                                                                   //
         } break;
 
         case txRxCycleState::waitForTxComplete:
@@ -448,6 +443,10 @@ void LoRaWAN::sendUplink(framePort theFramePort, const uint8_t applicationData[]
         return;
     }
 
+    // Wake the radio up..
+    theRadio.initializeInterface(); // does HAL_SUBGHZ_Init
+    theRadio.initializeRadio(); // writes all config registers.. should not be needed if config is retained
+
     if (theFramePort == 0) {
         // uplink message with framePort 0, containing no frameOptions and framePayload is all MAC stuff, encrypted with networkKey
         setOffsetsAndLengthsTx(macOut.getLevel());                    // sending all MAC stuff in the framePayload, so frameOptions are empty and frameOptionsLength is 0
@@ -465,13 +464,13 @@ void LoRaWAN::sendUplink(framePort theFramePort, const uint8_t applicationData[]
     insertMic();
 
     // 2. Configure the radio, and start stateMachine for transmitting the payload
-    currentChannelIndex  = theChannels.getRandomChannelIndex();
-    uint32_t txFrequency = theChannels.txRxChannels[currentChannelIndex].frequency;
+    theChannels.selectRandomChannelIndex();        // randomize the channel index
+    uint32_t txFrequency = theChannels.txRxChannels[theChannels.getCurrentChannelIndex()].frequency;
     spreadingFactor csf  = theDataRates.theDataRates[currentDataRateIndex].theSpreadingFactor;
     theRadio.configForTransmit(csf, txFrequency, rawMessage + macHeaderOffset, loRaPayloadLength);
 
     if (logging::loggingIsActive(loggingChannel::lorawanMac)) {
-        logging::snprintf("Sending Uplink : channel = %u, frequency = %u, dataRate = %u, framePayloadLength = %u, frameOptionsLength = %u\n", currentChannelIndex, txFrequency, currentDataRateIndex, framePayloadLength, frameOptionsLength);
+        logging::snprintf("Scheduled Uplink : channel = %u, frequency = %u, dataRate = %u, framePayloadLength = %u, frameOptionsLength = %u\n", theChannels.getCurrentChannelIndex(), txFrequency, currentDataRateIndex, framePayloadLength, frameOptionsLength);
         logging::snprintf("- LoRa msg = ");
         for (uint8_t i = 0; i < loRaPayloadLength; i++) {
             logging::snprintf("%02X ", rawMessage[i + b0BlockLength]);
@@ -514,6 +513,7 @@ messageType LoRaWAN::decodeMessage() {
     uint32_t lastDownlinkFramecount     = downlinkFrameCount.asUint32;
     uint32_t guessedDownlinkFramecount  = frameCount::guessFromUint16(lastDownlinkFramecount, receivedDownlinkFramecount);
     frameCount tmpDownLinkFrameCount(guessedDownlinkFramecount);
+    logging::snprintf(loggingChannel::lorawanMac, "receivedFramecount = %u, lastFramecount = %u, guessedFramecount = %u\n", receivedDownlinkFramecount, lastDownlinkFramecount, guessedDownlinkFramecount);
 
     // 3. Check the MIC
     insertBlockB0(linkDirection::downlink, DevAddr, tmpDownLinkFrameCount, loRaPayloadLength - micLength);
@@ -739,8 +739,8 @@ void LoRaWAN::processMacContents() {
 
             case macCommand::receiveTimingSetupRequest: {
                 constexpr uint32_t receiveTimingSetupRequestLength{2};        // 2 bytes : commandId, delay
-                uint32_t rx1Delay = macIn[1] && 0x0F;                         // TODO : a value of 0 means also 1 second
-                processReceiveTimingSetupRequest(rx1Delay);
+                uint32_t receivedRx1Delay = macIn[1] & 0x0F;                  // TODO : a value of 0 means also 1 second
+                processReceiveTimingSetupRequest(receivedRx1Delay);
                 macIn.consume(receiveTimingSetupRequestLength);               //
 
                 constexpr uint32_t receiveTimingSetupAnswerLength{1};         // 1 byte : commandId
@@ -873,12 +873,32 @@ void LoRaWAN::processNewChannelRequest(uint32_t channelIndex, uint32_t frequency
     theChannels.txRxChannels[channelIndex].maximumDataRateIndex = maximumDataRate;
 }
 
-void LoRaWAN::processReceiveTimingSetupRequest(uint32_t newRx1Delay) {
-    if (newRx1Delay == 0) {
-        newRx1Delay = 1;        // a value of 0, also results in a delay of 1 second. Link Layer Spec V1.0.4, line 1237
+void LoRaWAN::processReceiveTimingSetupRequest(uint32_t receivedRx1Delay) {
+    if (receivedRx1Delay == 0) {
+        receivedRx1Delay = 1;                                                                                                                         // a value of 0, also results in a delay of 1 second. Link Layer Spec V1.0.4, line 1237
     }
-    rx1Delay = newRx1Delay;
-    logging::snprintf(loggingChannel::lorawanMac, "ReceiveTimingSetupRequest : rx1Delay = %u\n", rx1Delay);        //
+    logging::snprintf(loggingChannel::lorawanMac, "ReceiveTimingSetupRequest : rx1Delay changed from %u to %u\n", rx1Delay, receivedRx1Delay);        //
+    rx1Delay = receivedRx1Delay;
+    nvs.writeBlock8(static_cast<uint32_t>(nvsMap::blockIndex::rx1Delay), rx1Delay);
+}
+
+void LoRaWAN::logSettings() {
+    if (logging::loggingIsActive(loggingChannel::lorawanSettings)) {
+        logging::snprintf("LoRaWAN Settings :\n");
+        logging::snprintf("- devAddr = %04X\n", DevAddr.asUint32);
+        logging::snprintf("- applicationKey = %s\n", applicationKey.asASCII());
+        logging::snprintf("- networkKey = %s\n", networkKey.asASCII());
+    }
+}
+
+void LoRaWAN::logState() {
+    if (logging::loggingIsActive(loggingChannel::lorawanState)) {
+        logging::snprintf("LoRaWAN State :\n");
+        logging::snprintf("- uplinkFrameCount = %u\n", uplinkFrameCount.asUint32);
+        logging::snprintf("- downlinkFrameCount = %u\n", downlinkFrameCount.asUint32);
+        logging::snprintf("- dataRateIndex = %u\n", currentDataRateIndex);
+        logging::snprintf("- rx1Delay = %u [s]\n", rx1Delay);
+    }
 }
 
 #ifndef environment_desktop
@@ -895,10 +915,12 @@ uint32_t LoRaWAN::getRandomNumber() {
 }
 
 void LoRaWAN::startTimer(uint32_t timeOut) {
+    logging::snprintf(loggingChannel::lorawanTiming, "started = %u\n", HAL_GetTick());
     HAL_LPTIM_SetOnce_Start_IT(&hlptim1, 0xFFFF, timeOut);
 }
 
 void LoRaWAN::stopTimer() {
+    logging::snprintf(loggingChannel::lorawanTiming, "stopped = %u\n", HAL_GetTick());
     HAL_LPTIM_SetOnce_Stop_IT(&hlptim1);
 }
 

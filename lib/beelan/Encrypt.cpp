@@ -34,7 +34,7 @@
 
 #include "Encrypt.h"
 
-#include <iostream>
+//#include <iostream>
 #include "hextools.h"
 #include "AES-128.h"
 #include "Struct.h"

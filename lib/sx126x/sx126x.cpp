@@ -11,6 +11,7 @@
 void sx126x::initialize() {
     initializeInterface();
     initializeRadio();
+    goSleep();
 }
 
 void sx126x::configForTransmit(spreadingFactor theSpreadingFactor, uint32_t frequency, uint8_t* payload, uint32_t payloadLength) {
@@ -232,7 +233,9 @@ void sx126x::initializeRadio() {
     commandParameters[1] = 0x44;        // LoRa Syncword LSB
     writeRegisters(sx126xRegister::LoRaSyncWordMSB, commandParameters, 2);
 
-    executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
+    //goSleep();
+
+    //executeGetCommand(sx126xCommand::getStatus, commandParameters, 1);
 }
 
 #ifndef environment_desktop

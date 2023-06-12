@@ -10,13 +10,21 @@
 
 enum class loggingChannel : uint32_t {
     applicationEvents,
+
+    lorawanSettings,
+    lorawanState,
     lorawanEvents,
     lorawanMac,
+    lorawanTiming,
+
     sx126xControl,
     sx126xBufferData,
+
     sensorEvents,
     sensorData,
+
     nvs,
+
     error,
     criticalError
 

@@ -4,9 +4,6 @@ bool power::usbPower{false};
 float power::batteryPercentCharged{0};
 float power::batteryVoltage{0};
 
-bool power::hasUsbPower() {
-    return usbPower;
-}
 
 uint32_t power::calculatePercentFromVoltage(uint32_t voltage) {
     return 0;
@@ -25,6 +22,10 @@ float power::getBatteryPercent() {
 #include "main.h"
 
 extern ADC_HandleTypeDef hadc;
+
+bool power::hasUsbPower() {
+    return (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, usbPowerPresent_Pin));
+}
 
 bool power::isUsbConnected() {
     bool newUsbPower = (GPIO_PIN_SET == HAL_GPIO_ReadPin(GPIOB, usbPowerPresent_Pin));

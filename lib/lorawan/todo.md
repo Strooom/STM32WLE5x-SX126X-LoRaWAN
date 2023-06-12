@@ -2,6 +2,8 @@
 
 1. store the complete non-volatile context in NVS and retrieve it from there upon initialization
   * currentDataRateIndex
+  * all channel info : frequencies and datarates
+  * rx1Delay
 
   are already stored : 
   * devAdrr

@@ -9,7 +9,7 @@ uint8_t toUpperCase(uint8_t aCharacter) {
 }
 
 bool isHexCharacter(uint8_t aCharacter) {
-    return ((aCharacter >= 'A' && aCharacter <= 'F') || (aCharacter >= '0' && aCharacter <= '9'));
+    return ((aCharacter >= 'A' && aCharacter <= 'F') || (aCharacter >= 'a' && aCharacter <= 'f') || (aCharacter >= '0' && aCharacter <= '9'));
 }
 
 uint8_t valueFromHexCharacter(uint8_t aCharacter) {
@@ -18,6 +18,9 @@ uint8_t valueFromHexCharacter(uint8_t aCharacter) {
     }
     if (aCharacter >= 'A' && aCharacter <= 'F') {
         return aCharacter - 'A' + 10;
+    }
+    if (aCharacter >= 'a' && aCharacter <= 'f') {
+        return aCharacter - 'a' + 10;
     }
     return 0;        // in case the character is not a hex character, return 0 as value
 }
