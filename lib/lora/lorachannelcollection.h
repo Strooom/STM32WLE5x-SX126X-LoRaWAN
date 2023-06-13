@@ -10,7 +10,8 @@
 
 class loRaChannelCollection {
   public:
-    uint32_t getRandomChannelIndex();
+    void selectRandomChannelIndex();
+    uint32_t getCurrentChannelIndex() const;
     static constexpr uint32_t maxNmbrChannels{16};        // Regional Parameters 1.0.3 line 320
     // uint32_t nmbrAvailableChannels{3};                    // 3 channels are always activate
     // // void addChannel(uint32_t frequency);
@@ -36,6 +37,11 @@ class loRaChannelCollection {
 
     loRaChannel rx2Channel{loRaChannel(869'525'000U, 0, 0)};
 
+#ifndef unitTesting
   private:
+#endif
+
     uint32_t getRandomNumber();
+    uint32_t currentChannelIndex{0};
+    void selectNextActiveChannelIndex();
 };

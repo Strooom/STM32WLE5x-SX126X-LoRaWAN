@@ -22,6 +22,8 @@ class nvsMap {
   public:
     enum class blockIndex : uint32_t {
         nvsMapVersion = 0,
+        displayVersion,
+        batteryVersion,
         unusedGeneral,
 
         measurementWriteIndex,
@@ -45,7 +47,9 @@ class nvsMap {
     const nvsBlock blocks[static_cast<uint32_t>(blockIndex::numberOfBlocks)] = {
         // Important note : make sure that none of the blocks are mapped into two pages of 128 Bytes, as the page-write of the EEPROM is limited to 128 Byte pages and the address will wrap around to the beginning of the page if addressing more than 128 Bytes
         {0, 1},          // nvsMapVersion : 1 byte
-        {1, 127},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 127 bytes
+        {1, 1},          // displayVersion : 1 byte
+        {2, 1},          // batteryVersion : 1 byte
+        {3, 127},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 127 bytes
         // TODO : add a setting displayVersion
 
         {128, 4},        // measurementWriteIndex : 32 bits

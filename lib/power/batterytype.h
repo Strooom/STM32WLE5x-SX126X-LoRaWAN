@@ -6,17 +6,11 @@
 // #############################################################################
 
 #pragma once
-#include <stdint.h>
+#include "stdint.h"
 
-enum class sleepMode : uint8_t {
-    coldStart = 0x0 << 2,
-    warmStart = 0x1 << 2
+enum class batteryType : uint8_t {
+    none             = 0x00,        // no battery, device powered by USB
+    liFePO4_700mAh   = 0x01,        // AA LiFePO4 battery
+    liFePO4_1500mAh  = 0x02,        // 18650 LiFePO4 battery
+    alkaline_1200mAh = 0x03,        // 2 AAA Alkaline batteries
 };
-
-
-enum class standbyMode : uint8_t {
-    rc   = 0x00,
-    xosc = 0x01
-
-};
-

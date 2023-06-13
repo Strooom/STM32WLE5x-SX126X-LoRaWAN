@@ -11,66 +11,94 @@
 #include <cstring>
 #include <cstdio>
 #include <cstdarg>
-#include "logging.h"                               //
+#include "logging.h"        //
 
-bool logging::debugProbePresent{false};            // initialisation of static member variable
-uint32_t logging::activeLoggingChannels{0};        // initialisation of static member variable
+// bool logging::debugProbePresent{false};                // initialisation of static member variable
+uint32_t logging::activeLoggingSources{0};             // initialisation of static member variable
+uint32_t logging::activeLoggingDestinations{0};        // initialisation of static member variable
 
-bool logging::isDebugProbePresent() {
-    return debugProbePresent;
+// bool logging::isDebugProbePresent() {
+//     return debugProbePresent;
+// }
+
+void logging::enableLoggingSource(loggingSource aSource) {
+    activeLoggingSources = activeLoggingSources | (0x01 << static_cast<uint32_t>(aSource));
+}
+void logging::disableLoggingSource(loggingSource aSource) {
+    activeLoggingSources = activeLoggingSources & ~(0x01 << static_cast<uint32_t>(aSource));
 }
 
-void logging::enableLoggingChannel(loggingChannel aChannel) {
-    activeLoggingChannels = activeLoggingChannels | (0x01 << static_cast<uint32_t>(aChannel));
+void logging::enableLoggingDestination(loggingDestination aDestination) {
+    activeLoggingDestinations = activeLoggingDestinations | (0x01 << static_cast<uint32_t>(aDestination));
 }
-void logging::disableLoggingChannel(loggingChannel aChannel) {
-    activeLoggingChannels = activeLoggingChannels & ~(0x01 << static_cast<uint32_t>(aChannel));
+void logging::disableLoggingDestination(loggingDestination aDestination) {
+    activeLoggingDestinations = activeLoggingDestinations & ~(0x01 << static_cast<uint32_t>(aDestination));
 }
 
-bool logging::loggingIsActive(loggingChannel aChannel) {
-    uint32_t channelMask = 0x01 << static_cast<uint32_t>(aChannel);
-    return ((activeLoggingChannels & channelMask) != 0);
+bool logging::isActive(loggingSource aSource) {
+    uint32_t mask = 0x01 << static_cast<uint32_t>(aSource);
+    return ((activeLoggingSources & mask) != 0);
+}
+
+bool logging::isActive(loggingDestination aDestination) {
+    uint32_t mask = 0x01 << static_cast<uint32_t>(aDestination);
+    return ((activeLoggingDestinations & mask) != 0);
 }
 
 #ifndef environment_desktop
 
-#include "main.h"                            // required for ITM_Sendchar - TODO : I could reduce the attack surface by only including the core_cm4.h from CMSIS
+#include "main.h"                            // required for ITM_Sendchar
 
 char logging::buffer[bufferLength]{};        // Transmit buffer
 
 void logging::snprintf(const char *format, ...) {
-    if (debugProbePresent) {        // if no debugprobe, then no tracing, so do not bother to calculate the output
+    if (activeLoggingDestinations != 00) {        // if any destination is active
         va_list argList;
         va_start(argList, format);
         uint32_t length = vsnprintf(buffer, bufferLength, format, argList);
         va_end(argList);
 
-        for (uint32_t index = 0; index < length; index++) {
-            ITM_SendChar(static_cast<uint32_t>(buffer[index]));
+        write(length);
+
+        // for (uint32_t index = 0; index < length; index++) {
+        //     ITM_SendChar(static_cast<uint32_t>(buffer[index]));
+        // }
+    }
+}
+
+void logging::snprintf(loggingSource aSource, const char *format, ...) {
+    if (activeLoggingDestinations != 00) {        // if any destination is active
+        if (isActive(aSource)) {
+            va_list argList;
+            va_start(argList, format);
+            uint32_t length = vsnprintf(buffer, bufferLength, format, argList);
+            va_end(argList);
+
+            write(length);
+
+            // for (uint32_t index = 0; index < length; index++) {
+            //     ITM_SendChar(static_cast<uint32_t>(buffer[index]));
+            // }
         }
     }
 }
 
-void logging::snprintf(loggingChannel aChannel, const char *format, ...) {
-    uint32_t channelMask = 0x01 << static_cast<uint32_t>(aChannel);
-    if (debugProbePresent && ((activeLoggingChannels & channelMask) != 0)) {
-        va_list argList;
-        va_start(argList, format);
-        uint32_t length = vsnprintf(buffer, bufferLength, format, argList);
-        va_end(argList);
-
-        for (uint32_t index = 0; index < length; index++) {
+void logging::write(uint32_t dataLength) {
+    if (isActive(loggingDestination::debugProbe)) {
+        for (uint32_t index = 0; index < dataLength; index++) {
             ITM_SendChar(static_cast<uint32_t>(buffer[index]));
         }
     }
+    if (isActive(loggingDestination::uart)) {
+        // HAL_UART_();
+    }
 }
-
-void logging::detectDebugProbe() {
-    debugProbePresent = ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001);        // This LSBit is 1 when the ST-Link is connected, 0 when disconnected
-}
+// void logging::detectDebugProbe() {
+//     debugProbePresent = ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001);        // This LSBit is 1 when the ST-Link is connected, 0 when disconnected
+// }
 
 #else
-void logging::detectDebugProbe() {}
+
 void logging::snprintf(const char *format, ...) {}
-void logging::snprintf(loggingChannel aChannel, const char *format, ...) {}
+void logging::snprintf(loggingSource aSource, const char *format, ...) {}
 #endif

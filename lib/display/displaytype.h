@@ -8,15 +8,8 @@
 #pragma once
 #include <stdint.h>
 
-enum class sleepMode : uint8_t {
-    coldStart = 0x0 << 2,
-    warmStart = 0x1 << 2
+enum class displayType : uint8_t {
+    none = 0,
+    mikro,
+    gooddisplay
 };
-
-
-enum class standbyMode : uint8_t {
-    rc   = 0x00,
-    xosc = 0x01
-
-};
-

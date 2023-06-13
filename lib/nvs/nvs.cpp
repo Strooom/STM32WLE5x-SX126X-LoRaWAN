@@ -7,8 +7,8 @@
 #include "nvs.h"
 #include "logging.h"
 
-bool nonVolatileStorage::blockIndexIsValid(uint32_t blockIndex) {
-    return (blockIndex < static_cast<uint32_t>(nvsMap::blockIndex::numberOfBlocks));
+bool nonVolatileStorage::blockIndexIsValid(uint32_t theBlockIndex) {
+    return (theBlockIndex < static_cast<uint32_t>(nvsMap::blockIndex::numberOfBlocks));
 }
 
 bool nonVolatileStorage::isInitialized() {
@@ -25,17 +25,22 @@ void nonVolatileStorage::initializeOnce() {
     writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::measurementWriteIndex), data);        // set all other to 0
     writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::oldestUnsentMeasurementIndex), data);
     writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::oldestUnconfirmedMeasurementindex), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::unusedMeasurementDataManagement), data);
+    // writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::unusedMeasurementDataManagement), data);
 
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::DevEUI), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), data);
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), data);
+    logging::snprintf("Write Default / Initial LoRaWAN Settings & State...\n");        //
+    writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::DevAddr), 0x260BB8CA);
 
-    data[0] = 0x01;
-    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::rx1Delay), data);        // this defaults to 1 second
+
+
+    uint8_t tmpKey1[] = {0x18, 0x21, 0x7B, 0x0F, 0x97, 0x65, 0x62, 0x1C, 0xE4, 0x53, 0x46, 0x34, 0x43, 0x64, 0xAB, 0x99};
+    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::applicationSessionKey), tmpKey1);
+
+    uint8_t tmpKey2[] = {0xB4, 0xAB, 0xBF, 0x24, 0xAD, 0x9B, 0x04, 0x27, 0x86, 0x2E, 0x6F, 0x91, 0x76, 0x2C, 0xD0, 0x96};
+    writeBlock(static_cast<uint32_t>(nvsMap::blockIndex::networkSessionKey), tmpKey2);
+
+    writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::uplinkFrameCounter), 0U);
+    writeBlock32(static_cast<uint32_t>(nvsMap::blockIndex::downlinkFrameCounter), 0U);
+    writeBlock8(static_cast<uint32_t>(nvsMap::blockIndex::rx1Delay), 1U);
 }
 
 void nonVolatileStorage::initialize() {

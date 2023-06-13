@@ -37,14 +37,16 @@ class LoRaWAN {
     void getDownlinkMessage();                                                                             //
     void checkNetwork();
 
-    void logSettings();        // log the current settings of the LoRaWAN layer
-    void logState();           // log the current state of the LoRaWAN layer
+    void logSettings();                                            // log the current settings of the LoRaWAN layer
+    void logState();                                               // log the current state of the LoRaWAN layer
+
+    txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine : TODO : provide a getter()
 
 #ifndef unitTesting
   private:
 #endif
-    txRxCycleState theTxRxCycleState{txRxCycleState::idle};        // state variable tracking the TxRxCycle state machine
-    void goTo(txRxCycleState newState);                            // move the state of the TxRxCycle state machine - handles exit old state actions and entry new state actions
+
+    void goTo(txRxCycleState newState);        // move the state of the TxRxCycle state machine - handles exit old state actions and entry new state actions
 
     // macHeader MHDR;
     deviceAddress DevAddr;
@@ -59,10 +61,11 @@ class LoRaWAN {
     dataRates theDataRates;
     uint32_t currentDataRateIndex{0};
     loRaChannelCollection theChannels;
-    uint32_t currentChannelIndex{0};
     uint32_t rx1Delay{1};        // in [seconds]
 
     // transmitPower theTransmitPower{transmitPower::max};
+    // static constexpr uint32_t maxRandomDelayBeforeTx{16384U};        // offset in the rawMessage where the header(s) starts
+    static constexpr uint32_t maxRandomDelayBeforeTx{1024U};        // test-version
 
     // #################################################
     // ### Encoding and Decoding of LoRaWAN messages ###

@@ -22,9 +22,6 @@ In order to limit the amount of work, and get something working soon, I decided 
 * only support region EU-868
 * LoRa sync word is fixed to 0x34 and preamble length is fixed to 8 symbols
 * Support only the minimum set of DR0 - DR5, as a consequence, the bandwidth is always 125 kHz
-* in the uplink, we don't combine MAC messages with application payload.
-    - MAC messages are sent in the payload on framePort 0
-    - Application messages are sent on another port
 * restrict to settings needed by The Things Network, wherever applicable, as this will be the LoRaWAN network provider we will be using.
 
 # Things for later
