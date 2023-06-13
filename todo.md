@@ -56,6 +56,8 @@ SC126x Sleep vs Standby : (DebugStopModeDisabled)
     * sleep 0.383 mA
     * delta = 0.747 mA
 
+* investigate how to put the STM32/ SX126 in sleep during the waitForRxStart and waitForRx2Start
+
 
 # TODO's LoRaWAN
 * solution for when a device boots with no settings in EEPROM : when reading settings from NVS, they should all be checked to see if they are (still) valid
@@ -64,3 +66,8 @@ SC126x Sleep vs Standby : (DebugStopModeDisabled)
 
 # TODO's USB / CLI
 * add standard flashing from USB during 10 seconds after reboot, when USB is present..
+* make the trace output select SWD/Trace and/or UART2 depending on when they are present
+
+
+# TODO's Sensors
+* add TSL2591 - this needs a change from blocking to nonblocking sensor reading, as this sensor may need 600 ms to do a reading..
