@@ -119,17 +119,17 @@ int main(void) {
     __HAL_RCC_WAKEUPSTOP_CLK_CONFIG(RCC_STOP_WAKEUPCLOCK_MSI);
 
     if ((CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) == 0x0001) {
-        logging::enableLoggingDestination(loggingDestination::debugProbe);
+        logging::enable(logging::destination::debugProbe);
     }
 
     enableGpio(gpioGroup::usbPresent);
     if (power::hasUsbPower()) {
-        // logging::enableLoggingDestination(loggingDestination::debugProbe); // TODO : enable this as soon as output to UART1 is working
+        // logging::enable(logging::destination::debugProbe); // TODO : enable this as soon as output to UART1 is working
     }
 
     logging::snprintf("MuMo v2 - V1.0.2 - Boot\n");        //
 
-    if (logging::isActive(loggingDestination::debugProbe)) {
+    if (logging::isActive(logging::destination::debugProbe)) {
         LL_DBGMCU_EnableDBGStopMode();
         logging::snprintf("debugProbe connected\n");        //
     } else {
@@ -137,7 +137,7 @@ int main(void) {
         disableGpio(gpioGroup::debugPort);
     }
 
-    if (logging::isActive(loggingDestination::uart)) {
+    if (logging::isActive(logging::destination::uart)) {
         logging::snprintf("USB connected\n");        //
     }
 
@@ -150,14 +150,14 @@ int main(void) {
     MX_I2C2_Init();
 
     // Enable/Disable the logging sources we want to monitor
-    logging::enableLoggingSource(loggingSource::criticalError);
-    logging::enableLoggingSource(loggingSource::error);
-    logging::enableLoggingSource(loggingSource::lorawanSettings);
-    logging::enableLoggingSource(loggingSource::lorawanState);
-    // logging::enableLoggingSource(loggingSource::lorawanTiming);
-    // logging::enableLoggingSource(loggingSource::lorawanEvents);
-    // logging::enableLoggingSource(loggingSource::lorawanMac);
-    logging::enableLoggingSource(loggingSource::sensorEvents);
+    logging::enable(logging::source::criticalError);
+    logging::enable(logging::source::error);
+    logging::enable(logging::source::lorawanSettings);
+    logging::enable(logging::source::lorawanState);
+    // logging::enablelogging::source(logging::source::lorawanTiming);
+    // logging::enablelogging::source(logging::source::lorawanEvents);
+    // logging::enablelogging::source(logging::source::lorawanMac);
+    logging::enable(logging::source::sensorEvents);
 
     //nvs.initializeOnce();
 
@@ -675,7 +675,7 @@ void Error_Handler(void) {
 
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim) {
     loraWanEventBuffer.push(loRaWanEvent::timeOut);
-    logging::snprintf(loggingSource::lorawanTiming, "expired = %u\n", HAL_GetTick());
+    logging::snprintf(logging::source::lorawanTiming, "expired = %u\n", HAL_GetTick());
 }
 
 void HAL_SUBGHZ_TxCpltCallback(SUBGHZ_HandleTypeDef *hsubghz) {

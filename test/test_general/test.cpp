@@ -5,13 +5,13 @@
 // ### License : https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode ###
 // #############################################################################
 #include <unity.h>
-#include "datarate.h"
+#include "logging.h"
 
 void setUp(void) {}           // before test
 void tearDown(void) {}        // after test
 
 void test_initialize() {
-    TEST_IGNORE_MESSAGE("to be implemented");
+    TEST_ASSERT_EQUAL_CHAR(0x00, logging::buffer[0]);
 }
 
 int main(int argc, char **argv) {

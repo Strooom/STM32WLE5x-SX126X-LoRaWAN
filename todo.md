@@ -28,7 +28,10 @@
 * FUOTA : complex implementation, not only on the end node but also on the network server. We can do firmware updates via USB as an alternative
 
 
-
+# TODO's C++ / CodingStyle
+* rename eventBuffer template class to circularBuffer : it can be used for any type of content, not only events.. (I intend to use if for UART buffer as well)
+* rename byteBuffer2 template class to linearBuffer
+* maybe get rid of byteBuffer1
 
 # TODO's LowPower
 

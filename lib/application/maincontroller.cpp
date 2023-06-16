@@ -31,7 +31,7 @@ extern nonVolatileStorage nvs;
 
 void mainController::initialize() {
     if (nvs.isReady()) {
-        logging::snprintf(loggingSource::nvs, "128K EEPROM found\n");
+        logging::snprintf(logging::source::nvs, "128K EEPROM found\n");
     }
     if (!nvs.isInitialized()) {
         nvs.initializeOnce();
@@ -44,7 +44,7 @@ void mainController::initialize() {
 void mainController::handleEvents() {
     while (applicationEventBuffer.hasEvents()) {
         applicationEvent theEvent = applicationEventBuffer.pop();
-        logging::snprintf(loggingSource::applicationEvents, "Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
+        logging::snprintf(logging::source::applicationEvents, "Application Event [%u] : %s\n", static_cast<uint8_t>(theEvent), toString(theEvent));
         switch (theEvent) {
             case applicationEvent::usbConnected:
                 // MX_USART2_UART_Init();

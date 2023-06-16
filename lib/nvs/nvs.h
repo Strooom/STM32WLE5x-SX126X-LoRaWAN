@@ -25,6 +25,7 @@ class nvsMap {
         displayVersion,
         batteryVersion,
         unusedGeneral,
+        activeloggingSources,
 
         measurementWriteIndex,
         oldestUnsentMeasurementIndex,
@@ -49,8 +50,8 @@ class nvsMap {
         {0, 1},          // nvsMapVersion : 1 byte
         {1, 1},          // displayVersion : 1 byte
         {2, 1},          // batteryVersion : 1 byte
-        {3, 127},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 127 bytes
-        // TODO : add a setting displayVersion
+        {3, 4},          // activelogging::sources : 4 bytes
+        {7, 121},        // unusedGeneral : extra blocks can be inserted hereafter for a maximum of 121 bytes
 
         {128, 4},        // measurementWriteIndex : 32 bits
         {132, 4},        // oldestUnsentMeasurementIndex : 32 bits
